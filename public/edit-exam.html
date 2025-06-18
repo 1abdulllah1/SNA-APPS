@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Exam | CBT System</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    main { max-width: 900px; }
+    .form-grid-col-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    .question-card {
+      background: #f8f9ff;
+      border: 1px solid #e0e5ff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #d1d9ff;
+    }
+    .question-header h3 { margin: 0; color: var(--primary-blue); }
+    .delete-question-btn {
+        background-color: var(--danger-red);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    .delete-question-btn:hover { background-color: #c82333; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .add-question-btn-container { margin: 20px 0; }
+    .form-actions { margin-top: 30px; display: flex; justify-content: space-between; align-items: center;}
+    #totalMarksInfo {
+        margin-top: 10px;
+        font-style: italic;
+        color: var(--text-medium);
+    }
+    #loadingIndicator { text-align: center; padding: 20px; font-style: italic; font-size: 1.1em; }
+    .lock-exam-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #fff8e1;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid #ffecb3;
+        margin-bottom: 20px;
+    }
+    .lock-exam-container label {
+        margin-bottom: 0;
+        font-weight: 600;
+        color: #6d4c41;
+    }
+    .lock-exam-container input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="nav-container">
+        <a href="dashboard.html" class="logo">CBT System</a>
+        <div class="nav-links" id="navLinks">
+          <a href="#" id="logoutLinkNav">Logout</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Edit Exam</h1>
+    <div id="loadingIndicator">Loading exam data...</div>
+    <div id="formError" class="error-message hidden"></div>
+    
+    <form id="examForm" class="hidden">
+      <div class="lock-exam-container">
+        <input type="checkbox" id="is_locked" name="is_locked">
+        <label for="is_locked">Lock this exam to prevent students from taking it.</label>
+      </div>
+      
+      <div class="form-group">
+        <label for="title">Exam Title *</label>
+        <input type="text" id="title" name="title" required>
+      </div>
+
+      <div class="form-grid-col-3">
+        <div class="form-group">
+          <label for="subject">Subject *</label>
+          <select id="subject" name="subject_id" required>
+            <option value="">Loading subjects...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="exam_type">Exam Type *</label>
+          <select id="exam_type" name="exam_type" required>
+            <option value="">Select type...</option>
+            <option value="CA1">Continuous Assessment 1 (CA1)</option>
+            <option value="CA2">Continuous Assessment 2 (CA2)</option>
+            <option value="CA3">Continuous Assessment 3 (CA3)</option>
+            <option value="CA4">Continuous Assessment 4 (CA4)</option>
+            <option value="MID_TERM">Mid-Term Exam</option>
+            <option value="MAIN_EXAM">Main Exam (End of Term)</option>
+            <option value="OTHER_CA">Other CA</option>
+          </select>
+        </div>
+         <div class="form-group">
+          <label for="max_score">Max Score for this Exam/CA *</label>
+          <input type="number" id="max_score" name="max_score" min="1" required>
+          <small id="totalMarksInfo">Sum of marks for all questions should ideally match this.</small>
+        </div>
+      </div>
+
+      <div class="form-grid-col-3">
+        <div class="form-group">
+          <label for="term">Term *</label>
+          <select id="term" name="term" required>
+            <option value="">Select term...</option>
+            <option value="FIRST">First Term</option>
+            <option value="SECOND">Second Term</option>
+            <option value="THIRD">Third Term</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="session">Session *</label>
+          <input type="text" id="session" name="session" placeholder="YYYY-YYYY" required pattern="\d{4}-\d{4}">
+        </div>
+        <div class="form-group">
+          <label for="duration">Duration (minutes) *</label>
+          <input type="number" id="duration" name="duration_minutes" min="1" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="class_level">Target Class Level *</label>
+        <select id="class_level" name="class_level" required>
+            <option value="">Select class level...</option>
+            <option value="Primary 1">Primary 1</option><option value="Primary 2">Primary 2</option>
+            <option value="Primary 3">Primary 3</option><option value="Primary 4">Primary 4</option>
+            <option value="Primary 5">Primary 5</option><option value="Primary 6">Primary 6</option>
+            <option value="JSS 1">JSS 1</option><option value="JSS 2">JSS 2</option><option value="JSS 3">JSS 3</option>
+            <option value="SS 1">SS 1</option><option value="SS 2">SS 2</option><option value="SS 3">SS 3</option>
+            <option value="Any">Any (General)</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="description">Description (Optional)</label>
+        <textarea id="description" name="description"></textarea>
+      </div>
+      
+      <h2>Questions</h2>
+      <div id="questionsContainer">
+        </div>
+      
+      <div class="add-question-btn-container">
+        <button type="button" class="btn primary-btn" onclick="addQuestionField()">Add Question</button>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" id="deleteExamBtn" class="btn delete-btn">Delete Exam</button>
+        <div>
+            <button type="button" class="btn secondary-btn" onclick="window.location.href='dashboard.html'">Cancel</button>
+            <button type="submit" class="btn primary-btn">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+  </footer>
+
+<script>
+    let questionFieldCounter = 0;
+    let currentUser = {};
+    const urlParams = new URLSearchParams(window.location.search);
+    const examId = urlParams.get('examId');
+
+    function displayFormError(message) {
+        const errorDiv = document.getElementById('formError');
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
+        errorDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+    function clearFormError() {
+        document.getElementById('formError').classList.add('hidden');
+        document.getElementById('formError').textContent = '';
+    }
+    function showLoading(show) {
+        document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+        document.getElementById('examForm').classList.toggle('hidden', show);
+    }
+
+    async function fetchSubjects(selectedSubjectId = null) {
+        try {
+            const response = await fetch('/api/exams/config/subjects', { credentials: 'include' });
+            if (!response.ok) throw new Error('Failed to load subjects');
+            const subjects = await response.json();
+            const subjectSelect = document.getElementById('subject');
+            subjectSelect.innerHTML = '<option value="">Select subject...</option>';
+            subjects.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.subject_id;
+                option.textContent = `${sub.name} (${sub.subject_code || 'N/A'})`;
+                if (selectedSubjectId && parseInt(sub.subject_id) === parseInt(selectedSubjectId)) {
+                    option.selected = true;
+                }
+                subjectSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+            document.getElementById('subject').innerHTML = '<option value="">Error loading subjects</option>';
+            displayFormError(error.message);
+        }
+    }
+
+    function addQuestionField(questionData = null) {
+      questionFieldCounter++;
+      const questionsContainer = document.getElementById('questionsContainer');
+      const questionDiv = document.createElement('div');
+      questionDiv.className = 'question-card';
+      questionDiv.dataset.questionFieldId = questionFieldCounter;
+
+      const qText = questionData ? questionData.question_text : '';
+      const optA = questionData ? questionData.option_a : '';
+      const optB = questionData ? questionData.option_b : '';
+      const optC = questionData ? questionData.option_c : '';
+      const optD = questionData ? questionData.option_d : '';
+      const correctOpt = questionData ? questionData.correct_answer : 'A';
+      const qMarks = questionData ? questionData.marks : 1;
+      const qExplanation = questionData ? questionData.explanation : '';
+
+      questionDiv.innerHTML = `
+        <div class="question-header">
+          <h3 class="question-title-text">Question ${questionsContainer.children.length + 1}</h3>
+          <button type="button" class="delete-question-btn" onclick="deleteQuestionField(${questionFieldCounter})">Delete</button>
+        </div>
+        <input type="hidden" name="q_db_id" value="${questionData ? (questionData.question_id || 'new') : 'new'}">
+        <div class="form-group">
+          <label for="q_text_${questionFieldCounter}">Question Text *</label>
+          <textarea id="q_text_${questionFieldCounter}" class="question-text-input" rows="3" required>${qText}</textarea>
+        </div>
+        <div class="options-grid">
+          <div class="form-group"><label for="q_optA_${questionFieldCounter}">Option A *</label><input type="text" id="q_optA_${questionFieldCounter}" class="option-input" required value="${optA}"></div>
+          <div class="form-group"><label for="q_optB_${questionFieldCounter}">Option B *</label><input type="text" id="q_optB_${questionFieldCounter}" class="option-input" required value="${optB}"></div>
+          <div class="form-group"><label for="q_optC_${questionFieldCounter}">Option C *</label><input type="text" id="q_optC_${questionFieldCounter}" class="option-input" required value="${optC}"></div>
+          <div class="form-group"><label for="q_optD_${questionFieldCounter}">Option D *</label><input type="text" id="q_optD_${questionFieldCounter}" class="option-input" required value="${optD}"></div>
+        </div>
+        <div class="form-grid-col-3">
+            <div class="form-group"><label for="q_correct_${questionFieldCounter}">Correct Answer *</label><select id="q_correct_${questionFieldCounter}" class="correct-answer-select" required><option value="A" ${correctOpt.toUpperCase() === 'A' ? 'selected' : ''}>A</option><option value="B" ${correctOpt.toUpperCase() === 'B' ? 'selected' : ''}>B</option><option value="C" ${correctOpt.toUpperCase() === 'C' ? 'selected' : ''}>C</option><option value="D" ${correctOpt.toUpperCase() === 'D' ? 'selected' : ''}>D</option></select></div>
+            <div class="form-group"><label for="q_marks_${questionFieldCounter}">Marks *</label><input type="number" id="q_marks_${questionFieldCounter}" class="marks-input" min="1" value="${qMarks}" required></div>
+        </div>
+        <div class="form-group"><label for="q_explanation_${questionFieldCounter}">Explanation (Optional)</label><textarea id="q_explanation_${questionFieldCounter}" class="explanation-input" rows="2">${qExplanation || ''}</textarea></div>
+      `;
+      questionsContainer.appendChild(questionDiv);
+      updateQuestionNumbers();
+    }
+    
+    function deleteQuestionField(fieldId) {
+        const questionDiv = document.querySelector(`.question-card[data-question-field-id="${fieldId}"]`);
+        if (questionDiv) {
+            questionDiv.remove();
+            updateQuestionNumbers();
+        }
+    }
+
+    function updateQuestionNumbers() {
+        document.querySelectorAll('#questionsContainer .question-card').forEach((card, index) => {
+            card.querySelector('.question-title-text').textContent = `Question ${index + 1}`;
+        });
+    }
+
+    async function loadExamData() {
+        if (!examId) {
+            displayFormError("No Exam ID provided.");
+            showLoading(false);
+            return;
+        }
+        showLoading(true);
+        try {
+            const response = await fetch(`/api/exams/${examId}`, { credentials: 'include' });
+            if (!response.ok) throw new Error(`Failed to load exam data (Status: ${response.status})`);
+            const exam = await response.json();
+            
+            // Populate form fields
+            document.getElementById('is_locked').checked = exam.is_locked; // Set checkbox state
+            document.getElementById('title').value = exam.title || '';
+            document.getElementById('description').value = exam.description || '';
+            document.getElementById('duration').value = exam.duration_minutes || '';
+            document.getElementById('class_level').value = exam.class_level || '';
+            document.getElementById('exam_type').value = exam.exam_type || '';
+            document.getElementById('max_score').value = exam.max_score || '';
+            document.getElementById('term').value = exam.term || '';
+            document.getElementById('session').value = exam.session || '';
+
+            await fetchSubjects(exam.subject_id);
+
+            const questionsContainer = document.getElementById('questionsContainer');
+            questionsContainer.innerHTML = '';
+            questionFieldCounter = 0;
+            if (exam.questions && exam.questions.length > 0) {
+                exam.questions.forEach(addQuestionField);
+            }
+            showLoading(false);
+        } catch (error) {
+            console.error("Error loading exam:", error);
+            displayFormError(error.message);
+            showLoading(false);
+        }
+    }
+    
+    document.getElementById('examForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearFormError();
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
+
+        const examData = {
+            is_locked: document.getElementById('is_locked').checked, // Get lock status
+            title: document.getElementById('title').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            duration_minutes: parseInt(document.getElementById('duration').value),
+            class_level: document.getElementById('class_level').value.trim(),
+            subject_id: document.getElementById('subject').value,
+            exam_type: document.getElementById('exam_type').value.trim().toUpperCase(),
+            max_score: parseInt(document.getElementById('max_score').value),
+            term: document.getElementById('term').value.trim().toUpperCase(),
+            session: document.getElementById('session').value.trim(),
+            questions: []
+        };
+
+        const questionCards = document.querySelectorAll('.question-card');
+        questionCards.forEach(card => {
+            examData.questions.push({
+                question_id: card.querySelector('input[name="q_db_id"]').value,
+                question_text: card.querySelector('.question-text-input').value.trim(),
+                option_a: card.querySelector('#q_optA_' + card.dataset.questionFieldId).value.trim(),
+                option_b: card.querySelector('#q_optB_' + card.dataset.questionFieldId).value.trim(),
+                option_c: card.querySelector('#q_optC_' + card.dataset.questionFieldId).value.trim(),
+                option_d: card.querySelector('#q_optD_' + card.dataset.questionFieldId).value.trim(),
+                correct_answer: card.querySelector('.correct-answer-select').value.toUpperCase(),
+                marks: parseInt(card.querySelector('.marks-input').value),
+                explanation: card.querySelector('.explanation-input').value.trim()
+            });
+        });
+
+        try {
+            const response = await fetch(`/api/exams/${examId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(examData),
+                credentials: 'include'
+            });
+            
+            const responseData = await response.json();
+            if (response.ok) {
+                alert('Exam updated successfully!');
+                window.location.href = 'dashboard.html';
+            } else {
+                displayFormError(responseData.error || 'Failed to update exam.');
+            }
+        } catch (error) {
+            console.error('Exam update error:', error);
+            displayFormError('An unexpected error occurred: ' + error.message);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Save Changes';
+        }
+    });
+
+    document.getElementById('deleteExamBtn').addEventListener('click', async () => {
+        if (!examId) return;
+        if (confirm('Are you sure you want to delete this exam? This will remove all associated results and cannot be undone.')) {
+            try {
+                const response = await fetch(`/api/exams/${examId}`, { method: 'DELETE', credentials: 'include' });
+                if (response.ok) {
+                    alert('Exam deleted successfully.');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Failed to delete exam.');
+                }
+            } catch (error) {
+                displayFormError(error.message);
+            }
+        }
+    });
+    
+    async function initPage() {
+        try {
+            const userResponse = await fetch('/api/users/me', { credentials: 'include' });
+            if (!userResponse.ok) window.location.href = '/login.html';
+            currentUser = await userResponse.json();
+            // You can add navigation link generation here if needed
+            if (currentUser.role !== 'teacher' && !currentUser.is_admin) {
+                document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to edit exams.</p>';
+                showLoading(false);
+                return;
+            }
+            await loadExamData();
+        } catch (error) {
+            console.error("Initialization error:", error);
+            displayFormError("Failed to initialize page.");
+            showLoading(false);
+        }
+    }
+    
+    window.addEventListener('DOMContentLoaded', initPage);
+</script>
+</body>
+</html>

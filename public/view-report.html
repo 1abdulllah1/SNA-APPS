@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Report Card | CBT System</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to your global styles -->
+    <style>
+        /* Inspired by the provided PDF and modernized */
+        body {
+            font-family: 'Arial', sans-serif; /* Using a common sans-serif font */
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
+            color-adjust: exact !important; /* Firefox */
+        }
+        .report-card-container {
+            width: 210mm; /* A4 width */
+            min-height: 297mm; /* A4 height */
+            margin: 20px auto;
+            padding: 15mm; /* Padding around content */
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            position: relative;
+        }
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0056b3; /* Primary blue */
+            padding-bottom: 15px;
+        }
+        .school-logo {
+            max-width: 100px; /* Adjust as needed */
+            max-height: 100px;
+            margin-bottom: 10px;
+            /* Placeholder for logo, replace with actual image if available */
+            background-color: #ddd;
+            padding:10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .school-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0056b3; /* Primary blue */
+            margin: 5px 0;
+        }
+        .school-address, .school-contact {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.4;
+        }
+        .report-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0 10px 0;
+            color: #333;
+        }
+
+        .student-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px 20px; /* row-gap column-gap */
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e9f5ff; /* Light blue background */
+            border-radius: 8px;
+            border: 1px solid #b3d4fc;
+        }
+        .student-info-grid div {
+            font-size: 13px;
+        }
+        .student-info-grid strong {
+            color: #0056b3; /* Primary blue for labels */
+            margin-right: 5px;
+            display: inline-block;
+            min-width: 100px; /* Align values */
+        }
+        .student-profile-pic {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #0056b3;
+            grid-row: span 2; /* Example: make it span a couple of rows if desired */
+            justify-self: center; /* Center picture in its grid area */
+        }
+
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0056b3; /* Primary blue */
+            margin-top: 25px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #007bff; /* Header blue */
+            color: white;
+            font-weight: bold;
+        }
+        td.center { text-align: center; }
+        td.bold { font-weight: bold; }
+
+        .cognitive-ratings tr:nth-child(even) { background-color: #f8f9fa; }
+        .cognitive-ratings .subject-name { font-weight: 500; }
+        .cognitive-ratings .remark-pass { color: green; }
+        .cognitive-ratings .remark-fail { color: red; }
+
+        .summary-section {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f0f8ff; /* Alice blue */
+            border-radius: 8px;
+            border: 1px solid #cce0ff;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .summary-grid div { font-size: 14px; }
+        .summary-grid strong { color: #0056b3; }
+        .final-grade { font-size: 18px; font-weight: bold; color: #0056b3; }
+
+        .comments-section {
+            margin-top: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .comments-section div { margin-bottom: 15px; }
+        .comments-section strong { display: block; margin-bottom: 5px; color: #0056b3; }
+        .comments-section p { margin: 0; padding-left: 10px; border-left: 2px solid #e0e0e0;}
+
+        .report-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            font-size: 11px;
+            color: #777;
+        }
+        .print-button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .print-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+
+        #loadingMessage, #errorMessage {
+            text-align: center;
+            font-size: 1.2em;
+            padding: 50px;
+        }
+        #loadingMessage.hidden, #errorMessage.hidden { display: none; }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: #fff; /* Ensure white background for printing */
+            }
+            .report-card-container {
+                margin: 0;
+                box-shadow: none;
+                border: none; /* Optional: remove border for print */
+                width: 100%; /* Use full available width */
+                min-height: 0; /* Adjust for content */
+                padding: 10mm 5mm; /* Reduce padding for print if needed */
+            }
+            .print-button-container {
+                display: none; /* Hide print button in print view */
+            }
+            th { /* Ensure table headers print with background */
+                background-color: #007bff !important;
+                color: white !important;
+            }
+            .student-info-grid {
+                 background-color: #e9f5ff !important;
+                 border: 1px solid #b3d4fc !important;
+            }
+             .summary-section {
+                background-color: #f0f8ff !important;
+                border: 1px solid #cce0ff !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingMessage">Loading report card data...</div>
+    <div id="errorMessage" class="hidden"></div>
+
+    <div class="report-card-container hidden" id="reportCardContent">
+        <header class="report-header">
+            <!-- <img src="path/to/your/logo.png" alt="School Logo" class="school-logo"> -->
+            <div class="school-logo" id="schoolLogoPlaceholder">LOGO</div>
+            <div class="school-name" id="schoolName">SEALED NECTAR ACADEMY</div>
+            <div class="school-address" id="schoolAddress">15, Nasirudeen Street, Off CDA Road, Off Ikola Road, Ota, Ogun State.</div>
+            <div class="school-contact" id="schoolContact">080865257209 | sealednec@gmail.com</div>
+            <div class="report-title">STUDENT REPORT CARD</div>
+        </header>
+
+        <section class="student-info">
+            <div class="student-info-grid">
+                <div><strong>Student Name:</strong> <span id="studentName"></span></div>
+                <div><strong>Admission No:</strong> <span id="admissionNumber"></span></div>
+                <div><strong>Class:</strong> <span id="studentClass"></span></div>
+                <div><strong>Term:</strong> <span id="reportTerm"></span></div>
+                <div><strong>Session:</strong> <span id="reportSession"></span></div>
+                <div><strong>Date of Birth:</strong> <span id="studentDOB">N/A</span></div>
+                <div><strong>Gender:</strong> <span id="studentGender">N/A</span></div>
+                <div><strong>Next Term Begins:</strong> <span id="nextTermDate">To be announced</span></div>
+                 <img id="studentProfilePic" src="https://placehold.co/100x100/ccc/333?text=Pic" alt="Student Picture" class="student-profile-pic">
+            </div>
+        </section>
+
+        <section class="academic-performance">
+            <div class="section-title">COGNITIVE DOMAIN (ACADEMIC PERFORMANCE)</div>
+            <table class="cognitive-ratings">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Obtainable</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Grade</th>
+                        <th>Remark</th>
+                    </tr>
+                </thead>
+                <tbody id="cognitiveRatingsBody">
+                    <!-- Rows will be dynamically inserted here -->
+                </tbody>
+                <tfoot>
+                    <tr class="bold">
+                        <td>Total</td>
+                        <td id="totalObtainable" class="center"></td>
+                        <td id="totalScore" class="center"></td>
+                        <td id="overallPercentage" class="center"></td>
+                        <td id="overallGrade" class="center"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+
+        <section class="other-assessments-grid">
+             <div class="section-title">PSYCHOMOTOR & AFFECTIVE DOMAIN</div>
+             <table class="affective-psychomotor-table">
+                <thead>
+                    <tr>
+                        <th>Domain Area</th>
+                        <th>Rating (1-5)</th>
+                        <th>Domain Area</th>
+                        <th>Rating (1-5)</th>
+                    </tr>
+                </thead>
+                <tbody id="affectivePsychomotorBody">
+                    <!-- Example static rows, make dynamic if data available -->
+                    <tr><td>Punctuality</td><td class="center" id="valPunctuality">-</td><td>Politeness</td><td class="center" id="valPoliteness">-</td></tr>
+                    <tr><td>Neatness</td><td class="center" id="valNeatness">-</td><td>Honesty</td><td class="center" id="valHonesty">-</td></tr>
+                    <tr><td>Creativity</td><td class="center" id="valCreativity">-</td><td>Cooperation</td><td class="center" id="valCooperation">-</td></tr>
+                    <tr><td>Sports/Games</td><td class="center" id="valSports">-</td><td>Self-Control</td><td class="center" id="valSelfControl">-</td></tr>
+                    <tr><td>Attendance (%)</td><td class="center" id="valAttendance">-</td><td>Leadership</td><td class="center" id="valLeadership">-</td></tr>
+                </tbody>
+             </table>
+        </section>
+
+
+        <section class="summary-section">
+            <div class="section-title">PERFORMANCE SUMMARY</div>
+            <div class="summary-grid">
+                <div><strong>Total Score:</strong> <span id="summaryTotalScore"></span> / <span id="summaryTotalObtainable"></span></div>
+                <div><strong>Overall Percentage:</strong> <span id="summaryOverallPercentage" class="bold"></span></div>
+                <div><strong>Overall Grade:</strong> <span id="summaryOverallGrade" class="final-grade"></span></div>
+                <div><strong>Position in Class:</strong> <span id="summaryPosition">N/A</span></div>
+            </div>
+        </section>
+
+        <section class="comments-section">
+            <div class="section-title">COMMENTS</div>
+            <div>
+                <strong>Class Teacher's Comment:</strong>
+                <p id="teacherComment">A promising student with potential for further improvement. Consistent effort is key.</p>
+            </div>
+            <div>
+                <strong>Principal's/Director's Comment:</strong>
+                <p id="principalComment">Good performance. Keep up the hard work and strive for excellence in all endeavors.</p>
+            </div>
+        </section>
+        
+        <div class="print-button-container">
+            <button onclick="window.print()" class="print-button">Print Report Card</button>
+        </div>
+
+        <footer class="report-footer">
+            Sealed Nectar Academy - Striving for Excellence and Piety. Generated on: <span id="generationDate"></span>
+        </footer>
+    </div>
+
+    <script>
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const reportCardContent = document.getElementById('reportCardContent');
+
+        // Helper function to get query parameters
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Function to calculate grade and remark based on score (percentage)
+        function getGradeAndRemark(percentage) {
+            if (percentage >= 90) return { grade: 'A1', remark: 'Excellent' };
+            if (percentage >= 80) return { grade: 'A2', remark: 'Very Good' };
+            if (percentage >= 70) return { grade: 'B2', remark: 'Good' };
+            if (percentage >= 65) return { grade: 'B3', remark: 'Credit' };
+            if (percentage >= 60) return { grade: 'C4', remark: 'Credit' };
+            if (percentage >= 55) return { grade: 'C5', remark: 'Pass' };
+            if (percentage >= 50) return { grade: 'C6', remark: 'Pass' };
+            if (percentage >= 45) return { grade: 'D7', remark: 'Weak Pass' };
+            if (percentage >= 40) return { grade: 'E8', remark: 'Weak Pass' };
+            return { grade: 'F9', remark: 'Fail' };
+        }
+        
+        // Function to populate affective/psychomotor (mock data for now)
+        function populateAffectivePsychomotor(data) {
+            // These would come from `data.affective_ratings` or similar if available
+            document.getElementById('valPunctuality').textContent = data.affective_psychomotor?.punctuality || '4';
+            document.getElementById('valNeatness').textContent = data.affective_psychomotor?.neatness || '5';
+            document.getElementById('valCreativity').textContent = data.affective_psychomotor?.creativity || '4';
+            document.getElementById('valSports').textContent = data.affective_psychomotor?.sports || '3';
+            document.getElementById('valAttendance').textContent = data.affective_psychomotor?.attendance_percentage || '95%';
+            document.getElementById('valPoliteness').textContent = data.affective_psychomotor?.politeness || '5';
+            document.getElementById('valHonesty').textContent = data.affective_psychomotor?.honesty || '5';
+            document.getElementById('valCooperation').textContent = data.affective_psychomotor?.cooperation || '4';
+            document.getElementById('valSelfControl').textContent = data.affective_psychomotor?.self_control || '4';
+            document.getElementById('valLeadership').textContent = data.affective_psychomotor?.leadership || '3';
+        }
+
+
+        async function loadReportData() {
+            const studentId = getQueryParam('studentId');
+            const term = getQueryParam('term');
+            const session = getQueryParam('session');
+
+            if (!studentId || !term || !session) {
+                loadingMessage.classList.add('hidden');
+                errorMessage.textContent = 'Missing required parameters (student, term, or session) to generate report.';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Fetch report data from the backend
+                // This endpoint needs to be created in results.js
+                const response = await fetch(`/api/exam-results/compile-report?studentId=${studentId}&term=${term}&session=${session}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `Failed to load report data (Status: ${response.status})`);
+                }
+
+                const reportData = await response.json();
+                console.log("Report Data Received:", reportData);
+
+
+                // Populate student information
+                document.getElementById('studentName').textContent = `${reportData.student.first_name || ''} ${reportData.student.last_name || ''}`;
+                document.getElementById('admissionNumber').textContent = reportData.student.admission_number || 'N/A';
+                document.getElementById('studentClass').textContent = reportData.student.class_level || 'N/A';
+                document.getElementById('reportTerm').textContent = reportData.term || term; // Use fetched term if available
+                document.getElementById('reportSession').textContent = reportData.session || session; // Use fetched session
+                if(reportData.student.profile_picture_url) {
+                    document.getElementById('studentProfilePic').src = reportData.student.profile_picture_url;
+                } else {
+                    document.getElementById('studentProfilePic').src = `https://placehold.co/100x100/ccc/333?text=${(reportData.student.first_name||'S').charAt(0)}`;
+                }
+                // Add DOB, Gender, Next Term from reportData if available
+                document.getElementById('studentDOB').textContent = reportData.student.dob || 'N/A';
+                document.getElementById('studentGender').textContent = reportData.student.gender || 'N/A';
+                document.getElementById('nextTermDate').textContent = reportData.school_info?.next_term_begins || 'To be announced';
+                document.getElementById('schoolName').textContent = reportData.school_info?.name || 'SEALED NECTAR ACADEMY';
+                document.getElementById('schoolAddress').textContent = reportData.school_info?.address || '15, Nasirudeen Street, Off CDA Road, Off Ikola Road, Ota, Ogun State.';
+                document.getElementById('schoolContact').textContent = reportData.school_info?.contact || '080865257209 | sealednec@gmail.com';
+
+
+                // Populate cognitive ratings (exam results)
+                const cognitiveBody = document.getElementById('cognitiveRatingsBody');
+                cognitiveBody.innerHTML = ''; // Clear any existing rows
+                let currentTotalScore = 0;
+                let currentTotalObtainable = 0;
+
+                if (reportData.exam_results && reportData.exam_results.length > 0) {
+                    reportData.exam_results.forEach(result => {
+                        const row = cognitiveBody.insertRow();
+                        const percentage = parseFloat(result.score); // Assuming score is already percentage
+                        const obtainable = result.total_marks_for_exam || 100; // Default to 100 if not specified
+                        const actualScore = (percentage / 100) * obtainable;
+
+                        const gradeInfo = getGradeAndRemark(percentage);
+
+                        row.insertCell().textContent = result.exam_title;
+                        row.insertCell().textContent = obtainable;
+                        row.insertCell().textContent = actualScore.toFixed(0); // Display actual score based on percentage
+                        row.insertCell().textContent = percentage.toFixed(1) + '%';
+                        row.insertCell().textContent = gradeInfo.grade;
+                        const remarkCell = row.insertCell();
+                        remarkCell.textContent = gradeInfo.remark;
+                        remarkCell.className = percentage >= 50 ? 'remark-pass' : 'remark-fail';
+                        
+                        currentTotalScore += actualScore;
+                        currentTotalObtainable += obtainable;
+                    });
+                } else {
+                    const row = cognitiveBody.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = 6;
+                    cell.textContent = "No exam results found for this period.";
+                    cell.style.textAlign = "center";
+                    cell.style.fontStyle = "italic";
+                }
+
+                // Populate totals in footer
+                document.getElementById('totalObtainable').textContent = currentTotalObtainable.toFixed(0);
+                document.getElementById('totalScore').textContent = currentTotalScore.toFixed(0);
+                const overallPercentageVal = currentTotalObtainable > 0 ? (currentTotalScore / currentTotalObtainable) * 100 : 0;
+                document.getElementById('overallPercentage').textContent = overallPercentageVal.toFixed(1) + '%';
+                const overallGradeInfo = getGradeAndRemark(overallPercentageVal);
+                document.getElementById('overallGrade').textContent = overallGradeInfo.grade;
+
+                // Populate summary section
+                document.getElementById('summaryTotalScore').textContent = currentTotalScore.toFixed(0);
+                document.getElementById('summaryTotalObtainable').textContent = currentTotalObtainable.toFixed(0);
+                document.getElementById('summaryOverallPercentage').textContent = overallPercentageVal.toFixed(1) + '%';
+                document.getElementById('summaryOverallGrade').textContent = overallGradeInfo.grade;
+                document.getElementById('summaryPosition').textContent = reportData.class_position || 'N/A';
+
+
+                // Populate Affective/Psychomotor (using mock data for now, extend with real data)
+                populateAffectivePsychomotor(reportData);
+
+
+                // Populate comments
+                document.getElementById('teacherComment').textContent = reportData.comments?.teacher_comment || 'Keep up the good work!';
+                document.getElementById('principalComment').textContent = reportData.comments?.principal_comment || 'A satisfactory performance. More effort is encouraged.';
+                document.getElementById('generationDate').textContent = new Date().toLocaleDateString();
+
+
+                loadingMessage.classList.add('hidden');
+                reportCardContent.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error loading report card:', error);
+                loadingMessage.classList.add('hidden');
+                errorMessage.textContent = `Error: ${error.message}. Please check console for details.`;
+                errorMessage.classList.remove('hidden');
+            }
+        }
+
+        // Load data when the page is ready
+        window.addEventListener('DOMContentLoaded', loadReportData);
+    </script>
+</body>
+</html>

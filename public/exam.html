@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Take Exam | CBT System</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* General body styling for better centering and background */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6; /* Light grey background */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh; /* Ensure full viewport height */
+    }
+
+    main {
+      flex-grow: 1; /* Allows main content to take available space */
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Center horizontally */
+      justify-content: flex-start; /* Align content to the top */
+      padding-top: 2rem; /* Add some space from the header */
+      padding-bottom: 2rem;
+    }
+
+    /* Header Styling */
+    header nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2.5rem; /* Increased padding for more space */
+      background-color: #007bff; /* Primary color for header */
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+      width: 100%; /* Ensure header spans full width */
+    }
+
+    header nav .logo {
+      font-size: 2rem; /* Slightly larger logo */
+      font-weight: bold;
+      color: white;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    header nav .nav-links {
+      display: flex;
+      align-items: center;
+    }
+
+    header nav .nav-links span {
+      margin-right: 20px; /* More space between username and logout */
+      font-size: 1.15rem;
+      font-weight: 500;
+    }
+
+    header nav .nav-links a {
+      color: white;
+      text-decoration: none;
+      margin-left: 1rem; /* Adjust spacing */
+      font-size: 1.1rem;
+      padding: 0.5rem 1rem; /* Add padding for better click area */
+      border-radius: 5px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    header nav .nav-links a:hover {
+      background-color: rgba(255, 255, 255, 0.2); /* Subtle hover effect */
+      color: white;
+    }
+
+    /* Main Exam Container */
+    .exam-container {
+      max-width: 900px; /* Increased max-width for more content space */
+      width: 95%; /* Responsive width */
+      margin: 2rem auto; /* Centered with vertical margin */
+      padding: 3rem; /* Increased padding */
+      background: #ffffff;
+      border-radius: 15px; /* Softer rounded corners */
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15); /* More prominent shadow */
+      display: flex;
+      flex-direction: column;
+      gap: 2rem; /* Increased gap between sections */
+    }
+
+    .exam-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .exam-title {
+      font-size: 2.5rem; /* Larger title */
+      color: #2c3e50; /* Darker, more professional color */
+      margin-bottom: 0.8rem;
+      font-weight: 700;
+    }
+
+    .exam-description {
+      font-size: 1.2rem;
+      color: #7f8c8d; /* Muted description color */
+      line-height: 1.6;
+    }
+
+    /* Timer Positioning and Styling */
+    .timer-container {
+      width: 100%; /* Spans the full width of exam-container */
+      display: flex;
+      justify-content: center; /* Center the timer text */
+      margin-top: 1.5rem; /* Space below description */
+      margin-bottom: 2rem; /* Space above question section */
+    }
+
+    .timer {
+      font-size: 2.5rem; /* Larger timer text */
+      font-weight: bold;
+      color: #34495e; /* Darker grey */
+      background-color: #ecf0f1; /* Light background for timer */
+      padding: 1.2rem 2.5rem; /* Generous padding */
+      border-radius: 10px;
+      border: 1px solid #bdc3c7; /* Subtle border */
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* Soft shadow */
+      min-width: 200px; /* Ensure consistent width */
+      text-align: center;
+      transition: all 0.3s ease-in-out; /* Smooth transition for color changes */
+    }
+
+    /* Timer color states */
+    .timer.warning {
+      color: #e67e22; /* Orange for warning */
+      border-color: #d35400;
+    }
+
+    .timer.critical {
+      color: #c0392b; /* Red for critical time */
+      border-color: #a52a22;
+      animation: pulse 1s infinite alternate; /* Pulsing animation for critical */
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(1.05); opacity: 0.9; }
+    }
+
+    .question-section {
+      background: #fdfdfd; /* Lighter background for question section */
+      border: 1px solid #ececec;
+      border-radius: 10px; /* Slightly more rounded */
+      padding: 2.5rem; /* More padding */
+      margin-top: 1rem; /* Adjusted margin */
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.03); /* Inner shadow for depth */
+    }
+
+    .question-text {
+      font-size: 1.5rem; /* Larger question text */
+      margin-bottom: 1.8rem;
+      color: #333;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .option-item {
+      margin-bottom: 1.2rem; /* More space between options */
+    }
+
+    .option-label {
+      display: block;
+      padding: 1.2rem 1.5rem; /* More padding */
+      border: 2px solid #e0e0e0; /* Thicker, softer border */
+      border-radius: 8px; /* Slightly more rounded */
+      cursor: pointer;
+      transition: all 0.25s ease-in-out; /* Smoother transition */
+      display: flex;
+      align-items: center;
+      font-size: 1.15rem; /* Slightly larger option text */
+      color: #444;
+      background-color: #fefefe;
+    }
+
+    .option-label:hover {
+      background-color: #f5f5f5;
+      border-color: #c9c9c9;
+      transform: translateY(-2px); /* Slight lift on hover */
+    }
+
+    .option-label input[type="radio"] {
+      margin-right: 1.2rem; /* More space */
+      transform: scale(1.3); /* Slightly larger radio button */
+      accent-color: #007bff; /* Custom color for radio button */
+    }
+
+    .option-label.selected {
+      background-color: #e7f5fe; /* Lighter blue for selected */
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35); /* More pronounced shadow */
+      font-weight: 500;
+      color: #0056b3; /* Darker text for selected */
+    }
+
+    .navigation-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.5rem; /* More space between buttons */
+      margin-top: 2.5rem; /* More space from question section */
+    }
+
+    .navigation-buttons button {
+      flex: 1;
+      padding: 1.2rem 1.8rem; /* More padding for buttons */
+      border: none;
+      border-radius: 9px; /* Softer edges */
+      font-size: 1.15rem;
+      cursor: pointer;
+      transition: background-color 0.25s ease, transform 0.1s ease;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Subtle button shadow */
+    }
+
+    .navigation-buttons button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .prev-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .prev-btn:hover:not(:disabled) {
+      background-color: #5a6268;
+      transform: translateY(-2px);
+    }
+
+    .next-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .next-btn:hover:not(:disabled) {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    .submit-btn {
+      background-color: #28a745; /* Green for submit */
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background-color: #218838;
+      transform: translateY(-2px);
+    }
+
+    .loader {
+      border: 8px solid #f3f3f3; /* Thicker loader border */
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 60px; /* Larger loader */
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin: 80px auto; /* More vertical margin */
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error-message, .info-message {
+      text-align: center;
+      padding: 1.5rem; /* More padding */
+      margin: 2rem auto; /* More vertical margin */
+      border-radius: 10px; /* Softer corners */
+      font-size: 1.15rem;
+      max-width: 650px; /* Increased max width */
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08); /* Subtle shadow */
+    }
+
+    .error-message {
+      background-color: #ffebeb; /* Lighter red background */
+      color: #d32f2f;
+      border: 1px solid #d32f2f;
+    }
+
+    .info-message {
+      background-color: #e0f7fa; /* Lighter blue background */
+      color: #007bff;
+      border: 1px solid #007bff;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Modal for confirmation */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.5); /* Darker overlay */
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(3px); /* Subtle blur for background */
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 35px; /* More padding */
+      border: 1px solid #888;
+      border-radius: 12px; /* Softer rounded corners */
+      width: 90%;
+      max-width: 550px; /* Increased max-width */
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.35); /* More prominent shadow */
+    }
+
+    .modal-content h3 {
+      margin-bottom: 25px; /* More space */
+      color: #333;
+      font-size: 1.8rem; /* Larger heading */
+      font-weight: 600;
+    }
+
+    .modal-content p {
+        font-size: 1.1rem;
+        color: #555;
+        margin-bottom: 30px; /* More space */
+        line-height: 1.6;
+    }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px; /* Space between buttons */
+    }
+
+    .modal-buttons button {
+      padding: 12px 25px; /* More padding */
+      margin: 0; /* Remove default margin */
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 600;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .modal-buttons .confirm-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .modal-buttons .confirm-btn:hover {
+        background-color: #218838;
+        transform: translateY(-2px);
+    }
+
+    .modal-buttons .cancel-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .modal-buttons .cancel-btn:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+    }
+
+    /* Footer styling */
+    footer {
+        text-align: center;
+        padding: 1.5rem;
+        background-color: #343a40; /* Darker footer background */
+        color: #f8f9fa; /* Light text color */
+        font-size: 0.95rem;
+        margin-top: auto; /* Pushes footer to the bottom */
+        width: 100%;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.05); /* Subtle shadow on top */
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="dashboard.html" class="logo">SNA CBT System</a>
+      <div class="nav-links">
+        <span id="navUsername">Guest</span>
+        <a href="#" id="logoutLink">Logout</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div id="loadingIndicator" class="loader"></div>
+    <div id="errorMessage" class="error-message hidden"></div>
+    <div id="infoMessage" class="info-message hidden"></div>
+
+    <div id="examContent" class="exam-container hidden">
+      <div class="exam-header">
+        <h1 class="exam-title" id="examTitle"></h1>
+        <p class="exam-description" id="examDescription"></p>
+        <div class="timer-container">
+            <div class="timer" id="timer"></div>
+        </div>
+      </div>
+
+      <div id="questionDisplay" class="question-section">
+        <p class="question-text" id="questionText"></p>
+        <ul id="optionsList" class="options-list">
+          </ul>
+      </div>
+
+      <div class="navigation-buttons">
+        <button id="prevBtn" class="prev-btn" onclick="showPreviousQuestion()">Previous</button>
+        <button id="nextBtn" class="next-btn" onclick="showNextQuestion()">Next</button>
+        <button id="submitBtn" class="submit-btn hidden" onclick="showSubmitConfirmation()">Submit Exam</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="submitConfirmationModal" class="modal">
+    <div class="modal-content">
+      <h3>Confirm Submission</h3>
+      <p>Are you sure you want to submit the exam? You cannot make changes after submission.</p>
+      <div class="modal-buttons">
+        <button class="confirm-btn" onclick="submitExam()">Yes, Submit</button>
+        <button class="cancel-btn" onclick="hideSubmitConfirmation()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+  </footer>
+
+  <script>
+    let examId;
+    let examData = {}; // Will hold the exam details and questions
+    let currentQuestionIndex = 0;
+    let userAnswers = {}; // Store answers: { questionId: selectedOptionId }
+    let timerInterval;
+    let timeRemaining; // in seconds
+    let totalDuration;
+
+    // Helper functions for showing/hiding elements
+    function showElement(id) { document.getElementById(id)?.classList.remove('hidden'); }
+    function hideElement(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+    // Function to display messages and control view
+    function displayMessage(type, message) {
+        const errorDiv = document.getElementById('errorMessage');
+        const infoDiv = document.getElementById('infoMessage');
+        
+        hideElement('loadingIndicator');
+        hideElement('examContent');
+        
+        if (type === 'error') {
+            errorDiv.textContent = message;
+            showElement('errorMessage');
+            hideElement('infoMessage');
+        } else {
+            infoDiv.textContent = message;
+            showElement('infoMessage');
+            hideElement('errorMessage');
+        }
+    }
+
+    async function loadUserData() {
+        try {
+            const response = await fetch(`/api/users/me`, { credentials: 'include' });
+            if (response.status === 401) {
+                window.location.href = '/login.html';
+                return null;
+            }
+            if (!response.ok) throw new Error('Failed to load user data');
+            const user = await response.json();
+            document.getElementById('navUsername').textContent = user.username || 'User';
+            return user;
+        } catch (error) {
+            console.error('User data error:', error);
+            displayMessage('error', 'Session expired or invalid. Please log in again.');
+            return null;
+        }
+    }
+
+    async function loadExam() {
+        hideElement('examContent');
+        hideElement('errorMessage');
+        hideElement('infoMessage');
+        showElement('loadingIndicator');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        examId = urlParams.get('examId');
+
+        if (!examId) {
+            displayMessage('error', 'No Exam ID provided. Please return to the dashboard.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/exam-session/${examId}/start`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                // This will catch errors like "Exam locked" or "No questions" from the backend
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
+
+            const sessionStartData = await response.json();
+            
+            // **FIXED**: Correctly assign data. The backend returns { exam: {...}, questions: [...] }.
+            // The `questions` array is at the top level, not inside the `exam` object.
+            examData = sessionStartData.exam;
+            examData.questions = sessionStartData.questions;
+
+            // This check is now valid and will prevent the "no questions" error.
+            if (!examData.questions || examData.questions.length === 0) {
+                // This case is already handled by the backend, but this is a good fallback.
+                displayMessage('info', 'This exam has no questions available.');
+                return;
+            }
+            
+            // **MODIFIED**: Since we are not resuming sessions, initialize fresh.
+            userAnswers = {};
+            totalDuration = examData.duration_minutes * 60;
+            timeRemaining = totalDuration;
+
+            // Populate exam details
+            document.getElementById('examTitle').textContent = examData.title;
+            document.getElementById('examDescription').textContent = examData.description;
+
+            // Start the exam
+            renderQuestion();
+            startTimer();
+            hideElement('loadingIndicator');
+            showElement('examContent');
+
+        } catch (error) {
+            console.error('Exam load error:', error);
+            displayMessage('error', `Failed to load exam: ${error.message}`);
+        }
+    }
+
+    function renderQuestion() {
+        const question = examData.questions[currentQuestionIndex];
+        document.getElementById('questionText').textContent = `Q${currentQuestionIndex + 1}: ${question.question_text}`;
+
+        const optionsList = document.getElementById('optionsList');
+        optionsList.innerHTML = '';
+
+        question.options.forEach(option => {
+            const optionItem = document.createElement('li');
+            optionItem.className = 'option-item';
+            const radioId = `option-${question.question_id}-${option.option_id}`;
+            const isSelected = userAnswers[question.question_id] === option.option_id;
+
+            optionItem.innerHTML = `
+                <label for="${radioId}" class="option-label ${isSelected ? 'selected' : ''}">
+                    <input type="radio" id="${radioId}" name="question-${question.question_id}" 
+                           value="${option.option_id}" ${isSelected ? 'checked' : ''} onchange="selectOption('${question.question_id}', '${option.option_id}')">
+                    <span>${option.option_text}</span>
+                </label>
+            `;
+            optionsList.appendChild(optionItem);
+        });
+        updateNavigationButtons();
+    }
+    
+    function selectOption(questionId, optionId) {
+        userAnswers[questionId] = optionId;
+        // Visually update the selected option
+        document.querySelectorAll(`#optionsList .option-label`).forEach(label => label.classList.remove('selected'));
+        const radio = document.querySelector(`input[value="${optionId}"]`);
+        if (radio) {
+            radio.closest('.option-label').classList.add('selected');
+        }
+        // NOTE: The call to save progress has been removed as the feature is incomplete.
+    }
+
+    function updateNavigationButtons() {
+        document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+        document.getElementById('nextBtn').disabled = currentQuestionIndex === examData.questions.length - 1;
+        
+        if (currentQuestionIndex === examData.questions.length - 1) {
+            showElement('submitBtn');
+        } else {
+            hideElement('submitBtn');
+        }
+    }
+
+    function showNextQuestion() {
+        if (currentQuestionIndex < examData.questions.length - 1) {
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+    }
+
+    function showPreviousQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            renderQuestion();
+        }
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        const timerElement = document.getElementById('timer');
+        
+        // Initial display
+        const initialMinutes = Math.floor(timeRemaining / 60);
+        const initialSeconds = timeRemaining % 60;
+        timerElement.textContent = `${initialMinutes}:${initialSeconds < 10 ? '0' : ''}${initialSeconds}`;
+
+        timerInterval = setInterval(() => {
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                timerElement.textContent = 'Time Up!';
+                submitExam(); // Auto-submit when time is up
+                return;
+            }
+            timeRemaining--;
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            // **NEW**: Interactively change timer color based on remaining time
+            timerElement.classList.remove('warning', 'critical');
+            if (timeRemaining <= 60) { // 1 minute
+                timerElement.classList.add('critical');
+            } else if (timeRemaining <= 300) { // 5 minutes
+                timerElement.classList.add('warning');
+            }
+        }, 1000);
+    }
+
+    function showSubmitConfirmation() {
+        document.getElementById('submitConfirmationModal').style.display = 'flex';
+    }
+
+    function hideSubmitConfirmation() {
+        document.getElementById('submitConfirmationModal').style.display = 'none';
+    }
+
+    async function submitExam() {
+        hideSubmitConfirmation();
+        clearInterval(timerInterval);
+        
+        displayMessage('info', 'Submitting your exam, please wait...');
+        
+        const timeTakenSeconds = totalDuration - timeRemaining;
+
+        try {
+            const response = await fetch(`/api/exam-session/${examId}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answers: userAnswers, timeTakenSeconds }),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || "Submission failed");
+            }
+
+            const result = await response.json();
+            // **IMPROVED**: More informative success message
+            displayMessage('info', `Exam submitted successfully! Your score is ${result.score.toFixed(2)}%. You will be redirected to the dashboard shortly.`);
+            setTimeout(() => window.location.href = 'dashboard.html', 4000);
+
+        } catch (error) {
+            console.error('Submission error:', error);
+            displayMessage('error', `Could not submit exam: ${error.message}. Please check your connection.`);
+            startTimer(); // You may want to allow the user to try submitting again
+        }
+    }
+
+    document.getElementById('logoutLink').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch(`/api/users/logout`, { method: 'POST', credentials: 'include' });
+        window.location.href = '/login.html';
+    });
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        const user = await loadUserData();
+        if (user) {
+            loadExam();
+        }
+    });
+  </script>
+</body>
+</html>

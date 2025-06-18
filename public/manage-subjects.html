@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Subjects | CBT System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        main { max-width: 800px; }
+        .management-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        @media (min-width: 768px) {
+            .management-container { grid-template-columns: 2fr 3fr; }
+        }
+        .form-container { background-color: #f8f9fa; padding: 1.5rem; border-radius: var(--border-radius-md); border: 1px solid #dee2e6; }
+        .form-container h2 { margin-top: 0; color: var(--primary-blue); border-bottom: 2px solid var(--secondary-blue); padding-bottom: 0.5rem; margin-bottom: 1.5rem;}
+        .table-container { background: white; padding: 1rem; border-radius: var(--border-radius-md); box-shadow: var(--shadow-soft); }
+        .subjects-table { width: 100%; border-collapse: collapse; }
+        .subjects-table th, .subjects-table td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        .subjects-table th { background-color: var(--primary-blue); color: white; }
+        .subjects-table tr:hover { background-color: #f1f3f5; }
+        .actions-cell button { margin-right: 5px; }
+        .form-actions { display: flex; gap: 10px; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <a href="dashboard.html" class="logo">CBT System</a>
+                <div class="nav-links" id="navLinks"></div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="mainContent">
+        <h1>Manage Subjects</h1>
+        <div id="errorMessage" class="error-message hidden"></div>
+        <div id="successMessage" class="success-message hidden"></div>
+        <div id="loadingIndicator">Loading...</div>
+
+        <div class="management-container hidden">
+            <div class="form-container">
+                <h2 id="formTitle">Add New Subject</h2>
+                <form id="subjectForm">
+                    <input type="hidden" id="subjectId" name="subjectId">
+                    <div class="form-group">
+                        <label for="subjectName">Subject Name *</label>
+                        <input type="text" id="subjectName" name="subjectName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subjectCode">Subject Code *</label>
+                        <input type="text" id="subjectCode" name="subjectCode" placeholder="e.g., MATHS, PHY" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary-btn" id="submitBtn">Add Subject</button>
+                        <button type="button" class="btn secondary-btn" id="cancelBtn" onclick="resetForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <div class="table-container">
+                <table class="subjects-table">
+                    <thead>
+                        <tr>
+                            <th>Subject Name</th>
+                            <th>Code</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjectsTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <footer><p>&copy; 2025 SNA CBT System. All rights reserved.</p></footer>
+
+<script>
+    const form = document.getElementById('subjectForm');
+    const formTitle = document.getElementById('formTitle');
+    const subjectIdInput = document.getElementById('subjectId');
+    const subjectNameInput = document.getElementById('subjectName');
+    const subjectCodeInput = document.getElementById('subjectCode');
+    const submitBtn = document.getElementById('submitBtn');
+    const tableBody = document.getElementById('subjectsTableBody');
+    const errorDiv = document.getElementById('errorMessage');
+    const successDiv = document.getElementById('successMessage');
+
+    function showAlert(type, message) {
+        const div = type === 'error' ? errorDiv : successDiv;
+        div.textContent = message;
+        div.classList.remove('hidden');
+        setTimeout(() => div.classList.add('hidden'), 5000);
+    }
+
+    async function fetchSubjects() {
+        try {
+            const response = await fetch('/api/subjects', { credentials: 'include' });
+            if (!response.ok) throw new Error('Failed to fetch subjects.');
+            const subjects = await response.json();
+            renderSubjectsTable(subjects);
+        } catch (error) {
+            showAlert('error', error.message);
+        }
+    }
+
+    function renderSubjectsTable(subjects) {
+        tableBody.innerHTML = '';
+        if (subjects.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No subjects found.</td></tr>';
+            return;
+        }
+        subjects.forEach(subject => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${subject.name}</td>
+                <td>${subject.subject_code}</td>
+                <td class="actions-cell">
+                    <button class="btn btn-secondary btn-sm" onclick="showEditForm(${subject.subject_id}, '${subject.name}', '${subject.subject_code}')">Edit</button>
+                    <button class="btn delete-btn btn-sm" onclick="handleDelete(${subject.subject_id})">Delete</button>
+                </td>
+            `;
+        });
+    }
+
+    function showEditForm(id, name, code) {
+        formTitle.textContent = 'Edit Subject';
+        subjectIdInput.value = id;
+        subjectNameInput.value = name;
+        subjectCodeInput.value = code;
+        submitBtn.textContent = 'Save Changes';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        form.reset();
+        formTitle.textContent = 'Add New Subject';
+        subjectIdInput.value = '';
+        submitBtn.textContent = 'Add Subject';
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const id = subjectIdInput.value;
+        const name = subjectNameInput.value;
+        const code = subjectCodeInput.value;
+        const url = id ? `/api/subjects/${id}` : '/api/subjects';
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, subject_code: code }),
+                credentials: 'include'
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error);
+            
+            showAlert('success', `Subject ${id ? 'updated' : 'added'} successfully!`);
+            resetForm();
+            fetchSubjects();
+        } catch (error) {
+            showAlert('error', error.message);
+        }
+    }
+
+    async function handleDelete(id) {
+        if (!confirm('Are you sure you want to delete this subject? This action cannot be undone.')) return;
+        
+        try {
+            const response = await fetch(`/api/subjects/${id}`, { method: 'DELETE', credentials: 'include' });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error);
+
+            showAlert('success', result.message);
+            fetchSubjects();
+        } catch (error) {
+            showAlert('error', error.message);
+        }
+    }
+
+    async function loadPage() {
+        try {
+            const userResponse = await fetch('/api/users/me', { credentials: 'include' });
+            if (!userResponse.ok) window.location.href = '/login.html';
+            const user = await userResponse.json();
+            
+            if (!user.is_admin) {
+                document.getElementById('mainContent').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to manage subjects.</p>';
+                return;
+            }
+            // Create nav links here if needed, or assume a global function
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            document.querySelector('.management-container').classList.remove('hidden');
+            
+            await fetchSubjects();
+            form.addEventListener('submit', handleFormSubmit);
+
+        } catch (error) {
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            showAlert('error', 'Failed to load page. You may not be authorized.');
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadPage);
+</script>
+</body>
+</html>

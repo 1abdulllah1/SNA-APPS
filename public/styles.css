@@ -1,0 +1,442 @@
+/* styles.css */
+/* Reset and Base Styles */
+:root {
+    --primary-blue: #007bff;
+    --secondary-blue: #0056b3; /* Darker blue */
+    --tertiary-blue: #e0f2f7;  /* Light blue accent */
+    --primary-dark-blue: #004085; /* Even darker for hover states */
+    --text-light: #f8f9fa;    /* Off-white for backgrounds or light text */
+    --text-medium: #6c757d;   /* Grey for secondary text */
+    --text-dark: #343a40;     /* Dark grey for primary text */
+    --cream-light: #fff8e1;   /* Light cream for cards */
+    --cream-dark: #ffecb3;    /* Darker cream for borders */
+    --success-green: #28a745;
+    --danger-red: #dc3545;
+    --warning-yellow: #ffc107;
+    --info-blue: #17a2b8;
+
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+
+    --shadow-soft: 0 2px 8px rgba(0,0,0,0.07);
+    --shadow-medium: 0 5px 15px rgba(0,0,0,0.1);
+    --shadow-strong: 0 8px 25px rgba(0,0,0,0.15);
+
+    --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    --transition-fast: all 0.2s ease-in-out;
+    --transition-medium: all 0.3s ease-in-out;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-sans-serif);
+  line-height: 1.6;
+  background-color: #f0f2f5; /* Light grey background for the whole page */
+  color: var(--text-dark);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  background-color: var(--primary-blue);
+  color: var(--text-light);
+  padding: 1rem 0; /* Vertical padding only */
+  box-shadow: var(--shadow-medium);
+}
+
+nav {
+  max-width: 1200px; /* Max width for nav content */
+  margin: 0 auto; /* Center nav content */
+  padding: 0 20px; /* Side padding for nav content */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav .logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-light);
+  text-decoration: none;
+}
+
+nav .nav-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+}
+
+nav .nav-links a, nav .nav-links .nav-link {
+  color: var(--text-light);
+  text-decoration: none;
+  margin-left: 20px;
+  padding: 8px 15px;
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+nav .nav-links a:hover, nav .nav-links .nav-link:hover, nav .nav-links a.active {
+  background-color: var(--secondary-blue);
+  /* color: var(--primary-blue); */
+}
+
+main {
+  flex: 1; /* Allow main to grow and push footer down */
+  max-width: 1200px;
+  width: 100%;
+  margin: 2rem auto; /* Top/bottom margin, centered */
+  padding: 0 20px; /* Side padding for content */
+}
+
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  background-color: var(--text-dark);
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-top: auto; /* Pushes footer to bottom */
+}
+
+h1, h2, h3 {
+  margin-bottom: 1rem;
+  color: var(--primary-blue); /* Consistent heading color */
+}
+h1 { font-size: 2.2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.5rem; }
+
+
+/* Form Elements Styling */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+.form-group label.checkbox-label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    color: var(--text-medium);
+}
+.form-group label.checkbox-label input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.1);
+}
+.form-group label.checkbox-label a {
+    color: var(--primary-blue);
+    text-decoration: none;
+}
+.form-group label.checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+  width: 100%;
+  padding: 12px 15px; /* Increased padding */
+  border: 1px solid #ced4da;
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  background-color: #fff; /* Ensure background is white */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Button Styling */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.primary-btn, .btn-primary { /* Added .btn-primary for consistency */
+  background-color: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
+}
+.primary-btn:hover, .btn-primary:hover {
+  background-color: var(--secondary-blue);
+  border-color: var(--secondary-blue);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.secondary-btn, .btn-secondary {
+  background-color: var(--text-medium);
+  color: white;
+  border-color: var(--text-medium);
+}
+.secondary-btn:hover, .btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+.delete-btn, .btn-danger {
+  background-color: var(--danger-red);
+  color: white;
+  border-color: var(--danger-red);
+}
+.delete-btn:hover, .btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.btn-success {
+  background-color: var(--success-green);
+  color: white;
+  border-color: var(--success-green);
+}
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+.btn-info {
+  background-color: var(--info-blue);
+  color: white;
+  border-color: var(--info-blue);
+}
+.btn-info:hover {
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+
+/* Password Strength Meter */
+.password-strength {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: var(--border-radius-sm);
+  margin-top: 8px;
+  overflow: hidden; /* Ensure inner bar doesn't overflow */
+}
+.strength-bar {
+  height: 100%;
+  width: 0%; /* Initial width */
+  background-color: var(--danger-red); /* Default to weak */
+  transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+#passwordCriteria {
+    font-size: 0.8em;
+    color: var(--text-medium);
+    margin-top: 4px;
+}
+
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+
+/* Error and Success Messages (Global Inline) */
+.error-message, .success-message-inline {
+  padding: 10px 15px;
+  margin-bottom: 1rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+}
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+.success-message-inline {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+}
+
+
+/* Modal Styling (Basic - for custom alerts/confirms) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5); /* Dim background */
+  justify-content: center; /* For flex display */
+  align-items: center; /* For flex display */
+}
+.modal.active {
+  display: flex; /* Use flex to center content */
+}
+.modal-content {
+  background-color: #fff;
+  margin: auto;
+  padding: 25px 30px;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-strong);
+  width: 90%;
+  max-width: 450px; /* Max width for modals */
+  text-align: center;
+  animation: modalAppear 0.3s ease-out;
+}
+@keyframes modalAppear {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+}
+.modal-title-success { color: var(--success-green); }
+.modal-title-error { color: var(--danger-red); }
+.modal-title-info { color: var(--primary-blue); }
+.modal-title-confirm { color: var(--text-dark); }
+
+.modal-content p {
+  margin-bottom: 20px;
+  font-size: 1rem;
+  color: var(--text-medium);
+}
+.modal-buttons {
+  display: flex;
+  justify-content: center; /* Center buttons */
+  gap: 15px; /* Space between buttons */
+}
+.modal-buttons .btn {
+  min-width: 100px; /* Ensure buttons have some width */
+}
+
+/* Specific for registration success message */
+.success-message-modal {
+    position: fixed;
+    top: -100px; /* Start off-screen */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--success-green);
+    color: white;
+    padding: 15px 25px;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-medium);
+    z-index: 1001; /* Above other modals if any */
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0;
+    transition: opacity 0.4s ease, top 0.4s ease;
+}
+.success-message-modal.show {
+    opacity: 1;
+    top: 30px; /* Slide in from top */
+}
+.success-message-modal .checkmark { /* Ensure checkmark is visible */
+    width: 30px; height: 30px;
+}
+.success-message-modal .checkmark-circle { stroke: #fff; } /* White circle on green bg */
+.success-message-modal .checkmark-check { stroke: #fff; } /* White check on green bg */
+
+
+/* Table Styling Enhancements */
+.table-responsive {
+    overflow-x: auto; /* Allow horizontal scrolling on small screens */
+    margin-bottom: 1rem;
+}
+table {
+    width: 100%;
+    border-collapse: collapse; /* Ensure borders are neat */
+    margin-bottom: 1rem; /* Space below tables */
+    background-color: #fff; /* Default background for tables */
+    box-shadow: var(--shadow-soft);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden; /* To make border-radius work with <th> */
+}
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6; /* Light border for rows */
+}
+th {
+    background-color: var(--primary-blue); /* Header background */
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase; /* Optional: Uppercase headers */
+    font-size: 0.9em;
+}
+tr:nth-child(even) {
+    background-color: #f8f9fa; /* Zebra striping for readability */
+}
+tr:hover {
+    background-color: #e9ecef; /* Hover effect for rows */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  nav .nav-links {
+    /* Consider a mobile menu solution for many links */
+    /* For now, just allow wrapping or reduce margins */
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  nav .nav-links a, nav .nav-links .nav-link {
+    margin: 5px;
+  }
+  main {
+    margin: 1rem auto;
+    padding: 0 15px;
+  }
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.5rem; }
+
+  .form-grid { /* From registration.html, making it global */
+      grid-template-columns: 1fr; /* Single column on smaller screens */
+  }
+}

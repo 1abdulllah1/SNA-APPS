@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User | CBT System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        main { max-width: 700px; }
+        .auth-container { /* Reusing some styles for consistency */
+            margin: 2rem auto; padding: 2.5rem; background: #ffffff;
+            border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .form-header { text-align: center; margin-bottom: 2rem; }
+        .form-header h1 { font-size: 2rem; color: var(--primary-blue); margin-bottom: 0.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .profile-picture-group { margin-bottom: 1.5rem; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; background-color: #f9f9f9; }
+        #profile_picture_preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #ddd; background-color: #e9ecef; display: block; margin: 0 auto 15px auto; }
+        .checkbox-group label { display: inline-block; margin-right: 15px;}
+    </style>
+</head>
+<body>
+    <header>
+      <nav>
+        <div class="nav-container"> <a href="dashboard.html" class="logo">CBT System</a> <div class="nav-links" id="navLinks"> <a href="#" id="logoutLinkNavEditUser" style="display:none;">Logout</a></div> </div>
+      </nav>
+    </header>
+    <main>
+        <div class="auth-container">
+            <div class="form-header"> <h1>Edit User Profile</h1> <p id="editingUserIdentifier"></p> </div>
+            <div id="loadingIndicatorUserEdit" style="text-align:center; padding:20px;">Loading user data...</div>
+            <div id="formUserEditError" class="error-message hidden"></div>
+
+            <form id="editUserForm" class="hidden" enctype="multipart/form-data">
+                <input type="hidden" id="userId" name="userId">
+                
+                <div class="form-grid">
+                    <div class="form-group"> <label for="edit_first_name">First Name *</label> <input type="text" id="edit_first_name" name="first_name" required> </div>
+                    <div class="form-group"> <label for="edit_last_name">Last Name *</label> <input type="text" id="edit_last_name" name="last_name" required> </div>
+                </div>
+                <div class="form-group"> <label for="edit_email">Email *</label> <input type="email" id="edit_email" name="email" required> </div>
+                <div class="form-group"> <label for="edit_username">Username</label> <input type="text" id="edit_username" name="username"> </div>
+                
+                <div class="form-group">
+                    <label for="edit_role">Role *</label>
+                    <select id="edit_role" name="role" required onchange="toggleEditStudentFields()">
+                        <option value="student">Student</option> <option value="teacher">Teacher</option> <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div id="editStudentFields" class="hidden">
+                    <div class="form-group"> <label for="edit_admission_number">Admission Number</label> <input type="text" id="edit_admission_number" name="admission_number" placeholder="SNA/YY/001"> </div>
+                    <div class="form-group">
+                        <label for="edit_class_level">Class Level</label>
+                        <select id="edit_class_level" name="class_level">
+                            <option value="">Select Class...</option>
+                            <option value="Primary 1">Primary 1</option><option value="Primary 2">Primary 2</option><option value="Primary 3">Primary 3</option>
+                            <option value="Primary 4">Primary 4</option><option value="Primary 5">Primary 5</option><option value="Primary 6">Primary 6</option>
+                            <option value="JSS 1">JSS 1</option><option value="JSS 2">JSS 2</option><option value="JSS 3">JSS 3</option>
+                            <option value="SS 1">SS 1</option><option value="SS 2">SS 2</option><option value="SS 3">SS 3</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"> <label for="edit_dob">Date of Birth</label> <input type="date" id="edit_dob" name="dob"> </div>
+                    <div class="form-group"> <label for="edit_gender">Gender</label> <select id="edit_gender" name="gender"> <option value="">Select Gender...</option> <option value="Male">Male</option> <option value="Female">Female</option> <option value="Other">Other</option></select> </div>
+                </div>
+
+                <div class="form-group profile-picture-group">
+                    <label>Profile Picture</label>
+                    <img id="profile_picture_preview" src="https://placehold.co/120x120/e9ecef/333?text=Pic" alt="Profile Preview">
+                    <input type="file" id="edit_profile_picture" name="profile_picture" accept="image/jpeg, image/png, image/gif" style="margin-top:10px;">
+                    <div class="checkbox-group" style="margin-top:10px;">
+                        <label><input type="checkbox" id="remove_profile_picture" name="remove_profile_picture" value="true"> Remove current picture</label>
+                    </div>
+                </div>
+
+                <fieldset style="margin-top:1.5rem; padding:1rem; border:1px solid #ccc; border-radius:var(--border-radius-sm);">
+                    <legend>Change Password (Optional)</legend>
+                    <div class="form-group checkbox-group">
+                         <label><input type="checkbox" id="change_password_checkbox" name="change_password"> Change Password</label>
+                    </div>
+                    <div id="password_fields" class="hidden">
+                        <div class="form-group"> <label for="edit_password">New Password</label> <input type="password" id="edit_password" name="password" placeholder="Leave blank to keep current"> </div>
+                        <div class="form-group"> <label for="edit_password_confirm">Confirm New Password</label> <input type="password" id="edit_password_confirm" name="password_confirm"> </div>
+                    </div>
+                </fieldset>
+                
+                <div style="margin-top: 2rem; display:flex; justify-content:space-between;">
+                    <button type="button" class="btn secondary-btn" onclick="window.location.href='manage-users.html'">Cancel</button>
+                    <button type="submit" class="btn primary-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    <footer> <p>&copy; 2025 SNA CBT System. All rights reserved.</p> </footer>
+    <script>
+        const urlParamsEdit = new URLSearchParams(window.location.search);
+        const userIdToEdit = urlParamsEdit.get('userId');
+        const editStudentFieldsDiv = document.getElementById('editStudentFields');
+
+        function toggleEditStudentFields() {
+            const role = document.getElementById('edit_role').value;
+            editStudentFieldsDiv.classList.toggle('hidden', role !== 'student');
+            document.getElementById('edit_admission_number').required = (role === 'student');
+            document.getElementById('edit_class_level').required = (role === 'student');
+        }
+        
+        document.getElementById('change_password_checkbox').addEventListener('change', function() {
+            document.getElementById('password_fields').classList.toggle('hidden', !this.checked);
+            if(this.checked) {
+                document.getElementById('edit_password').required = true;
+                document.getElementById('edit_password_confirm').required = true;
+            } else {
+                document.getElementById('edit_password').required = false;
+                document.getElementById('edit_password_confirm').required = false;
+            }
+        });
+
+        async function loadUserForEditing() {
+            if (!userIdToEdit) {
+                document.getElementById('formUserEditError').textContent = "No User ID provided.";
+                document.getElementById('formUserEditError').classList.remove('hidden');
+                document.getElementById('loadingIndicatorUserEdit').style.display = 'none';
+                return;
+            }
+            try {
+                const response = await fetch(`/api/users/${userIdToEdit}`, { credentials: 'include' });
+                if (!response.ok) throw new Error('Failed to load user data for editing.');
+                const user = await response.json();
+
+                document.getElementById('userId').value = user.id;
+                document.getElementById('edit_first_name').value = user.first_name || '';
+                document.getElementById('edit_last_name').value = user.last_name || '';
+                document.getElementById('edit_email').value = user.email || '';
+                document.getElementById('edit_username').value = user.username || '';
+                document.getElementById('edit_role').value = user.role || 'student';
+                document.getElementById('edit_admission_number').value = user.admission_number || '';
+                document.getElementById('edit_class_level').value = user.class_level || '';
+                document.getElementById('edit_dob').value = user.dob || ''; // Assumes YYYY-MM-DD format from backend
+                document.getElementById('edit_gender').value = user.gender || '';
+                document.getElementById('profile_picture_preview').src = user.profile_picture_url || 'https://placehold.co/120x120/e9ecef/333?text=Pic';
+                document.getElementById('editingUserIdentifier').textContent = `Editing: ${user.first_name} ${user.last_name} (${user.username})`;
+
+                toggleEditStudentFields(); // Set visibility based on loaded role
+                document.getElementById('loadingIndicatorUserEdit').style.display = 'none';
+                document.getElementById('editUserForm').classList.remove('hidden');
+            } catch (error) {
+                document.getElementById('formUserEditError').textContent = error.message;
+                document.getElementById('formUserEditError').classList.remove('hidden');
+                document.getElementById('loadingIndicatorUserEdit').style.display = 'none';
+            }
+        }
+
+        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const errorDiv = document.getElementById('formUserEditError');
+            errorDiv.classList.add('hidden'); errorDiv.textContent = '';
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true; submitButton.textContent = 'Saving...';
+
+            const formData = new FormData(form);
+            // If change_password checkbox is not checked, remove password fields from FormData
+            if (!document.getElementById('change_password_checkbox').checked) {
+                formData.delete('password');
+                formData.delete('password_confirm');
+            } else {
+                 if (formData.get('password') !== formData.get('password_confirm')) {
+                    errorDiv.textContent = "New passwords do not match."; errorDiv.classList.remove('hidden');
+                    submitButton.disabled = false; submitButton.textContent = 'Save Changes'; return;
+                 }
+                 if (!formData.get('password')) { // If checked but empty
+                    errorDiv.textContent = "New password cannot be empty if changing password."; errorDiv.classList.remove('hidden');
+                    submitButton.disabled = false; submitButton.textContent = 'Save Changes'; return;
+                 }
+            }
+
+
+            try {
+                const response = await fetch(`/api/users/${userIdToEdit}`, {
+                    method: 'PUT',
+                    body: formData, // FormData handles multipart for file upload
+                    credentials: 'include'
+                });
+                const responseData = await response.json();
+                if (response.ok) {
+                    alert('User updated successfully!');
+                    window.location.href = 'manage-users.html';
+                } else {
+                    errorDiv.textContent = responseData.error || 'Failed to update user.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'An unexpected error occurred: ' + error.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitButton.disabled = false; submitButton.textContent = 'Save Changes';
+            }
+        });
+        
+        async function loadUserDataAndNavForEdit() { /* Similar to other pages, load user for nav */ }
+        window.addEventListener('DOMContentLoaded', () => {
+            // loadUserDataAndNavForEdit(); // Call function to setup nav
+            loadUserForEditing();
+        });
+    </script>
+</body>
+</html>

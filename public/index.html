@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNA CBT System</title>
+  <script>
+    // Handle initial routing
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check if user is authenticated
+      fetch('/api/users/me', {
+        credentials: 'include'
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = '/dashboard.html';
+        } else {
+          window.location.href = '/login.html';
+        }
+      })
+      .catch(() => {
+        window.location.href = '/login.html';
+      });
+    });
+  </script>
+</head>
+<body>
+  <div>Loading application...</div>
+</body>
+</html>

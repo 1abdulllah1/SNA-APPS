@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Exam | CBT System</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    main { max-width: 900px; }
+    .form-grid-col-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .question-card { background: #f8f9ff; border: 1px solid #e0e5ff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #d1d9ff; }
+    .question-header h3 { margin: 0; color: var(--primary-blue); }
+    .delete-question-btn { background-color: var(--danger-red); color: white; border: none; padding: 6px 12px; border-radius: var(--border-radius-sm); cursor: pointer; font-size: 0.9em; }
+    .delete-question-btn:hover { background-color: #c82333; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .add-question-btn-container { margin: 20px 0; }
+    .form-actions { margin-top: 30px; text-align: right; }
+    #totalMarksInfo { margin-top: 10px; font-style: italic; color: var(--text-medium); }
+     .lock-exam-container { display: flex; align-items: center; gap: 10px; background-color: #fff8e1; padding: 10px 15px; border-radius: 8px; border: 1px solid #ffecb3; margin-top: 1.5rem; margin-bottom: 1.5rem; }
+    .lock-exam-container label { margin-bottom: 0; font-weight: 600; color: #6d4c41; }
+    .lock-exam-container input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--danger-red); }
+  </style>
+</head>
+<body>
+  <header> <nav> <div class="nav-container"> <a href="dashboard.html" class="logo">CBT System</a> <div class="nav-links" id="navLinks"> <a href="#" id="logoutLinkNav">Logout</a> </div> </div> </nav> </header>
+  <main>
+    <h1>Create New Exam</h1>
+    <div id="formError" class="error-message hidden"></div>
+    <form id="examForm">
+      <div class="form-group"> <label for="title">Exam Title *</label> <input type="text" id="title" name="title" placeholder="e.g., Mathematics Mid-Term Test" required> </div>
+      <div class="form-grid-col-3">
+        <div class="form-group"> <label for="subject">Subject *</label> <select id="subject" name="subject_id" required> <option value="">Loading subjects...</option> </select> </div>
+        <div class="form-group"> <label for="exam_type">Exam Type *</label> <select id="exam_type" name="exam_type" required> <option value="">Select type...</option> <option value="CA1">Continuous Assessment 1</option> <option value="CA2">Continuous Assessment 2</option> <option value="CA3">Continuous Assessment 3</option> <option value="CA4">Continuous Assessment 4</option> <option value="MID_TERM">Mid-Term Exam</option> <option value="MAIN_EXAM">Main Exam (End of Term)</option> <option value="OTHER_CA">Other CA</option> </select> </div>
+        <div class="form-group"> <label for="max_score">Max Score for this Exam/CA *</label> <input type="number" id="max_score" name="max_score" min="1" placeholder="e.g., 20 or 60" required> <small id="totalMarksInfo">Sum of question marks should match this.</small> </div>
+      </div>
+      <div class="form-grid-col-3">
+        <div class="form-group"> <label for="term">Term *</label> <select id="term" name="term" required> <option value="">Select term...</option> <option value="FIRST">First Term</option> <option value="SECOND">Second Term</option> <option value="THIRD">Third Term</option> </select> </div>
+        <div class="form-group"> <label for="session">Session *</label> <input type="text" id="session" name="session" placeholder="YYYY-YYYY (e.g., 2024-2025)" required pattern="\d{4}-\d{4}"> </div>
+        <div class="form-group"> <label for="duration">Duration (minutes) *</label> <input type="number" id="duration" name="duration_minutes" min="1" placeholder="e.g., 60" required> </div>
+      </div>
+      <div class="form-group">
+        <label for="class_level">Target Class Level *</label>
+        <select id="class_level" name="class_level" required>
+            <option value="">Select class level...</option>
+            <option value="Primary 1">Primary 1</option><option value="Primary 2">Primary 2</option><option value="Primary 3">Primary 3</option><option value="Primary 4">Primary 4</option><option value="Primary 5">Primary 5</option><option value="Primary 6">Primary 6</option>
+            <option value="JSS 1">JSS 1</option><option value="JSS 2">JSS 2</option><option value="JSS 3">JSS 3</option>
+            <option value="SS 1">SS 1</option><option value="SS 2">SS 2</option><option value="SS 3">SS 3</option>
+            <option value="Any">Any (General)</option>
+        </select>
+      </div>
+      <div class="form-group"> <label for="description">Description (Optional)</label> <textarea id="description" name="description" placeholder="Briefly describe the exam or instructions"></textarea> </div>
+      <div class="lock-exam-container"> <input type="checkbox" id="is_locked" name="is_locked"> <label for="is_locked">Lock this exam immediately upon creation.</label> </div>
+      <h2>Questions</h2>
+      <div id="questionsContainer"></div>
+      <div class="add-question-btn-container"> <button type="button" class="btn primary-btn" onclick="addQuestionField()">Add Question</button> </div>
+      <div class="form-actions"> <button type="button" class="btn secondary-btn" onclick="window.location.href='dashboard.html'">Cancel</button> <button type="submit" class="btn primary-btn">Create Exam</button> </div>
+    </form>
+  </main>
+  <footer> <p>&copy; 2025 SNA CBT System. All rights reserved.</p> </footer>
+<script>
+    let questionFieldCounter = 0;
+    let currentUser = {};
+
+    async function fetchSubjects() {
+        try {
+            const response = await fetch('/api/exams/config/subjects', { credentials: 'include' });
+            if (!response.ok) throw new Error('Failed to load subjects');
+            const subjects = await response.json();
+            const subjectSelect = document.getElementById('subject');
+            subjectSelect.innerHTML = '<option value="">Select subject...</option>';
+            subjects.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.subject_id;
+                option.textContent = `${sub.name} (${sub.subject_code || 'N/A'})`;
+                subjectSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+            displayFormError(error.message);
+        }
+    }
+
+    function addQuestionField() {
+      questionFieldCounter++;
+      const questionsContainer = document.getElementById('questionsContainer');
+      const questionDiv = document.createElement('div');
+      questionDiv.className = 'question-card';
+      questionDiv.dataset.questionId = questionFieldCounter;
+
+      questionDiv.innerHTML = `
+        <div class="question-header"> <h3>Question ${questionsContainer.children.length + 1}</h3> <button type="button" class="delete-question-btn" onclick="deleteQuestionField(${questionFieldCounter})">Delete</button> </div>
+        <div class="form-group"> <label>Question Text *</label> <textarea class="q-text" rows="3" required></textarea> </div>
+        <div class="options-grid">
+          <div class="form-group"><label>Option A *</label><input type="text" class="q-opt-a" required></div>
+          <div class="form-group"><label>Option B *</label><input type="text" class="q-opt-b" required></div>
+          <div class="form-group"><label>Option C *</label><input type="text" class="q-opt-c" required></div>
+          <div class="form-group"><label>Option D *</label><input type="text" class="q-opt-d" required></div>
+        </div>
+        <div class="form-grid-col-3">
+            <div class="form-group"><label>Correct Answer *</label><select class="q-correct" required><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+            <div class="form-group"><label>Marks *</label><input type="number" class="q-marks" min="1" value="1" required></div>
+        </div>
+        <div class="form-group"><label>Explanation (Optional)</label><textarea class="q-explanation" rows="2"></textarea></div>
+      `;
+      questionsContainer.appendChild(questionDiv);
+    }
+
+    function deleteQuestionField(id) {
+      const questionDiv = document.querySelector(`.question-card[data-question-id="${id}"]`);
+      if (questionDiv) {
+        questionDiv.remove();
+        document.querySelectorAll('.question-card h3').forEach((h3, index) => h3.textContent = `Question ${index + 1}`);
+      }
+    }
+    
+    function displayFormError(message) { /* ... */ }
+    function clearFormError() { /* ... */ }
+
+    document.getElementById('examForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearFormError();
+      const submitButton = e.target.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Creating...';
+
+      const examData = {
+        title: document.getElementById('title').value,
+        subject_id: document.getElementById('subject').value,
+        exam_type: document.getElementById('exam_type').value,
+        max_score: parseInt(document.getElementById('max_score').value),
+        term: document.getElementById('term').value,
+        session: document.getElementById('session').value,
+        duration_minutes: parseInt(document.getElementById('duration').value),
+        class_level: document.getElementById('class_level').value,
+        description: document.getElementById('description').value,
+        is_locked: document.getElementById('is_locked').checked,
+        questions: []
+      };
+
+      const questionCards = document.querySelectorAll('.question-card');
+      if (questionCards.length === 0) {
+        displayFormError('Please add at least one question.');
+        submitButton.disabled = false; submitButton.textContent = 'Create Exam';
+        return;
+      }
+      
+      // **FIXED**: Correctly gather data from each question card
+      for (const card of questionCards) {
+          examData.questions.push({
+              question_text: card.querySelector(`.q-text`).value,
+              options: {
+                  A: card.querySelector(`.q-opt-a`).value,
+                  B: card.querySelector(`.q-opt-b`).value,
+                  C: card.querySelector(`.q-opt-c`).value,
+                  D: card.querySelector(`.q-opt-d`).value,
+              },
+              correct_answer: card.querySelector(`.q-correct`).value,
+              marks: parseInt(card.querySelector(`.q-marks`).value),
+              explanation: card.querySelector(`.q-explanation`).value
+          });
+      }
+
+      try {
+        const response = await fetch('/api/exams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(examData),
+          credentials: 'include'
+        });
+        const responseData = await response.json();
+        if (response.ok) {
+          alert('Exam created successfully!');
+          window.location.href = 'dashboard.html';
+        } else {
+          displayFormError(responseData.error || 'Failed to create exam.');
+        }
+      } catch (error) {
+        displayFormError('An unexpected error occurred: ' + error.message);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Create Exam';
+      }
+    });
+    
+    async function loadInitialData() {
+        try {
+            const userResponse = await fetch('/api/users/me', { credentials: 'include' });
+            if (!userResponse.ok) {
+                if (userResponse.status === 401) window.location.href = '/login.html';
+                throw new Error('User not authenticated');
+            }
+            currentUser = await userResponse.json();
+            if (currentUser.role !== 'teacher' && !currentUser.is_admin) {
+                document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to create exams.</p>';
+                return;
+            }
+            await fetchSubjects();
+            addQuestionField();
+        } catch (error) {
+            console.error("Initialization error:", error);
+            displayFormError(error.message || "Failed to initialize page.");
+        }
+    }
+    
+    window.addEventListener('DOMContentLoaded', loadInitialData);
+  </script>
+</body>
+</html>
