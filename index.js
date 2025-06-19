@@ -4,7 +4,9 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const pool = require("./database/db"); // Adjust if your DB file is elsewhere
+const pool = require("./database/db");
+const initializeTables = require('./database/init');
+ // Adjust if your DB file is elsewhere
 
 const app = express();
 
@@ -89,6 +91,9 @@ app.use((err, req, res, next) => {
     error: err.message || 'Internal Server Error'
   });
 });
+
+initializeTables();
+
 
 // Start the server — use '0.0.0.0' for Render
 app.listen(PORT, '0.0.0.0', () => {
