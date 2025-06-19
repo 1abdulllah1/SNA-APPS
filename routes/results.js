@@ -61,55 +61,56 @@ router.get("/", auth, async (req, res) => {
  * FIX: This route is now robust and correctly authorizes users.
  */
 router.get("/:examId", auth, async (req, res) => {
-    try {
-        const { examId } = req.params;
-        const { id: userId, is_admin, role } = req.user;
+  try {
+    const { examId } = req.params;
+    const { id: userId, is_admin, role } = req.user;
 
-        const examQuery = await pool.query("SELECT * FROM exams WHERE exam_id = $1", [examId]);
-        if (examQuery.rows.length === 0) return res.status(404).json({ error: "Exam not found." });
-        const exam = examQuery.rows[0];
+    const examQuery = await pool.query("SELECT * FROM exams WHERE exam_id = $1", [examId]);
+    if (examQuery.rows.length === 0) return res.status(404).json({ error: "Exam not found." });
+    const exam = examQuery.rows[0];
 
-        if (role === 'teacher' && !is_admin && exam.created_by !== userId) {
-            return res.status(403).json({ error: "You are not authorized to view results for this exam." });
-        }
-        
-        const resultsQuery = await pool.query(`
-            SELECT r.*, u.first_name, u.last_name, u.admission_number 
-            FROM exam_results r JOIN users u ON r.student_id = u.id
-            WHERE r.exam_id = $1 ORDER BY r.score DESC`, [examId]
-        );
-        
-        res.json({ exam, results: resultsQuery.rows, viewMode: 'teacher' });
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch exam results." });
+    if (role === 'teacher' && !is_admin && exam.created_by !== userId) {
+      return res.status(403).json({ error: "You are not authorized to view results for this exam." });
     }
-        
-        // --- Student View ---
-        const studentResultQuery = await pool.query(
-            "SELECT * FROM exam_results WHERE exam_id = $1 AND student_id = $2",
-            [examId, userId]
-        );
-        if (studentResultQuery.rows.length === 0) {
-            return res.status(404).json({ error: "You have not submitted this exam, or the result is not available." });
-        }
-        
-        const questionsQuery = await pool.query(
-            `SELECT question_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation
-             FROM questions WHERE exam_id = $1 ORDER BY question_id ASC`,
-            [examId]
-        );
 
-        res.json({
-            exam: { ...exam, ...studentResultQuery.rows[0] }, // Merge exam info with student's specific result
-            questions: questionsQuery.rows,
-            viewMode: 'student'
-        });
+    if (role === 'teacher' || is_admin) {
+      const resultsQuery = await pool.query(`
+        SELECT r.*, u.first_name, u.last_name, u.admission_number 
+        FROM exam_results r JOIN users u ON r.student_id = u.id
+        WHERE r.exam_id = $1 ORDER BY r.score DESC`, [examId]
+      );
 
-    } catch (error) {
-        console.error(`Error fetching results for exam ${examId}:`, error);
-        res.status(500).json({ error: "An internal server error occurred while fetching results." });
+      return res.json({ exam, results: resultsQuery.rows, viewMode: 'teacher' });
     }
+
+    // --- Student View ---
+    const studentResultQuery = await pool.query(
+      "SELECT * FROM exam_results WHERE exam_id = $1 AND student_id = $2",
+      [examId, userId]
+    );
+
+    if (studentResultQuery.rows.length === 0) {
+      return res.status(404).json({ error: "You have not submitted this exam, or the result is not available." });
+    }
+
+    const questionsQuery = await pool.query(
+      `SELECT question_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation
+       FROM questions WHERE exam_id = $1 ORDER BY question_id ASC`,
+      [examId]
+    );
+
+    res.json({
+      exam: { ...exam, ...studentResultQuery.rows[0] }, // Merge exam info with student's specific result
+      questions: questionsQuery.rows,
+      viewMode: 'student'
+    });
+
+  } catch (error) {
+    console.error(`Error fetching results for exam ${req.params.examId}:`, error);
+    res.status(500).json({ error: "An internal server error occurred while fetching results." });
+  }
 });
+
 
 // **NEW & FIX**: Get ONE specific result by its own ID (for Students)
 router.get("/by-result/:resultId", auth, async (req, res) => {
