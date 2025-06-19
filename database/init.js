@@ -1,4 +1,6 @@
 const pool = require('./db');
+const bcrypt = require('bcrypt');
+
 
 async function initializeTables() {
   try {
@@ -38,8 +40,34 @@ async function initializeTables() {
     `);
 
     console.log("✅ All tables initialized successfully.");
+  await createDefaultUser(); // ← add this
   } catch (error) {
     console.error("❌ Error initializing tables:", error);
+  }
+}
+
+async function createDefaultUser() {
+  try {
+    const email = 'sealednec@gmail.com'; // Change if you want
+    const username = 'Abu';
+    const role = 'admin';
+    const password = 'abusumayah'; // Change this too (IMPORTANT)
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Check if user already exists
+    const userExists = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+
+    if (userExists.rows.length === 0) {
+      await pool.query(
+        `INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4)`,
+        [username, email, hashedPassword, 'admin']
+      );
+      console.log('✅ Default admin user created.');
+    } else {
+      console.log('ℹ️ Default user already exists.');
+    }
+  } catch (error) {
+    console.error('❌ Error creating default user:', error);
   }
 }
 
