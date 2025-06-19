@@ -9,7 +9,7 @@ const pool = require("./database/db"); // Adjust if your DB file is elsewhere
 const app = express();
 
 // Use the port Render provides OR fallback to 3000 for local development
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cookieParser());
