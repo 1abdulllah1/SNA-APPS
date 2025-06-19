@@ -3,45 +3,41 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs'); // fs is already required
-const pool = require("./database/db"); // Assuming db.js is in a 'database' folder
+const fs = require('fs');
+const pool = require("./database/db"); // Adjust if your DB file is elsewhere
 
 const app = express();
-const PORT = process.env.PORT;
+
+// Use the port Render provides OR fallback to 3000 for local development
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cookieParser());
-app.use(express.json()); // For parsing application/json
-app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// CORS Configuration - ensure your frontend origin is allowed
+// CORS - allow frontend to connect
 app.use(cors({
-  origin: ['http://localhost:5000', 'http://127.0.0.1:5000'], // Adjust if your frontend runs on a different port during dev
+  origin: ['http://localhost:5000', 'http://127.0.0.1:5000'], // Add deployed frontend URL when available
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Request logging (optional, for debugging)
+// Request Logger
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  if (req.method === 'POST' || req.method === 'PUT') {
-    // console.log('Request Body:', req.body); // Be cautious logging sensitive data
-  }
   next();
 });
 
-// Serve static files from 'public' directory (HTML, CSS, JS, images)
-// This includes the profile pictures in public/uploads/profile_pictures
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 // API Routes
 const examRoutes = require("./routes/exams");
-const questionRoutes = require("./routes/questions"); // Assuming you have this
-const examSessionRoutes = require("./routes/examSession"); // Assuming you have this
+const questionRoutes = require("./routes/questions");
+const examSessionRoutes = require("./routes/examSession");
 const userRoutes = require("./routes/users");
-
 const subjectRoutes = require('./routes/subjects');
 const resultRoutes = require("./routes/results");
 
@@ -52,8 +48,7 @@ app.use("/api/users", userRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use("/api/exam-results", resultRoutes);
 
-
-// Health check endpoint
+// Health check
 app.get("/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -72,39 +67,32 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// SPA Fallback: Serve index.html for any route not handled above
-// This is important for client-side routing in your SPA.
+// Fallback for client-side routing (SPA)
 app.get('*', (req, res) => {
-  // Check if the request is for an API route one last time (shouldn't be necessary if routes are defined before this)
   if (req.originalUrl.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found.' });
   }
-  
-  // Otherwise, serve the main HTML file for the SPA
+
   const indexPath = path.join(__dirname, 'public', 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    // Fallback if index.html doesn't exist in public (should not happen in a correct setup)
-    res.status(404).send('Main application HTML file not found. Please ensure `public/index.html` exists.');
+    res.status(404).send('Main HTML file not found.');
   }
 });
 
-// Global error handling middleware (must be last)
+// Global error handler
 app.use((err, req, res, next) => {
   console.error(`[GLOBAL ERROR HANDLER] ${err.stack}`);
-  // Check if headers have already been sent
-  if (res.headersSent) {
-    return next(err); // Delegate to default Express error handler
-  }
-  res.status(err.status || 500).json({ 
-    error: err.message || 'Internal Server Error' 
+  if (res.headersSent) return next(err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error'
   });
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start the server — use '0.0.0.0' for Render
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📁 Serving static files from: ${path.join(__dirname, 'public')}`);
-  console.log(`🔗 Access the app at: http://localhost:${PORT}/login.html (or your main entry point)`);
+  console.log(`🔗 Access the app at: http://localhost:${PORT}/login.html`);
 });
