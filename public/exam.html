@@ -453,8 +453,11 @@
     let currentQuestionIndex = 0;
     let userAnswers = {}; // Store answers: { questionId: selectedOptionId }
     let timerInterval;
+     let progressSaveInterval;
     let timeRemaining; // in seconds
     let totalDuration;
+
+   
 
     // Helper functions for showing/hiding elements
     function showElement(id) { document.getElementById(id)?.classList.remove('hidden'); }
@@ -478,6 +481,7 @@
             hideElement('errorMessage');
         }
     }
+  
 
     async function loadUserData() {
         try {
@@ -495,6 +499,14 @@
             displayMessage('error', 'Session expired or invalid. Please log in again.');
             return null;
         }
+    }
+
+    // --- STATUS INDICATOR ---
+    function showSaveStatus(isSuccess) {
+        const statusEl = document.getElementById('saveStatus');
+        statusEl.textContent = isSuccess ? 'Progress Saved' : 'Save Failed';
+        statusEl.className = `status-indicator visible ${isSuccess ? '' : 'error'}`;
+        setTimeout(() => statusEl.classList.remove('visible'), 2000);
     }
 
     async function loadExam() {
@@ -529,6 +541,25 @@
             // The `questions` array is at the top level, not inside the `exam` object.
             examData = sessionStartData.exam;
             examData.questions = sessionStartData.questions;
+
+            // **NEW**: Check for and load saved progress
+            if (data.session && data.session.progress) {
+                userAnswers = data.session.progress;
+                timeRemaining = data.session.timeRemaining;
+                console.log("Resuming session with saved progress.");
+            } else {
+                userAnswers = {};
+                timeRemaining = examData.duration_minutes * 60;
+            }
+
+            document.getElementById('examTitle').textContent = examData.title;
+            renderQuestion();
+            startTimer();
+            // **NEW**: Start auto-saving progress
+            progressSaveInterval = setInterval(saveProgress, 15000); // Save every 15 seconds
+
+            showLoading(false);
+            document.getElementById('examContent').classList.remove('hidden');
 
             // This check is now valid and will prevent the "no questions" error.
             if (!examData.questions || examData.questions.length === 0) {
@@ -704,5 +735,6 @@
         }
     });
   </script>
+  <script src="/js/auth.js"></script>
 </body>
 </html>

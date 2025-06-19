@@ -18,6 +18,18 @@ router.post("/:examId/start", auth, async (req, res) => {
   }
 });
 
+// **NEW**: Save Exam Progress
+router.post("/:examId/progress", auth, async (req, res) => {
+    try {
+        const { examId } = req.params;
+        const { answers, timeRemaining } = req.body;
+        const result = await saveExamProgress(req.user.id, parseInt(examId), answers, timeRemaining);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message || "Failed to save progress." });
+    }
+});
+
 
 router.post("/:examId/submit", auth, async (req, res) => {
   try {
