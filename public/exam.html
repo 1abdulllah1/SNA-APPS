@@ -501,6 +501,14 @@
         }
     }
 
+     function showLoading(isLoading) { document.getElementById('loadingIndicator').style.display = isLoading ? 'block' : 'none'; }
+    function displayMessage(type, message) {
+        const banner = document.getElementById('messageBanner');
+        banner.className = `message-banner ${type}`;
+        banner.textContent = message;
+        banner.classList.remove('hidden');
+    }
+
     // --- STATUS INDICATOR ---
     function showSaveStatus(isSuccess) {
         const statusEl = document.getElementById('saveStatus');
@@ -524,10 +532,10 @@
         }
 
         try {
-            const response = await fetch(`/api/exam-session/${examId}/start`, {
-                method: 'POST',
-                credentials: 'include'
-            });
+            const response = await fetch(`/api/exam-session/${examId}/start`, { method: 'POST', credentials: 'include' });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || "Failed to start exam.");
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));

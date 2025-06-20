@@ -14,27 +14,47 @@ exports.startExamSession = async (userId, examId) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const examResult = await client.query("SELECT *, updated_at as version_timestamp FROM exams WHERE exam_id = $1", [examId]);
+
+        // 1. Fetch exam details, including the crucial updated_at timestamp.
+        const examResult = await client.query(
+            "SELECT *, updated_at as version_timestamp FROM exams WHERE exam_id = $1",
+            [examId]
+        );
         if (examResult.rows.length === 0) throw new Error("Exam not found.");
         const exam = examResult.rows[0];
 
         if (exam.is_locked) throw new Error("This exam is currently locked by the administrator.");
 
-        // **INTELLIGENT RETAKE LOGIC**
+        // 2. Check for a previous SUBMITTED result to handle retakes.
         const previousSubmission = await client.query(
             "SELECT exam_version_timestamp FROM exam_results WHERE student_id = $1 AND exam_id = $2",
             [userId, examId]
         );
+
+        let isRetake = false;
         if (previousSubmission.rows.length > 0) {
             const lastSubmissionVersion = new Date(previousSubmission.rows[0].exam_version_timestamp).getTime();
             const currentExamVersion = new Date(exam.version_timestamp).getTime();
+            
             if (currentExamVersion <= lastSubmissionVersion) {
-                throw new Error("You have already completed the most recent version of this exam. A retake is only allowed if the teacher has updated it.");
+                throw new Error("You have already completed the most recent version of this exam. A retake is only allowed if the exam has been updated.");
             }
+            isRetake = true; // Mark this attempt as an authorized retake.
         }
         
-        const inProgressSession = await client.query("SELECT * FROM exam_sessions WHERE user_id = $1 AND exam_id = $2 AND end_time IS NULL", [userId, examId]);
-        const questionsResult = await client.query("SELECT * FROM questions WHERE exam_id = $1 ORDER BY RANDOM()", [examId]);
+        // 3. Check for an IN-PROGRESS session to resume from.
+        // This logic is for resuming a session that was never submitted (e.g., browser crash).
+        const inProgressSession = await client.query(
+            "SELECT * FROM exam_sessions WHERE user_id = $1 AND exam_id = $2 AND end_time IS NULL",
+            [userId, examId]
+        );
+
+        // 4. Fetch questions (shuffled).
+        const questionsResult = await client.query(
+            `SELECT question_id, question_text, option_a, option_b, option_c, option_d, marks 
+             FROM questions WHERE exam_id = $1 ORDER BY RANDOM()`,
+            [examId]
+        );
         if (questionsResult.rows.length === 0) throw new Error("This exam has no questions available.");
         
         const transformedQuestions = questionsResult.rows.map(q => ({
@@ -42,22 +62,41 @@ exports.startExamSession = async (userId, examId) => {
             options: [
                 { option_id: 'a', option_text: q.option_a }, { option_id: 'b', option_text: q.option_b },
                 { option_id: 'c', option_text: q.option_c }, { option_id: 'd', option_text: q.option_d }
-            ]
+            ],
+            marks: q.marks
         }));
 
         let sessionData = {};
-        if (inProgressSession.rows.length > 0) {
-            sessionData = { progress: inProgressSession.rows[0].progress || {}, timeRemaining: inProgressSession.rows[0].time_remaining_seconds };
+        
+        // **FIX**: If this is an authorized retake, we must delete the old session record first.
+        if (isRetake) {
+            await client.query(
+                "DELETE FROM exam_sessions WHERE user_id = $1 AND exam_id = $2",
+                [userId, examId]
+            );
+        }
+
+        if (!isRetake && inProgressSession.rows.length > 0) {
+            // --- RESUME A PREVIOUSLY UNFINISHED SESSION ---
+            sessionData = {
+                progress: inProgressSession.rows[0].progress || {},
+                timeRemaining: inProgressSession.rows[0].time_remaining_seconds,
+            };
         } else {
-            await client.query("INSERT INTO exam_sessions (user_id, exam_id, start_time, time_remaining_seconds) VALUES ($1, $2, NOW(), $3)", [userId, examId, exam.duration_minutes * 60]);
+            // --- START A COMPLETELY NEW SESSION (or a retake after deletion) ---
+            await client.query(
+                `INSERT INTO exam_sessions (user_id, exam_id, start_time, time_remaining_seconds) VALUES ($1, $2, NOW(), $3)`,
+                [userId, examId, exam.duration_minutes * 60]
+            );
         }
         
         await client.query('COMMIT');
         return { exam, questions: transformedQuestions, session: sessionData };
+
     } catch (error) {
         await client.query('ROLLBACK');
         console.error("Exam start/resume service error:", error);
-        throw error;
+        throw error; // Re-throw to be handled by the route
     } finally {
         client.release();
     }
