@@ -371,6 +371,16 @@ router.delete("/:userId", auth, async (req, res) => {
         client.release();
     }
 });
+router.get('/debug-users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, username, email, role FROM users');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 // LOGOUT USER
 router.post("/logout", (req, res) => {

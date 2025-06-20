@@ -6,6 +6,10 @@ const path = require('path');
 const fs = require('fs');
 const pool = require("./database/db");
 const initializeTables = require('./database/init');
+
+if (process.env.RUN_INIT === 'true') {
+  initializeTables();  // Only runs if the env variable is set
+}
  // Adjust if your DB file is elsewhere
 
 const app = express();
@@ -91,8 +95,6 @@ app.use((err, req, res, next) => {
     error: err.message || 'Internal Server Error'
   });
 });
-
-initializeTables();
 
 
 // Start the server — use '0.0.0.0' for Render

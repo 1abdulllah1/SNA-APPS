@@ -3,13 +3,11 @@ const { Pool } = require('pg');
 let pool;
 
 if (process.env.DATABASE_URL) {
-  // Use Render PostgreSQL
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
   });
 } else {
-  // Local development settings (optional)
   pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -18,5 +16,7 @@ if (process.env.DATABASE_URL) {
     port: process.env.DB_PORT
   });
 }
+port: parseInt(process.env.DB_PORT, 10)
+
 
 module.exports = pool;
