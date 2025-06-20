@@ -122,55 +122,54 @@ router.get("/:examId", auth, async (req, res) => {
  * FEATURE: This is the powerhouse for the new report card system.
  */
 router.get("/report/compile", auth, async (req, res) => {
-    if (!req.user.is_admin) {
-        return res.status(403).json({ error: "Access denied." });
-    }
+    if (!req.user.is_admin) return res.status(403).json({ error: "Access denied." });
     const { studentId, term, session } = req.query;
+    if (!studentId || !term || !session) return res.status(400).json({ error: "Student, term, and session are required." });
 
-    if (!studentId || !term || !session) {
-        return res.status(400).json({ error: "Student, term, and session are required." });
-    }
-
+    const client = await pool.connect();
     try {
-        const studentQuery = pool.query("SELECT * FROM users WHERE id = $1", [studentId]);
-        const resultsQuery = pool.query(`
-            SELECT s.name AS subject_name, e.exam_type, e.max_score, er.raw_score_obtained
+        const studentQuery = client.query("SELECT * FROM users WHERE id = $1", [studentId]);
+        const resultsQuery = client.query(`
+            SELECT s.name AS subject_name, e.exam_type, er.raw_score_obtained, er.total_possible_marks
             FROM exam_results er
             JOIN exams e ON er.exam_id = e.exam_id
             JOIN subjects s ON e.subject_id = s.subject_id
             WHERE er.student_id = $1 AND e.term = $2 AND e.session = $3
         `, [studentId, term.toUpperCase(), session]);
         
-        // Fetch editable metadata from our new table
-        const metaQuery = pool.query(
-            "SELECT * FROM report_card_meta WHERE student_id = $1 AND term = $2 AND session = $3",
-            [studentId, term.toUpperCase(), session]
-        );
+        const prevTerms = term.toUpperCase() === 'SECOND' ? ['FIRST'] : term.toUpperCase() === 'THIRD' ? ['FIRST', 'SECOND'] : [];
+        const prevResultsQuery = prevTerms.length > 0
+            ? client.query("SELECT term, cumulative_data FROM report_card_meta WHERE student_id = $1 AND session = $2 AND term = ANY($3)", [studentId, session, prevTerms])
+            : Promise.resolve({ rows: [] });
 
-        const [studentRes, resultsRes, metaRes] = await Promise.all([studentQuery, resultsQuery, metaQuery]);
+        const metaQuery = client.query("SELECT * FROM report_card_meta WHERE student_id = $1 AND term = $2 AND session = $3", [studentId, term.toUpperCase(), session]);
+        const [studentRes, resultsRes, metaRes, prevResultsRes] = await Promise.all([studentQuery, resultsQuery, metaQuery, prevResultsQuery]);
 
-        if (studentRes.rows.length === 0) {
-            return res.status(404).json({ error: "Student not found." });
-        }
+        if (studentRes.rows.length === 0) throw new Error("Student not found.");
 
-        // --- Report Card Calculation Logic ---
-        const subjects = {};
+        const subjectsData = {};
         resultsRes.rows.forEach(r => {
-            if (!subjects[r.subject_name]) {
-                subjects[r.subject_name] = { CAs: [], Exam: null };
-            }
-            if (r.exam_type.startsWith('CA')) {
-                subjects[r.subject_name].CAs.push({ score: r.raw_score_obtained, max: r.max_score });
-            } else if (r.exam_type === 'MAIN_EXAM') {
-                subjects[r.subject_name].Exam = { score: r.raw_score_obtained, max: r.max_score };
-            }
+            if (!subjectsData[r.subject_name]) subjectsData[r.subject_name] = { CAs: [], Exam: null };
+            const result = { score: r.raw_score_obtained, max: r.total_possible_marks };
+            if (r.exam_type.startsWith('CA') || r.exam_type === 'MID_TERM') subjectsData[r.subject_name].CAs.push(result);
+            else if (r.exam_type === 'MAIN_EXAM') subjectsData[r.subject_name].Exam = result;
         });
 
+        const previousTermScores = {};
+        prevResultsRes.rows.forEach(row => {
+            if (row.cumulative_data) {
+                row.cumulative_data.forEach(subject => {
+                    if (!previousTermScores[subject.subjectName]) previousTermScores[subject.subjectName] = {};
+                    previousTermScores[subject.subjectName][row.term] = subject.finalScore;
+                });
+            }
+        });
+        
         const CA_WEIGHT = 40;
         const EXAM_WEIGHT = 60;
-        const processedSubjects = Object.entries(subjects).map(([name, scores]) => {
-            const totalCAScore = scores.CAs.reduce((sum, ca) => sum + ca.score, 0);
-            const totalCAMax = scores.CAs.reduce((sum, ca) => sum + ca.max, 0);
+        const processedSubjects = Object.entries(subjectsData).map(([name, scores]) => {
+            const totalCAScore = scores.CAs.reduce((sum, ca) => sum + (ca.score || 0), 0);
+            const totalCAMax = scores.CAs.reduce((sum, ca) => sum + (ca.max || 0), 0);
             const scaledCA = totalCAMax > 0 ? (totalCAScore / totalCAMax) * CA_WEIGHT : 0;
 
             const examScore = scores.Exam?.score || 0;
@@ -180,35 +179,27 @@ router.get("/report/compile", auth, async (req, res) => {
             const finalScore = scaledCA + scaledExam;
             const gradeInfo = getGradeAndRemark(finalScore);
 
+            const firstTermScore = term.toUpperCase() === 'FIRST' ? finalScore.toFixed(1) : (previousTermScores[name]?.FIRST || null);
+            const secondTermScore = term.toUpperCase() === 'SECOND' ? finalScore.toFixed(1) : (previousTermScores[name]?.SECOND || null);
+            const thirdTermScore = term.toUpperCase() === 'THIRD' ? finalScore.toFixed(1) : null;
+            
+            const validScores = [firstTermScore, secondTermScore, thirdTermScore].filter(s => s !== null).map(parseFloat);
+            const cumulativeAvg = validScores.length > 0 ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1) : 'N/A';
+
             return {
-                subjectName: name,
-                caScore: totalCAScore,
-                caMax: totalCAMax,
-                examScore: examScore,
-                examMax: examMax,
-                finalScore: finalScore.toFixed(1),
-                grade: gradeInfo.grade,
-                remark: gradeInfo.remark
+                subjectName: name, ca_scaled: scaledCA.toFixed(1), exam_scaled: scaledExam.toFixed(1), finalScore: finalScore.toFixed(1),
+                firstTerm: firstTermScore, secondTerm: secondTermScore, thirdTerm: thirdTermScore, cumulativeAvg, grade: gradeInfo.grade, remark: gradeInfo.remark
             };
         });
         
-        // --- Combine all data ---
-        const responsePayload = {
-            student: studentRes.rows[0],
-            term,
-            session,
-            subjects: processedSubjects,
-            meta: metaRes.rows[0] || {} // Send existing metadata or an empty object
-        };
-
-        res.json(responsePayload);
-
+        res.json({ student: studentRes.rows[0], term: term.toUpperCase(), session, subjects: processedSubjects, meta: metaRes.rows[0] || {} });
     } catch (error) {
-        console.error("Error compiling report card:", error);
+        console.error("Report compilation error:", error);
         res.status(500).json({ error: "Failed to compile report card data." });
+    } finally {
+        client.release();
     }
 });
-
 /**
  * ROUTE: POST /api/exam-results/report/meta
  * PURPOSE: Saves or updates the editable parts of the report card.
