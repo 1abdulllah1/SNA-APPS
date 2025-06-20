@@ -113,32 +113,7 @@ router.get("/:examId", auth, async (req, res) => {
 
 
 // **NEW & FIX**: Get ONE specific result by its own ID (for Students)
-router.get("/by-result/:resultId", auth, async (req, res) => {
-    try {
-        const { resultId } = req.params;
-        const { id: userId, is_admin } = req.user;
 
-        const resultQuery = await pool.query("SELECT * FROM exam_results WHERE result_id = $1", [resultId]);
-        if (resultQuery.rows.length === 0) return res.status(404).json({ error: "Result not found." });
-        
-        const result = resultQuery.rows[0];
-        // Security: Ensure the user owns the result or is an admin
-        if (result.student_id !== userId && !is_admin) {
-             return res.status(403).json({ error: "You are not authorized to view this result." });
-        }
-
-        const examQuery = await pool.query("SELECT * FROM exams WHERE exam_id = $1", [result.exam_id]);
-        const questionsQuery = await pool.query("SELECT * FROM questions WHERE exam_id = $1", [result.exam_id]);
-        
-        res.json({
-            exam: { ...examQuery.rows[0], ...result },
-            questions: questionsQuery.rows,
-            viewMode: 'student'
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch detailed result." });
-    }
-});
 
 
 /**
@@ -268,5 +243,31 @@ router.post("/report/meta", auth, async (req, res) => {
     }
 });
 
+router.get("/by-result/:resultId", auth, async (req, res) => {
+    try {
+        const { resultId } = req.params;
+        const { id: userId, is_admin } = req.user;
+
+        const resultQuery = await pool.query("SELECT * FROM exam_results WHERE result_id = $1", [resultId]);
+        if (resultQuery.rows.length === 0) return res.status(404).json({ error: "Result not found." });
+        
+        const result = resultQuery.rows[0];
+        // Security: Ensure the user owns the result or is an admin
+        if (result.student_id !== userId && !is_admin) {
+             return res.status(403).json({ error: "You are not authorized to view this result." });
+        }
+
+        const examQuery = await pool.query("SELECT * FROM exams WHERE exam_id = $1", [result.exam_id]);
+        const questionsQuery = await pool.query("SELECT * FROM questions WHERE exam_id = $1", [result.exam_id]);
+        
+        res.json({
+            exam: { ...examQuery.rows[0], ...result },
+            questions: questionsQuery.rows,
+            viewMode: 'student'
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch detailed result." });
+    }
+});
 
 module.exports = router;

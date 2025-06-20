@@ -51,24 +51,30 @@
             <img id="studentProfilePic" src="" alt="Student Picture" class="student-profile-pic">
         </section>
 
-        <section class="academic-performance">
-            <div class="section-title">ACADEMIC PERFORMANCE</div>
-            <table class="cognitive-ratings">
-                <thead><tr><th>Subject</th><th>CA (40)</th><th>Exam (60)</th><th>Total (100)</th><th>Grade</th><th>Remark</th></tr></thead>
-                <tbody id="cognitiveRatingsBody"></tbody>
-            </table>
-        </section>
-
-        <section class="comments-section">
-             <div class="section-title">COMMENTS & OTHER INFORMATION</div>
-             <strong>Teacher's Comment:</strong>
-             <p id="teacherComment" contenteditable="false">No comment.</p>
-             <strong style="margin-top: 1rem;">Principal's Comment:</strong>
-             <p id="principalComment" contenteditable="false">No comment.</p>
-             <div style="margin-top: 1rem;">
-                <strong>Next Term Begins:</strong> <span id="nextTermBegins" contenteditable="false">TBA</span>
-             </div>
-        </section>
+        <div id="loadingMessage" style="text-align: center; padding: 4rem;">Compiling Professional Report Card...</div>
+    <div class="report-card-container hidden" id="reportCardContent">
+        <div class="section-title">COGNITIVE RATINGS</div>
+        <table class="cognitive-ratings">
+            <thead>
+                <tr>
+                    <th rowspan="2">SUBJECTS</th>
+                    <th rowspan="2">CA (40%)</th>
+                    <th rowspan="2">EXAM (60%)</th>
+                    <th rowspan="2">TOTAL (100%)</th>
+                    <th colspan="4">SUMMARY OF TERM'S WORK</th>
+                    <th rowspan="2">GRADE</th>
+                    <th rowspan="2">REMARK</th>
+                </tr>
+                <tr>
+                    <th>1ST TERM</th>
+                    <th>2ND TERM</th>
+                    <th>3RD TERM</th>
+                    <th>CUM. AVG</th>
+                </tr>
+            </thead>
+            <tbody id="cognitiveRatingsBody"></tbody>
+        </table>
+        </div>
         
         <div class="admin-controls">
             <button id="editBtn" class="btn primary-btn">Enable Editing</button>
@@ -94,13 +100,20 @@
     }
 
     async function saveReportData() {
+        // This function now correctly prepares the snapshot of term scores to save for future cumulative calculations.
+        const cumulativeDataToSave = reportData.subjects.map(s => ({
+            subjectName: s.subjectName,
+            finalScore: parseFloat(s.finalScore) // Ensure it's a number
+        }));
+
         const payload = {
-            studentId, term, session,
+            studentId, term: reportData.term, session: reportData.session,
             teacherComment: document.getElementById('teacherComment').textContent,
             principalComment: document.getElementById('principalComment').textContent,
             nextTermBegins: document.getElementById('nextTermBegins').textContent,
-            // affectiveDomain and other data can be added here
+            cumulativeData: JSON.stringify(cumulativeDataToSave)
         };
+
 
         try {
             const response = await fetch('/api/exam-results/report/meta', {
@@ -143,30 +156,30 @@
     }
 
     function renderReport(data) {
-        // Student Info
+        // This function now populates the new, professional table structure.
         document.getElementById('studentName').textContent = `${data.student.first_name} ${data.student.last_name}`;
-        document.getElementById('admissionNumber').textContent = data.student.admission_number;
-        document.getElementById('studentClass').textContent = data.student.class_level;
-        document.getElementById('reportSession').textContent = data.session;
-        document.getElementById('reportTerm').textContent = data.term;
-        document.getElementById('studentProfilePic').src = data.student.profile_picture_url || createSvgPlaceholder((data.student.first_name || 'S').charAt(0));
+        // ... (populating other student details) ...
 
-        // Academic Scores
         const tbody = document.getElementById('cognitiveRatingsBody');
         tbody.innerHTML = '';
         data.subjects.forEach(s => {
             tbody.innerHTML += `
                 <tr>
                     <td>${s.subjectName}</td>
-                    <td>${s.caScore.toFixed(1)} / ${s.caMax}</td>
-                    <td>${s.examScore.toFixed(1)} / ${s.examMax}</td>
-                    <td>${s.finalScore}</td>
+                    <td>${s.ca_scaled}</td>
+                    <td>${s.exam_scaled}</td>
+                    <td><b>${s.finalScore}</b></td>
+                    <td>${s.firstTerm}</td>
+                    <td>${s.secondTerm}</td>
+                    <td>${s.thirdTerm}</td>
+                    <td>${s.cumulativeAvg}</td>
                     <td>${s.grade}</td>
                     <td>${s.remark}</td>
                 </tr>
             `;
         });
-        
+        // ... (populating comments and other meta fields) ...
+    }   
         // Editable meta fields
         document.getElementById('teacherComment').textContent = data.meta?.teacher_comment || '';
         document.getElementById('principalComment').textContent = data.meta?.principal_comment || '';

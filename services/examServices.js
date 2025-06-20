@@ -118,30 +118,27 @@ exports.submitExam = async (userId, examId, answers, timeTakenSeconds) => {
     try {
         await client.query('BEGIN');
         
-        // Fetch exam details to get its current version timestamp
-        const examDetails = await client.query("SELECT updated_at FROM exams WHERE exam_id = $1", [examId]);
+        // Fetch exam details to get its version and, crucially, its type
+        const examDetails = await client.query("SELECT updated_at, exam_type FROM exams WHERE exam_id = $1", [examId]);
         if (examDetails.rows.length === 0) throw new Error("Exam not found for submission.");
-        const examVersionTimestamp = examDetails.rows[0].updated_at;
+        const { updated_at: examVersionTimestamp, exam_type: examType } = examDetails.rows[0];
 
-        // Score calculation logic...
+        // --- Standard Score Calculation Logic ---
         const totalMarksResult = await client.query("SELECT SUM(marks) as total_marks FROM questions WHERE exam_id = $1", [examId]);
         const totalPossibleMarks = parseInt(totalMarksResult.rows[0].total_marks || 0);
 
         const questionsResult = await client.query("SELECT question_id, correct_answer, marks FROM questions WHERE exam_id = $1", [examId]);
         const questions = questionsResult.rows;
-        if (questions.length === 0) throw new Error("Cannot submit result for an exam with no questions.");
-        
         let rawScoreObtained = 0;
         questions.forEach(q => {
             if (answers[q.question_id] && answers[q.question_id].toUpperCase() === q.correct_answer.toUpperCase()) {
                 rawScoreObtained += q.marks;
             }
         });
-        
         const percentageScore = totalPossibleMarks > 0 ? (rawScoreObtained / totalPossibleMarks) * 100 : 0;
         const finalScore = Math.round(percentageScore);
 
-        // Insert result with the exam's version timestamp
+        // --- Insert Result with Version Timestamp ---
         const resultInsertQuery = await client.query(
             `INSERT INTO exam_results (student_id, exam_id, score, raw_score_obtained, total_possible_marks, answers, submission_date, time_taken_seconds, exam_version_timestamp)
              VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8)
@@ -155,13 +152,15 @@ exports.submitExam = async (userId, examId, answers, timeTakenSeconds) => {
         const newResultId = resultInsertQuery.rows[0].result_id;
 
         // End the session
-        await client.query(
-            "UPDATE exam_sessions SET end_time = NOW(), progress = NULL, time_remaining_seconds = 0 WHERE user_id = $1 AND exam_id = $2",
-            [userId, examId]
-        );
-
+        await client.query("UPDATE exam_sessions SET end_time = NOW() WHERE user_id = $1 AND exam_id = $2", [userId, examId]);
         await client.query('COMMIT');
-        return { resultId: newResultId, score: percentageScore };
+        
+        // **CRUCIAL CHANGE**: Return the exam type along with the result.
+        return {
+            resultId: newResultId,
+            score: percentageScore,
+            examType: examType // This tells the frontend how to behave post-submission
+        };
 
     } catch (error) {
         await client.query('ROLLBACK');
@@ -171,5 +170,6 @@ exports.submitExam = async (userId, examId, answers, timeTakenSeconds) => {
         client.release();
     }
 };
+
 
 // #endregion

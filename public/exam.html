@@ -689,13 +689,17 @@
         document.getElementById('submitConfirmationModal').style.display = 'none';
     }
 
-    async function submitExam() {
-        hideSubmitConfirmation();
+     async function submitExam() {
+        // Stop timers and disable buttons
+        clearInterval(progressSaveInterval);
         clearInterval(timerInterval);
+        document.getElementById('confirmSubmitBtn').disabled = true;
+        document.getElementById('confirmSubmitBtn').textContent = 'Submitting...';
         
+        hideSubmitConfirmation();
         displayMessage('info', 'Submitting your exam, please wait...');
         
-        const timeTakenSeconds = totalDuration - timeRemaining;
+        const timeTakenSeconds = (examData.duration_minutes * 60) - timeRemaining;
 
         try {
             const response = await fetch(`/api/exam-session/${examId}/submit`, {
@@ -705,20 +709,27 @@
                 credentials: 'include'
             });
 
+            const result = await response.json();
             if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || "Submission failed");
+                throw new Error(result.error || "Submission failed due to an unknown error.");
             }
 
-            const result = await response.json();
-            // **IMPROVED**: More informative success message
-            displayMessage('info', `Exam submitted successfully! Your score is ${result.score.toFixed(2)}%. You will be redirected to the dashboard shortly.`);
-            setTimeout(() => window.location.href = 'dashboard.html', 4000);
+            // **CRUCIAL CHANGE**: Conditional redirect based on exam type.
+            if (result.examType === 'MAIN_EXAM') {
+                // For main exams, hide score and redirect to dashboard.
+                displayMessage('info', `Exam submitted successfully! You will be redirected to the dashboard shortly.`);
+                setTimeout(() => window.location.href = 'dashboard.html', 3000);
+            } else {
+                // For tests/CAs, show the score and redirect to the results page.
+                displayMessage('info', `Test submitted successfully! Your score is ${result.score.toFixed(1)}%. Redirecting to results...`);
+                window.location.href = `results.html?resultId=${result.resultId}`;
+            }
 
         } catch (error) {
-            console.error('Submission error:', error);
-            displayMessage('error', `Could not submit exam: ${error.message}. Please check your connection.`);
-            startTimer(); // You may want to allow the user to try submitting again
+            // Re-enable button on failure to allow retry
+            document.getElementById('confirmSubmitBtn').disabled = false;
+            document.getElementById('confirmSubmitBtn').textContent = 'Yes, Submit';
+            displayMessage('error', `Could not submit exam: ${error.message}. Please check your connection and try again.`);
         }
     }
 
