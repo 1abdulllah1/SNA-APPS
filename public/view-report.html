@@ -32,7 +32,7 @@
 </head>
 <body>
     <div id="loadingMessage" style="text-align: center; padding: 4rem;">Loading Report Card...</div>
-    <div id="errorMessage" class="error-message hidden"></div>
+    <div id="errorMessage" class="error-message hidden" style="background: #fff2f2; color: #d8000c; padding: 1rem; margin: 1rem; border: 1px solid #ffbaba; border-radius: 8px;"></div>
     <div class="report-card-container hidden" id="reportCardContent">
         <header class="report-header">
             <h1 class="school-name">SEALED NECTAR ACADEMY</h1>
@@ -51,8 +51,6 @@
             <img id="studentProfilePic" src="" alt="Student Picture" class="student-profile-pic">
         </section>
 
-        <div id="loadingMessage" style="text-align: center; padding: 4rem;">Compiling Professional Report Card...</div>
-    <div class="report-card-container hidden" id="reportCardContent">
         <div class="section-title">COGNITIVE RATINGS</div>
         <table class="cognitive-ratings">
             <thead>
@@ -74,8 +72,25 @@
             </thead>
             <tbody id="cognitiveRatingsBody"></tbody>
         </table>
-        </div>
         
+        <div class="comments-section" style="margin-top: 2rem;">
+            <div class="section-title">COMMENTS & OTHER DETAILS</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <strong>Teacher's Comment:</strong>
+                    <p id="teacherComment" style="min-height: 40px; border: 1px solid #eee; padding: 5px;"></p>
+                </div>
+                <div>
+                    <strong>Principal's Comment:</strong>
+                    <p id="principalComment" style="min-height: 40px; border: 1px solid #eee; padding: 5px;"></p>
+                </div>
+                <div>
+                    <strong>Next Term Begins:</strong>
+                    <p id="nextTermBegins" style="border: 1px solid #eee; padding: 5px;"></p>
+                </div>
+            </div>
+        </div>
+
         <div class="admin-controls">
             <button id="editBtn" class="btn primary-btn">Enable Editing</button>
             <button id="saveBtn" class="btn success-btn hidden">Save Changes</button>
@@ -93,7 +108,16 @@
     function toggleEdit(isEditing) {
         const fields = ['teacherComment', 'principalComment', 'nextTermBegins'];
         fields.forEach(id => {
-            document.getElementById(id).contentEditable = isEditing;
+            const el = document.getElementById(id);
+            el.contentEditable = isEditing;
+            // **IMPROVEMENT**: Add visual cues for editing.
+            if(isEditing) {
+                el.style.backgroundColor = '#fffbe6';
+                el.style.outline = '1px dashed #fd7e14';
+            } else {
+                el.style.backgroundColor = 'transparent';
+                el.style.outline = 'none';
+            }
         });
         document.getElementById('editBtn').classList.toggle('hidden', isEditing);
         document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
@@ -107,10 +131,13 @@
         }));
 
         const payload = {
-            studentId, term: reportData.term, session: reportData.session,
+            studentId, 
+            term: reportData.term, 
+            session: reportData.session,
             teacherComment: document.getElementById('teacherComment').textContent,
             principalComment: document.getElementById('principalComment').textContent,
             nextTermBegins: document.getElementById('nextTermBegins').textContent,
+            // **FIX**: The backend now expects 'cumulativeData' (camelCase)
             cumulativeData: JSON.stringify(cumulativeDataToSave)
         };
 
@@ -121,7 +148,7 @@
                 headers: { 'Content-Type': 'application/json', 'credentials': 'include' },
                 body: JSON.stringify(payload)
             });
-            if (!response.ok) throw new Error('Failed to save data.');
+            if (!response.ok) throw new Error('Failed to save data. The server responded with an error.');
             alert('Report data saved successfully!');
             toggleEdit(false);
         } catch (error) {
@@ -140,8 +167,8 @@
         try {
             const response = await fetch(`/api/exam-results/report/compile?studentId=${studentId}&term=${term}&session=${session}`, { credentials: 'include' });
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || "Failed to compile report data.");
+                const err = await response.json().catch(() => ({error: "Failed to compile report data."}));
+                throw new Error(err.error);
             }
             reportData = await response.json();
             renderReport(reportData);
@@ -150,53 +177,86 @@
             document.getElementById('reportCardContent').classList.remove('hidden');
         } catch (error) {
             document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('errorMessage').textContent = error.message;
+            document.getElementById('errorMessage').textContent = "Error: " + error.message;
             document.getElementById('errorMessage').classList.remove('hidden');
         }
     }
 
+    // **FIX**: The syntax error was here. The closing brace for the function was misplaced,
+    // leaving some code in the global scope which caused a ReferenceError.
     function renderReport(data) {
-        // This function now populates the new, professional table structure.
+        // Populate student details
         document.getElementById('studentName').textContent = `${data.student.first_name} ${data.student.last_name}`;
-        // ... (populating other student details) ...
+        document.getElementById('admissionNumber').textContent = data.student.admission_number || 'N/A';
+        document.getElementById('studentClass').textContent = data.student.class_level || 'N/A';
+        document.getElementById('reportSession').textContent = data.session;
+        document.getElementById('reportTerm').textContent = data.term;
+        
+        // Handle profile picture
+        const profilePic = document.getElementById('studentProfilePic');
+        if(data.student.profile_picture_url) {
+            profilePic.src = data.student.profile_picture_url;
+        } else {
+            // Use a placeholder if no picture is available
+            const firstLetter = data.student.first_name ? data.student.first_name[0] : 'S';
+            profilePic.src = createSvgPlaceholder(firstLetter);
+        }
 
+
+        // Populate the cognitive ratings table
         const tbody = document.getElementById('cognitiveRatingsBody');
-        tbody.innerHTML = '';
-        data.subjects.forEach(s => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${s.subjectName}</td>
-                    <td>${s.ca_scaled}</td>
-                    <td>${s.exam_scaled}</td>
-                    <td><b>${s.finalScore}</b></td>
-                    <td>${s.firstTerm}</td>
-                    <td>${s.secondTerm}</td>
-                    <td>${s.thirdTerm}</td>
-                    <td>${s.cumulativeAvg}</td>
-                    <td>${s.grade}</td>
-                    <td>${s.remark}</td>
-                </tr>
-            `;
-        });
-        // ... (populating comments and other meta fields) ...
-    }   
-        // Editable meta fields
+        tbody.innerHTML = ''; // Clear previous content
+        if(data.subjects && data.subjects.length > 0) {
+            data.subjects.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.subjectName}</td>
+                        <td>${s.ca_scaled || 'N/A'}</td>
+                        <td>${s.exam_scaled || 'N/A'}</td>
+                        <td><b>${s.finalScore || 'N/A'}</b></td>
+                        <td>${s.firstTerm || '-'}</td>
+                        <td>${s.secondTerm || '-'}</td>
+                        <td>${s.thirdTerm || '-'}</td>
+                        <td>${s.cumulativeAvg || 'N/A'}</td>
+                        <td>${s.grade || 'N/A'}</td>
+                        <td>${s.remark || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+        } else {
+             tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No results found for this student for the selected term and session.</td></tr>`;
+        }
+        
+        // Populate editable meta fields (comments, etc.)
         document.getElementById('teacherComment').textContent = data.meta?.teacher_comment || '';
         document.getElementById('principalComment').textContent = data.meta?.principal_comment || '';
-        document.getElementById('nextTermBegins').textContent = data.meta?.next_term_begins ? new Date(data.meta.next_term_begins).toLocaleDateString() : 'TBA';
-    }
+        // Handle date formatting gracefully
+        let nextTermDate = 'TBA';
+        if (data.meta?.next_term_begins) {
+            try {
+                // Check if it's just a string or a valid date
+                const date = new Date(data.meta.next_term_begins);
+                if (!isNaN(date.getTime())) {
+                    nextTermDate = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                } else {
+                    nextTermDate = data.meta.next_term_begins; // If it's just text like "TBA"
+                }
+            } catch(e){
+                nextTermDate = data.meta.next_term_begins; // Fallback
+            }
+        }
+        document.getElementById('nextTermBegins').textContent = nextTermDate;
+    } // **FIX**: The function's closing brace is now correctly placed.
 
     window.addEventListener('DOMContentLoaded', loadReport);
     document.getElementById('editBtn').addEventListener('click', () => toggleEdit(true));
     document.getElementById('saveBtn').addEventListener('click', saveReportData);
 
     // To prevent copy-paste errors, here's a placeholder for the SVG function
-    function createSvgPlaceholder(letter = 'U') {
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="140" viewBox="0 0 120 140"><rect width="100%" height="100%" fill="#dee2e6"></rect><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#333">${letter.toUpperCase()}</text></svg>`;
+    function createSvgPlaceholder(letter = 'S') {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="140" viewBox="0 0 120 140"><rect width="100%" height="100%" fill="#dee2e6"></rect><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#555">${letter.toUpperCase()}</text></svg>`;
         return `data:image/svg+xml,${encodeURIComponent(svg)}`;
     }
 </script>
- <script src="/js/auth.js"></script>
 </body>
 </html>
-

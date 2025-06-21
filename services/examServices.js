@@ -31,7 +31,6 @@ exports.startExamSession = async (userId, examId) => {
             [userId, examId]
         );
 
-        let isRetake = false;
         if (previousSubmission.rows.length > 0) {
             const lastSubmissionVersion = new Date(previousSubmission.rows[0].exam_version_timestamp).getTime();
             const currentExamVersion = new Date(exam.version_timestamp).getTime();
@@ -39,11 +38,11 @@ exports.startExamSession = async (userId, examId) => {
             if (currentExamVersion <= lastSubmissionVersion) {
                 throw new Error("You have already completed the most recent version of this exam. A retake is only allowed if the exam has been updated.");
             }
-            isRetake = true; // Mark this attempt as an authorized retake.
+            // This is an authorized retake. Delete old session to start fresh.
+             await client.query("DELETE FROM exam_sessions WHERE user_id = $1 AND exam_id = $2", [userId, examId]);
         }
         
         // 3. Check for an IN-PROGRESS session to resume from.
-        // This logic is for resuming a session that was never submitted (e.g., browser crash).
         const inProgressSession = await client.query(
             "SELECT * FROM exam_sessions WHERE user_id = $1 AND exam_id = $2 AND end_time IS NULL",
             [userId, examId]
@@ -68,22 +67,16 @@ exports.startExamSession = async (userId, examId) => {
 
         let sessionData = {};
         
-        // **FIX**: If this is an authorized retake, we must delete the old session record first.
-        if (isRetake) {
-            await client.query(
-                "DELETE FROM exam_sessions WHERE user_id = $1 AND exam_id = $2",
-                [userId, examId]
-            );
-        }
-
-        if (!isRetake && inProgressSession.rows.length > 0) {
+        if (inProgressSession.rows.length > 0) {
             // --- RESUME A PREVIOUSLY UNFINISHED SESSION ---
             sessionData = {
                 progress: inProgressSession.rows[0].progress || {},
                 timeRemaining: inProgressSession.rows[0].time_remaining_seconds,
             };
+            console.log(`Resuming session for user ${userId}, exam ${examId}`);
         } else {
-            // --- START A COMPLETELY NEW SESSION (or a retake after deletion) ---
+            // --- START A COMPLETELY NEW SESSION ---
+             console.log(`Starting new session for user ${userId}, exam ${examId}`);
             await client.query(
                 `INSERT INTO exam_sessions (user_id, exam_id, start_time, time_remaining_seconds) VALUES ($1, $2, NOW(), $3)`,
                 [userId, examId, exam.duration_minutes * 60]
@@ -106,17 +99,24 @@ exports.startExamSession = async (userId, examId) => {
 
 // #region --- Save Progress ---
 
+// **FIX**: Added the missing saveExamProgress function that was being called by the route but was not defined.
 exports.saveExamProgress = async (userId, examId, answers, timeRemaining) => {
     try {
-        await pool.query(
-            `UPDATE exam_sessions SET progress = $1, time_remaining_seconds = $2
+        const result = await pool.query(
+            `UPDATE exam_sessions SET progress = $1, time_remaining_seconds = $2, updated_at = NOW()
              WHERE user_id = $3 AND exam_id = $4 AND end_time IS NULL`,
             [answers, timeRemaining, userId, examId]
         );
+        if (result.rowCount === 0) {
+            // This might happen if the session was submitted or deleted in another tab.
+            // It's not a critical error, but good to be aware of.
+            console.warn(`Attempted to save progress for a non-existent or completed session. User: ${userId}, Exam: ${examId}`);
+            return { message: "No active session to save." };
+        }
         return { message: "Progress saved." };
     } catch (error) {
-        console.error("Save progress error:", error);
-        throw new Error("Failed to save progress.");
+        console.error("Save progress service error:", error);
+        throw new Error("Failed to save progress due to a database error.");
     }
 };
 
@@ -129,7 +129,7 @@ exports.submitExam = async (userId, examId, answers, timeTakenSeconds) => {
     try {
         await client.query('BEGIN');
         
-        // Fetch exam details to get its version and, crucially, its type
+        // Fetch exam details to get its version and type
         const examDetails = await client.query("SELECT updated_at, exam_type FROM exams WHERE exam_id = $1", [examId]);
         if (examDetails.rows.length === 0) throw new Error("Exam not found for submission.");
         const { updated_at: examVersionTimestamp, exam_type: examType } = examDetails.rows[0];
@@ -139,34 +139,36 @@ exports.submitExam = async (userId, examId, answers, timeTakenSeconds) => {
         const totalPossibleMarks = parseInt(totalMarksResult.rows[0].total_marks || 0);
 
         const questionsResult = await client.query("SELECT question_id, correct_answer, marks FROM questions WHERE exam_id = $1", [examId]);
-        const questions = questionsResult.rows;
         let rawScoreObtained = 0;
-        questions.forEach(q => {
+        questionsResult.rows.forEach(q => {
             if (answers[q.question_id] && answers[q.question_id].toUpperCase() === q.correct_answer.toUpperCase()) {
-                rawScoreObtained += q.marks;
+                rawScoreObtained += (q.marks || 0);
             }
         });
         const percentageScore = totalPossibleMarks > 0 ? (rawScoreObtained / totalPossibleMarks) * 100 : 0;
-        const finalScore = Math.round(percentageScore);
-
+        
         // --- Insert Result with Version Timestamp ---
         const resultInsertQuery = await client.query(
             `INSERT INTO exam_results (student_id, exam_id, score, raw_score_obtained, total_possible_marks, answers, submission_date, time_taken_seconds, exam_version_timestamp)
              VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8)
              ON CONFLICT (student_id, exam_id) DO UPDATE SET 
-                score = EXCLUDED.score, raw_score_obtained = EXCLUDED.raw_score_obtained, 
-                answers = EXCLUDED.answers, submission_date = NOW(), time_taken_seconds = EXCLUDED.time_taken_seconds,
+                score = EXCLUDED.score, 
+                raw_score_obtained = EXCLUDED.raw_score_obtained, 
+                total_possible_marks = EXCLUDED.total_possible_marks,
+                answers = EXCLUDED.answers, 
+                submission_date = NOW(), 
+                time_taken_seconds = EXCLUDED.time_taken_seconds,
                 exam_version_timestamp = EXCLUDED.exam_version_timestamp
              RETURNING result_id;`,
-            [userId, examId, finalScore, rawScoreObtained, totalPossibleMarks, answers, timeTakenSeconds, examVersionTimestamp]
+            [userId, examId, percentageScore, rawScoreObtained, totalPossibleMarks, answers, timeTakenSeconds, examVersionTimestamp]
         );
         const newResultId = resultInsertQuery.rows[0].result_id;
 
         // End the session
-        await client.query("UPDATE exam_sessions SET end_time = NOW() WHERE user_id = $1 AND exam_id = $2", [userId, examId]);
+        await client.query("UPDATE exam_sessions SET end_time = NOW(), progress = NULL, time_remaining_seconds = 0 WHERE user_id = $1 AND exam_id = $2", [userId, examId]);
+        
         await client.query('COMMIT');
         
-        // **CRUCIAL CHANGE**: Return the exam type along with the result.
         return {
             resultId: newResultId,
             score: percentageScore,

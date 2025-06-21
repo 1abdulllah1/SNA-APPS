@@ -3,21 +3,9 @@ const router = express.Router();
 const pool = require("../database/db");
 const auth = require("../middlewares/auth");
 
-/**
- * --- GLOBAL FIXES & ENHANCEMENTS ---
- * 1.  Standardized Logout: A single, reliable logout function is now used across all pages.
- * 2.  Correct Result Fetching: The logic to get results for students and teachers is now distinct and correct.
- * 3.  "User Not Found" Error: This is fixed by correctly using the authenticated user's ID (`req.user.id`).
- * 4.  Dashboard Date: The query for dashboard results now correctly fetches `submission_date`.
- * 5.  New Report Card Engine: A powerful new endpoint `/compile-report` does all the heavy lifting for report cards.
- * 6.  Report Card Saving: New endpoints to get and save editable report card data (comments, etc.).
- */
-
-// #region --- Helper Functions ---
-
 // Helper function to get grade and remark based on percentage
 function getGradeAndRemark(percentage) {
-    if (isNaN(percentage)) return { grade: 'N/A', remark: 'N/A' };
+    if (isNaN(percentage) || percentage === null) return { grade: 'N/A', remark: 'N/A' };
     const p = Math.round(percentage);
     if (p >= 75) return { grade: 'A1', remark: 'Distinction' };
     if (p >= 70) return { grade: 'B2', remark: 'Excellent' };
@@ -29,14 +17,10 @@ function getGradeAndRemark(percentage) {
     if (p >= 40) return { grade: 'E8', remark: 'Fair' };
     return { grade: 'F9', remark: 'Fail' };
 }
-// #endregion
-
-// #region --- Main API Routes ---
 
 /**
  * ROUTE: GET /api/exam-results/
- * PURPOSE: Gets a simple list of results for the logged-in student's dashboard.
- * FIX: Now correctly selects `submission_date` to fix the "N/A" issue on the dashboard.
+ * Gets a simple list of results for the logged-in student's dashboard.
  */
 router.get("/", auth, async (req, res) => {
     try {
@@ -57,8 +41,7 @@ router.get("/", auth, async (req, res) => {
 
 /**
  * ROUTE: GET /api/exam-results/:examId
- * PURPOSE: Gets detailed results for a single exam. Handles different views for students vs. teachers/admins.
- * FIX: This route is now robust and correctly authorizes users.
+ * Gets detailed results for a single exam for teachers/admins.
  */
 router.get("/:examId", auth, async (req, res) => {
   try {
@@ -69,41 +52,20 @@ router.get("/:examId", auth, async (req, res) => {
     if (examQuery.rows.length === 0) return res.status(404).json({ error: "Exam not found." });
     const exam = examQuery.rows[0];
 
-    if (role === 'teacher' && !is_admin && exam.created_by !== userId) {
-      return res.status(403).json({ error: "You are not authorized to view results for this exam." });
-    }
-
+    // Authorize teacher/admin view
     if (role === 'teacher' || is_admin) {
-      const resultsQuery = await pool.query(`
-        SELECT r.*, u.first_name, u.last_name, u.admission_number 
-        FROM exam_results r JOIN users u ON r.student_id = u.id
-        WHERE r.exam_id = $1 ORDER BY r.score DESC`, [examId]
-      );
-
-      return res.json({ exam, results: resultsQuery.rows, viewMode: 'teacher' });
+        if (role === 'teacher' && !is_admin && exam.created_by !== userId) {
+            return res.status(403).json({ error: "You are not authorized to view results for this exam." });
+        }
+        const resultsQuery = await pool.query(`
+            SELECT r.*, u.first_name, u.last_name, u.admission_number 
+            FROM exam_results r JOIN users u ON r.student_id = u.id
+            WHERE r.exam_id = $1 ORDER BY r.score DESC`, [examId]
+        );
+        return res.json({ exam, results: resultsQuery.rows, viewMode: 'teacher' });
+    } else {
+        return res.status(403).json({ error: "Access denied." });
     }
-
-    // --- Student View ---
-    const studentResultQuery = await pool.query(
-      "SELECT * FROM exam_results WHERE exam_id = $1 AND student_id = $2",
-      [examId, userId]
-    );
-
-    if (studentResultQuery.rows.length === 0) {
-      return res.status(404).json({ error: "You have not submitted this exam, or the result is not available." });
-    }
-
-    const questionsQuery = await pool.query(
-      `SELECT question_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation
-       FROM questions WHERE exam_id = $1 ORDER BY question_id ASC`,
-      [examId]
-    );
-
-    res.json({
-      exam: { ...exam, ...studentResultQuery.rows[0] }, // Merge exam info with student's specific result
-      questions: questionsQuery.rows,
-      viewMode: 'student'
-    });
 
   } catch (error) {
     console.error(`Error fetching results for exam ${req.params.examId}:`, error);
@@ -112,14 +74,9 @@ router.get("/:examId", auth, async (req, res) => {
 });
 
 
-// **NEW & FIX**: Get ONE specific result by its own ID (for Students)
-
-
-
 /**
  * ROUTE: GET /api/exam-results/report/compile
- * PURPOSE: The new report card engine. Aggregates all data for a student's term report.
- * FEATURE: This is the powerhouse for the new report card system.
+ * The report card engine. Aggregates all data for a student's term report.
  */
 router.get("/report/compile", auth, async (req, res) => {
     if (!req.user.is_admin) return res.status(403).json({ error: "Access denied." });
@@ -128,7 +85,7 @@ router.get("/report/compile", auth, async (req, res) => {
 
     const client = await pool.connect();
     try {
-        const studentQuery = client.query("SELECT * FROM users WHERE id = $1", [studentId]);
+        const studentQuery = client.query("SELECT * FROM users WHERE id = $1 AND role = 'student'", [studentId]);
         const resultsQuery = client.query(`
             SELECT s.name AS subject_name, e.exam_type, er.raw_score_obtained, er.total_possible_marks
             FROM exam_results er
@@ -139,10 +96,11 @@ router.get("/report/compile", auth, async (req, res) => {
         
         const prevTerms = term.toUpperCase() === 'SECOND' ? ['FIRST'] : term.toUpperCase() === 'THIRD' ? ['FIRST', 'SECOND'] : [];
         const prevResultsQuery = prevTerms.length > 0
-            ? client.query("SELECT term, cumulative_data FROM report_card_meta WHERE student_id = $1 AND session = $2 AND term = ANY($3)", [studentId, session, prevTerms])
+            ? client.query("SELECT term, cumulative_data FROM report_card_meta WHERE student_id = $1 AND session = $2 AND term = ANY($3::text[])", [studentId, session, prevTerms])
             : Promise.resolve({ rows: [] });
 
         const metaQuery = client.query("SELECT * FROM report_card_meta WHERE student_id = $1 AND term = $2 AND session = $3", [studentId, term.toUpperCase(), session]);
+        
         const [studentRes, resultsRes, metaRes, prevResultsRes] = await Promise.all([studentQuery, resultsQuery, metaQuery, prevResultsQuery]);
 
         if (studentRes.rows.length === 0) throw new Error("Student not found.");
@@ -151,19 +109,26 @@ router.get("/report/compile", auth, async (req, res) => {
         resultsRes.rows.forEach(r => {
             if (!subjectsData[r.subject_name]) subjectsData[r.subject_name] = { CAs: [], Exam: null };
             const result = { score: r.raw_score_obtained, max: r.total_possible_marks };
-            if (r.exam_type.startsWith('CA') || r.exam_type === 'MID_TERM') subjectsData[r.subject_name].CAs.push(result);
-            else if (r.exam_type === 'MAIN_EXAM') subjectsData[r.subject_name].Exam = result;
+            if (r.exam_type.startsWith('CA') || r.exam_type === 'MID_TERM') {
+                subjectsData[r.subject_name].CAs.push(result);
+            } else if (r.exam_type === 'MAIN_EXAM') {
+                subjectsData[r.subject_name].Exam = result;
+            }
         });
 
         const previousTermScores = {};
-        prevResultsRes.rows.forEach(row => {
-            if (row.cumulative_data) {
-                row.cumulative_data.forEach(subject => {
-                    if (!previousTermScores[subject.subjectName]) previousTermScores[subject.subjectName] = {};
-                    previousTermScores[subject.subjectName][row.term] = subject.finalScore;
-                });
-            }
-        });
+        if(prevResultsRes.rows.length > 0) {
+            prevResultsRes.rows.forEach(row => {
+                // The cumulative_data is expected to be a JSON array of objects
+                const termData = (typeof row.cumulative_data === 'string') ? JSON.parse(row.cumulative_data) : row.cumulative_data;
+                if (termData) {
+                    termData.forEach(subject => {
+                        if (!previousTermScores[subject.subjectName]) previousTermScores[subject.subjectName] = {};
+                        previousTermScores[subject.subjectName][row.term] = subject.finalScore;
+                    });
+                }
+            });
+        }
         
         const CA_WEIGHT = 40;
         const EXAM_WEIGHT = 60;
@@ -178,55 +143,73 @@ router.get("/report/compile", auth, async (req, res) => {
             
             const finalScore = scaledCA + scaledExam;
             const gradeInfo = getGradeAndRemark(finalScore);
-
-            const firstTermScore = term.toUpperCase() === 'FIRST' ? finalScore.toFixed(1) : (previousTermScores[name]?.FIRST || null);
-            const secondTermScore = term.toUpperCase() === 'SECOND' ? finalScore.toFixed(1) : (previousTermScores[name]?.SECOND || null);
-            const thirdTermScore = term.toUpperCase() === 'THIRD' ? finalScore.toFixed(1) : null;
             
-            const validScores = [firstTermScore, secondTermScore, thirdTermScore].filter(s => s !== null).map(parseFloat);
-            const cumulativeAvg = validScores.length > 0 ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1) : 'N/A';
+            const currentTermUpper = term.toUpperCase();
+            const firstTermScore = currentTermUpper === 'FIRST' ? finalScore : (previousTermScores[name]?.FIRST || null);
+            const secondTermScore = currentTermUpper === 'SECOND' ? finalScore : (previousTermScores[name]?.SECOND || null);
+            const thirdTermScore = currentTermUpper === 'THIRD' ? finalScore : null;
+            
+            const validScores = [firstTermScore, secondTermScore, thirdTermScore].filter(s => s !== null && !isNaN(s)).map(parseFloat);
+            const cumulativeAvg = validScores.length > 0 ? (validScores.reduce((a, b) => a + b, 0) / validScores.length) : null;
 
             return {
-                subjectName: name, ca_scaled: scaledCA.toFixed(1), exam_scaled: scaledExam.toFixed(1), finalScore: finalScore.toFixed(1),
-                firstTerm: firstTermScore, secondTerm: secondTermScore, thirdTerm: thirdTermScore, cumulativeAvg, grade: gradeInfo.grade, remark: gradeInfo.remark
+                subjectName: name, 
+                ca_scaled: scaledCA.toFixed(1), 
+                exam_scaled: scaledExam.toFixed(1), 
+                finalScore: finalScore.toFixed(1),
+                firstTerm: firstTermScore ? firstTermScore.toFixed(1) : null,
+                secondTerm: secondTermScore ? secondTermScore.toFixed(1) : null,
+                thirdTerm: thirdTermScore ? thirdTermScore.toFixed(1) : null,
+                cumulativeAvg: cumulativeAvg ? cumulativeAvg.toFixed(1) : 'N/A', 
+                grade: gradeInfo.grade, 
+                remark: gradeInfo.remark
             };
         });
         
         res.json({ student: studentRes.rows[0], term: term.toUpperCase(), session, subjects: processedSubjects, meta: metaRes.rows[0] || {} });
     } catch (error) {
         console.error("Report compilation error:", error);
-        res.status(500).json({ error: "Failed to compile report card data." });
+        res.status(500).json({ error: "Failed to compile report card data. " + error.message });
     } finally {
         client.release();
     }
 });
 /**
  * ROUTE: POST /api/exam-results/report/meta
- * PURPOSE: Saves or updates the editable parts of the report card.
- * FEATURE: Powers the "Save" button in the report card's edit mode.
+ * Saves or updates the editable parts of the report card.
  */
 router.post("/report/meta", auth, async (req, res) => {
     if (!req.user.is_admin) return res.status(403).json({ error: "Access denied." });
-
+    
+    // **FIX**: Destructure all expected fields from the request body, including cumulativeData.
     const { 
         studentId, term, session, teacherComment, principalComment, 
-        nextTermBegins, classPosition, affectiveDomain 
+        nextTermBegins, cumulativeData // cumulativeData is the JSON string
     } = req.body;
 
+    // Basic validation
+    if (!studentId || !term || !session) {
+        return res.status(400).json({ error: "Missing required identifiers (studentId, term, session)." });
+    }
+
     try {
+        // **FIX**: The SQL query now includes `cumulative_data` in both the INSERT and UPDATE clauses.
+        // Assumes your `report_card_meta` table has a column `cumulative_data` of type JSONB or TEXT.
         const query = `
-            INSERT INTO report_card_meta (student_id, term, session, teacher_comment, principal_comment, next_term_begins, class_position, affective_domain)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO report_card_meta (student_id, term, session, teacher_comment, principal_comment, next_term_begins, cumulative_data)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (student_id, term, session) 
             DO UPDATE SET
                 teacher_comment = EXCLUDED.teacher_comment,
                 principal_comment = EXCLUDED.principal_comment,
                 next_term_begins = EXCLUDED.next_term_begins,
-                class_position = EXCLUDED.class_position,
-                affective_domain = EXCLUDED.affective_domain,
+                cumulative_data = EXCLUDED.cumulative_data,
                 updated_at = NOW();
         `;
-        await pool.query(query, [studentId, term, session, teacherComment, principalComment, nextTermBegins, classPosition, affectiveDomain]);
+        // Make sure nextTermBegins is null if it's an empty string or just 'TBA'
+        const finalNextTerm = (nextTermBegins && nextTermBegins.trim() !== '' && nextTermBegins.toUpperCase() !== 'TBA') ? nextTermBegins : null;
+
+        await pool.query(query, [studentId, term, session, teacherComment, principalComment, finalNextTerm, cumulativeData]);
         res.status(200).json({ message: "Report card data saved successfully." });
     } catch (error) {
         console.error("Error saving report meta:", error);
@@ -234,6 +217,10 @@ router.post("/report/meta", auth, async (req, res) => {
     }
 });
 
+/**
+ * ROUTE: GET /api/exam-results/by-result/:resultId
+ * Gets a student's detailed result view by the result ID.
+ */
 router.get("/by-result/:resultId", auth, async (req, res) => {
     try {
         const { resultId } = req.params;
@@ -249,7 +236,13 @@ router.get("/by-result/:resultId", auth, async (req, res) => {
         }
 
         const examQuery = await pool.query("SELECT * FROM exams WHERE exam_id = $1", [result.exam_id]);
-        const questionsQuery = await pool.query("SELECT * FROM questions WHERE exam_id = $1", [result.exam_id]);
+        if (examQuery.rows.length === 0) return res.status(404).json({ error: "Associated exam could not be found." });
+        
+        const questionsQuery = await pool.query(
+          `SELECT question_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation
+           FROM questions WHERE exam_id = $1 ORDER BY question_id ASC`,
+          [result.exam_id]
+        );
         
         res.json({
             exam: { ...examQuery.rows[0], ...result },
@@ -257,6 +250,7 @@ router.get("/by-result/:resultId", auth, async (req, res) => {
             viewMode: 'student'
         });
     } catch (error) {
+        console.error("Fetch by-result-id error:", error);
         res.status(500).json({ error: "Failed to fetch detailed result." });
     }
 });

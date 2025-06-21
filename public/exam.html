@@ -437,7 +437,7 @@
       <h3>Confirm Submission</h3>
       <p>Are you sure you want to submit the exam? You cannot make changes after submission.</p>
       <div class="modal-buttons">
-        <button class="confirm-btn" onclick="submitExam()">Yes, Submit</button>
+        <button id="confirmSubmitBtn" class="confirm-btn" onclick="submitExam()">Yes, Submit</button>
         <button class="cancel-btn" onclick="hideSubmitConfirmation()">Cancel</button>
       </div>
     </div>
@@ -453,11 +453,8 @@
     let currentQuestionIndex = 0;
     let userAnswers = {}; // Store answers: { questionId: selectedOptionId }
     let timerInterval;
-     let progressSaveInterval;
+    let progressSaveInterval;
     let timeRemaining; // in seconds
-    let totalDuration;
-
-   
 
     // Helper functions for showing/hiding elements
     function showElement(id) { document.getElementById(id)?.classList.remove('hidden'); }
@@ -482,7 +479,6 @@
         }
     }
   
-
     async function loadUserData() {
         try {
             const response = await fetch(`/api/users/me`, { credentials: 'include' });
@@ -499,22 +495,6 @@
             displayMessage('error', 'Session expired or invalid. Please log in again.');
             return null;
         }
-    }
-
-     function showLoading(isLoading) { document.getElementById('loadingIndicator').style.display = isLoading ? 'block' : 'none'; }
-    function displayMessage(type, message) {
-        const banner = document.getElementById('messageBanner');
-        banner.className = `message-banner ${type}`;
-        banner.textContent = message;
-        banner.classList.remove('hidden');
-    }
-
-    // --- STATUS INDICATOR ---
-    function showSaveStatus(isSuccess) {
-        const statusEl = document.getElementById('saveStatus');
-        statusEl.textContent = isSuccess ? 'Progress Saved' : 'Save Failed';
-        statusEl.className = `status-indicator visible ${isSuccess ? '' : 'error'}`;
-        setTimeout(() => statusEl.classList.remove('visible'), 2000);
     }
 
     async function loadExam() {
@@ -534,70 +514,54 @@
         try {
             const response = await fetch(`/api/exam-session/${examId}/start`, { method: 'POST', credentials: 'include' });
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || "Failed to start exam.");
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                // This will catch errors like "Exam locked" or "No questions" from the backend
-                throw new Error(errorData.error || `Server error: ${response.status}`);
+                const err = await response.json().catch(() => ({ error: "An unknown error occurred while starting the exam." }));
+                throw new Error(err.error);
             }
 
             const sessionStartData = await response.json();
             
-            // **FIXED**: Correctly assign data. The backend returns { exam: {...}, questions: [...] }.
-            // The `questions` array is at the top level, not inside the `exam` object.
+            // **FIX 1**: Correctly assign exam and questions data from the response.
             examData = sessionStartData.exam;
             examData.questions = sessionStartData.questions;
 
-            // **NEW**: Check for and load saved progress
-            if (data.session && data.session.progress) {
-                userAnswers = data.session.progress;
-                timeRemaining = data.session.timeRemaining;
-                console.log("Resuming session with saved progress.");
-            } else {
-                userAnswers = {};
-                timeRemaining = examData.duration_minutes * 60;
-            }
-
-            document.getElementById('examTitle').textContent = examData.title;
-            renderQuestion();
-            startTimer();
-            // **NEW**: Start auto-saving progress
-            progressSaveInterval = setInterval(saveProgress, 15000); // Save every 15 seconds
-
-            showLoading(false);
-            document.getElementById('examContent').classList.remove('hidden');
-
-            // This check is now valid and will prevent the "no questions" error.
             if (!examData.questions || examData.questions.length === 0) {
-                // This case is already handled by the backend, but this is a good fallback.
                 displayMessage('info', 'This exam has no questions available.');
                 return;
             }
-            
-            // **MODIFIED**: Since we are not resuming sessions, initialize fresh.
-            userAnswers = {};
-            totalDuration = examData.duration_minutes * 60;
-            timeRemaining = totalDuration;
+
+            // **FIX 2**: Properly handle resuming a session vs. starting a new one.
+            if (sessionStartData.session && Object.keys(sessionStartData.session).length > 0) {
+                console.log("Resuming session with saved progress.");
+                userAnswers = sessionStartData.session.progress || {};
+                timeRemaining = sessionStartData.session.timeRemaining;
+            } else {
+                console.log("Starting a new session.");
+                userAnswers = {};
+                timeRemaining = examData.duration_minutes * 60;
+            }
 
             // Populate exam details
             document.getElementById('examTitle').textContent = examData.title;
             document.getElementById('examDescription').textContent = examData.description;
 
-            // Start the exam
+            // Start the exam flow
             renderQuestion();
             startTimer();
+            // Start auto-saving progress (if you implement this feature)
+            // progressSaveInterval = setInterval(saveProgress, 15000); 
+
             hideElement('loadingIndicator');
             showElement('examContent');
 
         } catch (error) {
             console.error('Exam load error:', error);
+            // **IMPROVEMENT**: Display the specific error message from the backend.
             displayMessage('error', `Failed to load exam: ${error.message}`);
         }
     }
 
     function renderQuestion() {
+        if (!examData.questions || examData.questions.length === 0) return;
         const question = examData.questions[currentQuestionIndex];
         document.getElementById('questionText').textContent = `Q${currentQuestionIndex + 1}: ${question.question_text}`;
 
@@ -624,23 +588,20 @@
     
     function selectOption(questionId, optionId) {
         userAnswers[questionId] = optionId;
-        // Visually update the selected option
         document.querySelectorAll(`#optionsList .option-label`).forEach(label => label.classList.remove('selected'));
-        const radio = document.querySelector(`input[value="${optionId}"]`);
+        const radio = document.querySelector(`input[id='option-${questionId}-${optionId}']`);
         if (radio) {
             radio.closest('.option-label').classList.add('selected');
         }
-        // NOTE: The call to save progress has been removed as the feature is incomplete.
     }
 
     function updateNavigationButtons() {
         document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
         document.getElementById('nextBtn').disabled = currentQuestionIndex === examData.questions.length - 1;
         
+        hideElement('submitBtn');
         if (currentQuestionIndex === examData.questions.length - 1) {
             showElement('submitBtn');
-        } else {
-            hideElement('submitBtn');
         }
     }
 
@@ -662,16 +623,12 @@
         clearInterval(timerInterval);
         const timerElement = document.getElementById('timer');
         
-        // Initial display
-        const initialMinutes = Math.floor(timeRemaining / 60);
-        const initialSeconds = timeRemaining % 60;
-        timerElement.textContent = `${initialMinutes}:${initialSeconds < 10 ? '0' : ''}${initialSeconds}`;
-
         timerInterval = setInterval(() => {
             if (timeRemaining <= 0) {
                 clearInterval(timerInterval);
                 timerElement.textContent = 'Time Up!';
-                submitExam(); // Auto-submit when time is up
+                timerElement.classList.add('critical');
+                submitExam(true); // Auto-submit when time is up
                 return;
             }
             timeRemaining--;
@@ -679,7 +636,6 @@
             const seconds = timeRemaining % 60;
             timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-            // **NEW**: Interactively change timer color based on remaining time
             timerElement.classList.remove('warning', 'critical');
             if (timeRemaining <= 60) { // 1 minute
                 timerElement.classList.add('critical');
@@ -697,14 +653,21 @@
         document.getElementById('submitConfirmationModal').style.display = 'none';
     }
 
-     async function submitExam() {
-        // Stop timers and disable buttons
+     async function submitExam(isAutoSubmit = false) {
+        // Stop timers and disable buttons to prevent double submission
         clearInterval(progressSaveInterval);
         clearInterval(timerInterval);
-        document.getElementById('confirmSubmitBtn').disabled = true;
-        document.getElementById('confirmSubmitBtn').textContent = 'Submitting...';
         
-        hideSubmitConfirmation();
+        // **FIX**: Correctly select and disable the modal button using its ID
+        const confirmBtn = document.getElementById('confirmSubmitBtn');
+        if(confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Submitting...';
+        }
+        
+        if (!isAutoSubmit) {
+            hideSubmitConfirmation();
+        }
         displayMessage('info', 'Submitting your exam, please wait...');
         
         const timeTakenSeconds = (examData.duration_minutes * 60) - timeRemaining;
@@ -712,9 +675,8 @@
         try {
             const response = await fetch(`/api/exam-session/${examId}/submit`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'credentials': 'include' },
                 body: JSON.stringify({ answers: userAnswers, timeTakenSeconds }),
-                credentials: 'include'
             });
 
             const result = await response.json();
@@ -722,29 +684,34 @@
                 throw new Error(result.error || "Submission failed due to an unknown error.");
             }
 
-            // **CRUCIAL CHANGE**: Conditional redirect based on exam type.
-            if (result.examType === 'MAIN_EXAM') {
-                // For main exams, hide score and redirect to dashboard.
+            // **IMPROVEMENT**: Conditional redirect based on exam type for a better user experience.
+            if (result.examType === 'MAIN_EXAM' || result.examType === 'FINAL_EXAM') {
                 displayMessage('info', `Exam submitted successfully! You will be redirected to the dashboard shortly.`);
                 setTimeout(() => window.location.href = 'dashboard.html', 3000);
             } else {
-                // For tests/CAs, show the score and redirect to the results page.
                 displayMessage('info', `Test submitted successfully! Your score is ${result.score.toFixed(1)}%. Redirecting to results...`);
-                window.location.href = `results.html?resultId=${result.resultId}`;
+                // **FIX**: Redirect to the specific result page.
+                setTimeout(() => window.location.href = `results.html?resultId=${result.resultId}`, 3000);
             }
 
         } catch (error) {
-            // Re-enable button on failure to allow retry
-            document.getElementById('confirmSubmitBtn').disabled = false;
-            document.getElementById('confirmSubmitBtn').textContent = 'Yes, Submit';
+            if(confirmBtn) { // Re-enable button on failure to allow retry
+               confirmBtn.disabled = false;
+               confirmBtn.textContent = 'Yes, Submit';
+            }
             displayMessage('error', `Could not submit exam: ${error.message}. Please check your connection and try again.`);
         }
     }
 
     document.getElementById('logoutLink').addEventListener('click', async (e) => {
         e.preventDefault();
-        await fetch(`/api/users/logout`, { method: 'POST', credentials: 'include' });
-        window.location.href = '/login.html';
+        try {
+            await fetch(`/api/users/logout`, { method: 'POST', credentials: 'include' });
+        } catch(err) {
+            console.error("Logout failed:", err);
+        } finally {
+            window.location.href = '/login.html';
+        }
     });
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -754,6 +721,5 @@
         }
     });
   </script>
-  <script src="/js/auth.js"></script>
 </body>
 </html>
