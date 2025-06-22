@@ -3,41 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Report Card</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Student Progress Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #e9ecef; font-family: 'Segoe UI', sans-serif; }
-        .report-card-container { width: 210mm; min-height: 297mm; margin: 2rem auto; padding: 15mm; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-        .report-header { text-align: center; border-bottom: 3px solid #0056b3; padding-bottom: 15px; }
-        .school-name { font-size: 28px; font-weight: bold; color: #0056b3; }
-        .student-info-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin: 1.5rem 0; }
-        .student-details { display: grid; grid-template-columns: auto 1fr; gap: 5px 15px; align-items: center; }
-        .student-details strong { text-align: right; color: #555; }
-        .student-profile-pic { width: 120px; height: 140px; object-fit: cover; border: 3px solid #dee2e6; border-radius: 8px; justify-self: center; align-self: start; }
-        .section-title { font-size: 1.2rem; font-weight: 600; color: #0056b3; margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 5px; border-bottom: 1px solid #dee2e6; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; }
-        th { background-color: #f8f9fa; font-weight: 600; }
+        body {
+            background-color: #e9ecef;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+        }
+        .report-card-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 1.5rem auto;
+            padding: 12mm;
+            background: #fff;
+            box-shadow: 0 0 25px rgba(0,0,0,0.15);
+            color: #333;
+        }
+        .report-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 4px solid #0d47a1;
+        }
+        .school-logo { max-width: 90px; margin-bottom: 10px; }
+        .school-name { font-size: 26px; font-weight: 700; color: #0d47a1; margin: 0; }
+        .school-address { font-size: 13px; margin: 5px 0; }
+        .report-title { font-size: 20px; font-weight: 700; background-color: #0d47a1; color: white; padding: 5px; margin: 15px 0 10px 0; border-radius: 4px;}
+
+        .student-info-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-top: 15px; font-size: 13px;}
+        .student-details { display: grid; grid-template-columns: 100px 1fr; gap: 4px 10px; align-items: center;}
+        .student-details strong { text-align: left; font-weight: 500;}
+        .student-profile-pic { width: 110px; height: 130px; object-fit: cover; border: 4px solid #dee2e6; border-radius: 8px; justify-self: center; }
+
+        .section-title { font-size: 16px; font-weight: 700; color: #0d47a1; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #e0e0e0; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #ccc; padding: 7px; text-align: center; }
+        th { background-color: #f2f2f2; font-weight: 700; }
         td:first-child { text-align: left; font-weight: 500; }
-        .comments-section [contenteditable="true"] { background-color: #fffbe6; outline: 1px dashed #fd7e14; padding: 5px; border-radius: 4px; }
-        .admin-controls { text-align: center; padding: 1.5rem; background-color: #f8f9fa; border-radius: 8px; margin-top: 2rem; }
+        
+        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;}
+        .summary-box, .comments-box { border: 1px solid #ccc; border-radius: 5px; padding: 10px; font-size: 13px;}
+        .summary-box h4 { margin: 0 0 10px 0; font-size: 14px; color: #0d47a1; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        
+        .comments-section p { margin: 5px 0; }
+        .comments-section [contenteditable="true"] { background-color: #fffbe6; outline: 1px dashed #fd7e14; padding: 5px; border-radius: 4px; min-height: 40px;}
+
+        .admin-controls { text-align: center; padding: 1rem; background-color: #f8f9fa; border-radius: 8px; margin-top: 2rem; }
         .hidden { display: none; }
         @media print {
-            body { background-color: #fff; margin: 0; }
-            .report-card-container { margin: 0; box-shadow: none; width: 100%; height: 100%; }
+            body { background-color: #fff; }
+            .report-card-container { margin: 0; box-shadow: none; }
             .admin-controls { display: none; }
             .comments-section [contenteditable="true"] { background: transparent; outline: none; padding: 0; }
         }
     </style>
 </head>
 <body>
-    <div id="loadingMessage" style="text-align: center; padding: 4rem;">Loading Report Card...</div>
-    <div id="errorMessage" class="error-message hidden" style="background: #fff2f2; color: #d8000c; padding: 1rem; margin: 1rem; border: 1px solid #ffbaba; border-radius: 8px;"></div>
+    <div id="loadingMessage" style="text-align: center; padding: 4rem; font-size: 1.2rem;">Loading Report Card...</div>
+    <div id="errorMessage" class="hidden" style="background: #fff2f2; color: #d8000c; padding: 1rem; margin: 1rem auto; border: 1px solid #ffbaba; border-radius: 8px; max-width: 800px;"></div>
+
     <div class="report-card-container hidden" id="reportCardContent">
         <header class="report-header">
             <h1 class="school-name">SEALED NECTAR ACADEMY</h1>
-            <p>15, Nasirudeen Street, Off CDA Road, Off Ikola Road, Ota, Ogun State.</p>
-            <h2>STUDENT'S PROGRESS REPORT</h2>
+            <p class="school-address">15, Nasirudeen Street, Off CDA Road, Off Ikola Road, Ota, Ogun State.</p>
+            <h2 class="report-title">STUDENT'S PROGRESS REPORT</h2>
         </header>
 
         <section class="student-info-grid">
@@ -47,19 +79,21 @@
                 <strong>Class:</strong> <span id="studentClass"></span>
                 <strong>Session:</strong> <span id="reportSession"></span>
                 <strong>Term:</strong> <span id="reportTerm"></span>
+                <strong>Date of Birth:</strong> <span id="studentDOB"></span>
             </div>
             <img id="studentProfilePic" src="" alt="Student Picture" class="student-profile-pic">
         </section>
 
-        <div class="section-title">COGNITIVE RATINGS</div>
+        <div class="section-title">ACADEMIC PERFORMANCE (COGNITIVE DOMAIN)</div>
         <table class="cognitive-ratings">
             <thead>
                 <tr>
                     <th rowspan="2">SUBJECTS</th>
-                    <th rowspan="2">CA (40%)</th>
-                    <th rowspan="2">EXAM (60%)</th>
-                    <th rowspan="2">TOTAL (100%)</th>
-                    <th colspan="4">SUMMARY OF TERM'S WORK</th>
+                    <th rowspan="2">C.A (40)</th>
+                    <th rowspan="2">EXAM (60)</th>
+                    <th rowspan="2">TOTAL (100)</th>
+                    <th colspan="3">TERM'S SUMMARY</th>
+                    <th rowspan="2">CUM. AVG</th>
                     <th rowspan="2">GRADE</th>
                     <th rowspan="2">REMARK</th>
                 </tr>
@@ -67,27 +101,44 @@
                     <th>1ST TERM</th>
                     <th>2ND TERM</th>
                     <th>3RD TERM</th>
-                    <th>CUM. AVG</th>
                 </tr>
             </thead>
             <tbody id="cognitiveRatingsBody"></tbody>
+            <tfoot>
+                <tr style="font-weight: 700; background-color: #f2f2f2;">
+                    <td colspan="3">GRAND TOTAL:</td>
+                    <td id="grandTotalScore"></td>
+                    <td colspan="6"></td>
+                </tr>
+            </tfoot>
         </table>
         
-        <div class="comments-section" style="margin-top: 2rem;">
+        <div class="summary-grid">
+             <div class="summary-box">
+                <h4>PERFORMANCE SUMMARY</h4>
+                <div class="summary-item"><strong>Total Score Obtained:</strong> <span id="totalScoreObtained"></span></div>
+                <div class="summary-item"><strong>Total Score Obtainable:</strong> <span id="totalPossibleMarks"></span></div>
+                <div class="summary-item"><strong>Overall Percentage:</strong> <span id="overallPercentage" style="font-weight:bold;"></span></div>
+                <div class="summary-item"><strong>Position in Class:</strong> <span id="classPosition" style="font-weight:bold;"></span></div>
+             </div>
+             <div class="summary-box">
+                <h4>GRADING KEY</h4>
+                <div class="summary-item"><span>A* (90-100) - Distinction</span></div>
+                <div class="summary-item"><span>A (80-89) - Excellent</span></div>
+                <div class="summary-item"><span>B2 (75-79) - Very Good</span></div>
+                <div class="summary-item"><span>B3 (70-74) - Good</span></div>
+                <div class="summary-item"><span>C (60-69) - Credit</span></div>
+                <div class="summary-item"><span>D (50-59) - Pass</span></div>
+                <div class="summary-item"><span>F (0-49) - Fail</span></div>
+             </div>
+        </div>
+
+        <div class="comments-section" style="margin-top: 15px;">
             <div class="section-title">COMMENTS & OTHER DETAILS</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div>
-                    <strong>Teacher's Comment:</strong>
-                    <p id="teacherComment" style="min-height: 40px; border: 1px solid #eee; padding: 5px;"></p>
-                </div>
-                <div>
-                    <strong>Principal's Comment:</strong>
-                    <p id="principalComment" style="min-height: 40px; border: 1px solid #eee; padding: 5px;"></p>
-                </div>
-                <div>
-                    <strong>Next Term Begins:</strong>
-                    <p id="nextTermBegins" style="border: 1px solid #eee; padding: 5px;"></p>
-                </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 13px;">
+                <div><strong>Teacher's Comment:</strong><p id="teacherComment"></p></div>
+                <div><strong>Principal's Comment:</strong><p id="principalComment"></p></div>
+                <div><strong>Next Term Begins:</strong><p id="nextTermBegins"></p></div>
             </div>
         </div>
 
@@ -106,69 +157,48 @@
     const session = params.get('session');
 
     function toggleEdit(isEditing) {
-        const fields = ['teacherComment', 'principalComment', 'nextTermBegins'];
-        fields.forEach(id => {
+        ['teacherComment', 'principalComment', 'nextTermBegins'].forEach(id => {
             const el = document.getElementById(id);
             el.contentEditable = isEditing;
-            // **IMPROVEMENT**: Add visual cues for editing.
-            if(isEditing) {
-                el.style.backgroundColor = '#fffbe6';
-                el.style.outline = '1px dashed #fd7e14';
-            } else {
-                el.style.backgroundColor = 'transparent';
-                el.style.outline = 'none';
-            }
+            el.style.backgroundColor = isEditing ? '#fffbe6' : 'transparent';
+            el.style.outline = isEditing ? '1px dashed #fd7e14' : 'none';
         });
         document.getElementById('editBtn').classList.toggle('hidden', isEditing);
         document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
     }
 
     async function saveReportData() {
-        // This function now correctly prepares the snapshot of term scores to save for future cumulative calculations.
-        const cumulativeDataToSave = reportData.subjects.map(s => ({
-            subjectName: s.subjectName,
-            finalScore: parseFloat(s.finalScore) // Ensure it's a number
-        }));
-
+        const cumulativeDataToSave = reportData.subjects.map(s => ({ subjectName: s.subjectName, finalScore: parseFloat(s.finalScore) }));
         const payload = {
-            studentId, 
-            term: reportData.term, 
-            session: reportData.session,
+            studentId, term: reportData.term, session: reportData.session,
             teacherComment: document.getElementById('teacherComment').textContent,
             principalComment: document.getElementById('principalComment').textContent,
             nextTermBegins: document.getElementById('nextTermBegins').textContent,
-            // **FIX**: The backend now expects 'cumulativeData' (camelCase)
+            classLevel: reportData.student.class_level,
             cumulativeData: JSON.stringify(cumulativeDataToSave)
         };
 
-
         try {
             const response = await fetch('/api/exam-results/report/meta', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'credentials': 'include' },
-                body: JSON.stringify(payload)
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
             });
-            if (!response.ok) throw new Error('Failed to save data. The server responded with an error.');
+            if (!response.ok) throw new Error('Failed to save data.');
             alert('Report data saved successfully!');
             toggleEdit(false);
-        } catch (error) {
-            alert(error.message);
-        }
+        } catch (error) { alert(error.message); }
     }
 
     async function loadReport() {
         if (!studentId || !term || !session) {
-            document.getElementById('errorMessage').textContent = 'Student ID, Term, and Session are required.';
-            document.getElementById('errorMessage').classList.remove('hidden');
-            document.getElementById('loadingMessage').classList.add('hidden');
+            displayError('Student ID, Term, and Session are required to generate a report.');
             return;
         }
 
         try {
-            const response = await fetch(`/api/exam-results/report/compile?studentId=${studentId}&term=${term}&session=${session}`, { credentials: 'include' });
+            const response = await fetch(`/api/exam-results/report/compile?studentId=${studentId}&term=${term}&session=${session}`);
             if (!response.ok) {
-                const err = await response.json().catch(() => ({error: "Failed to compile report data."}));
-                throw new Error(err.error);
+                const err = await response.json();
+                throw new Error(err.error || "Failed to compile report data.");
             }
             reportData = await response.json();
             renderReport(reportData);
@@ -176,14 +206,10 @@
             document.getElementById('loadingMessage').classList.add('hidden');
             document.getElementById('reportCardContent').classList.remove('hidden');
         } catch (error) {
-            document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('errorMessage').textContent = "Error: " + error.message;
-            document.getElementById('errorMessage').classList.remove('hidden');
+            displayError("Error: " + error.message);
         }
     }
 
-    // **FIX**: The syntax error was here. The closing brace for the function was misplaced,
-    // leaving some code in the global scope which caused a ReferenceError.
     function renderReport(data) {
         // Populate student details
         document.getElementById('studentName').textContent = `${data.student.first_name} ${data.student.last_name}`;
@@ -191,72 +217,58 @@
         document.getElementById('studentClass').textContent = data.student.class_level || 'N/A';
         document.getElementById('reportSession').textContent = data.session;
         document.getElementById('reportTerm').textContent = data.term;
-        
-        // Handle profile picture
-        const profilePic = document.getElementById('studentProfilePic');
-        if(data.student.profile_picture_url) {
-            profilePic.src = data.student.profile_picture_url;
-        } else {
-            // Use a placeholder if no picture is available
-            const firstLetter = data.student.first_name ? data.student.first_name[0] : 'S';
-            profilePic.src = createSvgPlaceholder(firstLetter);
-        }
+        document.getElementById('studentDOB').textContent = data.student.dob ? new Date(data.student.dob).toLocaleDateString() : 'N/A';
 
+        const profilePic = document.getElementById('studentProfilePic');
+        profilePic.src = data.student.profile_picture_url || 'placeholder.png'; // Use a placeholder image
 
         // Populate the cognitive ratings table
         const tbody = document.getElementById('cognitiveRatingsBody');
-        tbody.innerHTML = ''; // Clear previous content
+        tbody.innerHTML = ''; 
         if(data.subjects && data.subjects.length > 0) {
             data.subjects.forEach(s => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${s.subjectName}</td>
-                        <td>${s.ca_scaled || 'N/A'}</td>
-                        <td>${s.exam_scaled || 'N/A'}</td>
-                        <td><b>${s.finalScore || 'N/A'}</b></td>
-                        <td>${s.firstTerm || '-'}</td>
-                        <td>${s.secondTerm || '-'}</td>
-                        <td>${s.thirdTerm || '-'}</td>
-                        <td>${s.cumulativeAvg || 'N/A'}</td>
-                        <td>${s.grade || 'N/A'}</td>
-                        <td>${s.remark || 'N/A'}</td>
+                        <td>${s.ca_scaled}</td>
+                        <td>${s.exam_scaled}</td>
+                        <td><b>${s.finalScore}</b></td>
+                        <td>${s.firstTerm}</td>
+                        <td>${s.secondTerm}</td>
+                        <td>${s.thirdTerm}</td>
+                        <td>${s.cumulativeAvg}</td>
+                        <td>${s.grade}</td>
+                        <td>${s.remark}</td>
                     </tr>
                 `;
             });
         } else {
-             tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No results found for this student for the selected term and session.</td></tr>`;
+             tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No subject results found for this student.</td></tr>`;
         }
         
-        // Populate editable meta fields (comments, etc.)
+        // Populate summary
+        document.getElementById('grandTotalScore').textContent = data.summary.totalScoreObtained;
+        document.getElementById('totalScoreObtained').textContent = data.summary.totalScoreObtained;
+        document.getElementById('totalPossibleMarks').textContent = data.summary.totalPossibleMarks;
+        document.getElementById('overallPercentage').textContent = `${data.summary.overallPercentage}%`;
+        document.getElementById('classPosition').textContent = data.summary.position;
+
+        // Populate editable meta fields
         document.getElementById('teacherComment').textContent = data.meta?.teacher_comment || '';
         document.getElementById('principalComment').textContent = data.meta?.principal_comment || '';
-        // Handle date formatting gracefully
-        let nextTermDate = 'TBA';
-        if (data.meta?.next_term_begins) {
-            try {
-                // Check if it's just a string or a valid date
-                const date = new Date(data.meta.next_term_begins);
-                if (!isNaN(date.getTime())) {
-                    nextTermDate = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-                } else {
-                    nextTermDate = data.meta.next_term_begins; // If it's just text like "TBA"
-                }
-            } catch(e){
-                nextTermDate = data.meta.next_term_begins; // Fallback
-            }
-        }
-        document.getElementById('nextTermBegins').textContent = nextTermDate;
-    } // **FIX**: The function's closing brace is now correctly placed.
+        document.getElementById('nextTermBegins').textContent = data.meta?.next_term_begins || 'TBA';
+    }
+
+    function displayError(message) {
+        document.getElementById('loadingMessage').classList.add('hidden');
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
+    }
 
     window.addEventListener('DOMContentLoaded', loadReport);
     document.getElementById('editBtn').addEventListener('click', () => toggleEdit(true));
     document.getElementById('saveBtn').addEventListener('click', saveReportData);
-
-    // To prevent copy-paste errors, here's a placeholder for the SVG function
-    function createSvgPlaceholder(letter = 'S') {
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="140" viewBox="0 0 120 140"><rect width="100%" height="100%" fill="#dee2e6"></rect><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#555">${letter.toUpperCase()}</text></svg>`;
-        return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-    }
 </script>
 </body>
 </html>
