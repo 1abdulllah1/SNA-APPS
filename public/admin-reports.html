@@ -33,203 +33,224 @@
             padding: 12px;
             border-radius: var(--border-radius-sm);
             border: 1px solid var(--cream-dark);
-            background-color: var(--cream-light);
+            background-color: var(--input-bg);
+            box-sizing: border-box; /* Ensures padding doesn't increase width */
         }
-        .report-actions {
-            text-align: right;
+        .student-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 2rem;
         }
-        .loading-spinner {
-            display: none; /* Hidden by default */
-            margin: 20px auto;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--primary-blue);
-            border-radius: 50%;
+        .student-table th, .student-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .student-table th {
+            background-color: var(--primary-blue);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+        .student-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .student-table tr:hover {
+            background-color: #f0f0f0;
+        }
+        .btn-view-report {
+            background-color: var(--secondary-blue);
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+        .btn-view-report:hover {
+            background-color: #0056b3;
+        }
+        .profile-pic-thumbnail {
             width: 40px;
             height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #reportPreviewArea {
-            margin-top: 2rem;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
             border: 1px solid #eee;
-            padding: 1rem;
-            min-height: 300px;
-            background-color: #f9f9f9;
         }
-        .nav-links a.active {
-            background-color: var(--secondary-blue);
-            font-weight: bold;
+        .student-name-cell {
+            display: flex;
+            align-items: center;
+        }
+        #loadingIndicator {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        .hidden {
+            display: none;
+        }
+        .error-message {
+            color: var(--danger-red);
+            background-color: #ffebeb;
+            border: 1px solid var(--danger-red);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <header>
         <nav>
-            <div class="nav-container">
-                <a href="dashboard.html" class="logo">CBT System - Admin</a>
-                <div class="nav-links" id="navLinks">
-                    <a href="dashboard.html" class="nav-link">Dashboard</a>
-                    <a href="create-exam.html" class="nav-link">Create Exam</a>
-                    <a href="manage-users.html" class="nav-link">Manage Users</a>
-                    <a href="registration.html" class="nav-link">Register User</a>
-                    <a href="admin-reports.html" class="nav-link active">Student Reports</a>
-                    <a href="#" id="logoutLink" class="nav-link">Logout</a>
-                </div>
-            </div>
+            <div class="logo">CBT System</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
+            </ul>
         </nav>
     </header>
 
     <main>
         <div class="report-container">
-            <h1>Generate Student Report Card</h1>
-            <div id="errorMessage" class="error-message hidden" style="margin-bottom: 1rem;"></div>
+            <h1>Admin Student Reports</h1>
+            <div id="loadingIndicator">Loading students...</div>
+            <div id="errorMessage" class="error-message hidden"></div>
 
             <div class="form-group">
-                <label for="selectStudent">Select Student:</label>
-                <select id="selectStudent" name="studentId">
-                    <option value="">Loading students...</option>
-                </select>
+                <label for="studentFilter">Filter by Student:</label>
+                <input type="text" id="studentFilter" placeholder="Search by name or admission number">
             </div>
 
             <div class="form-group">
-                <label for="selectTerm">Select Term:</label>
-                <select id="selectTerm" name="term">
-                    <option value="FIRST">First Term</option>
-                    <option value="SECOND">Second Term</option>
-                    <option value="THIRD">Third Term</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="selectSession">Select Session (e.g., 2023-2024):</label>
-                <input type="text" id="selectSession" name="session" placeholder="YYYY-YYYY" value="2024-2025">
+                <label for="classFilter">Filter by Class:</label>
+                <select id="classFilter">
+                    <option value="">All Classes</option>
+                    </select>
             </div>
 
-            <div class="report-actions">
-                <button id="generateReportBtn" class="btn primary-btn">Generate Report</button>
-            </div>
-            
-            <div id="loadingSpinner" class="loading-spinner"></div>
-            <div id="reportPreviewArea" class="hidden">
-                <p>Report will be displayed here. <a href="#" id="viewFullReportLink" target="_blank" class="hidden">View Full Report in New Tab</a></p>
-                <iframe id="reportIframe" width="100%" height="600px" style="border:none;" class="hidden"></iframe>
-            </div>
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Picture</th>
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Admission No.</th>
+                        <th>Class</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    </tbody>
+            </table>
         </div>
     </main>
 
-    <footer>
-        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
-    </footer>
-
     <script>
-        const selectStudent = document.getElementById('selectStudent');
-        const generateReportBtn = document.getElementById('generateReportBtn');
-        const reportPreviewArea = document.getElementById('reportPreviewArea');
-        const reportIframe = document.getElementById('reportIframe');
-        const viewFullReportLink = document.getElementById('viewFullReportLink');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const errorMessageDiv = document.getElementById('errorMessage');
+        let allStudentsData = []; // Store all students fetched from API
+        let classesData = []; // Store classes data
+
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/users/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.href = '/login.html';
+                    return null;
+                }
+                const user = await response.json();
+                document.getElementById('navUsername').textContent = user.username;
+                createNavigationLinks(user); // Call function from auth.js or similar
+                return user;
+            } catch (error) {
+                console.error("Error loading user data:", error);
+                window.location.href = '/login.html';
+                return null;
+            }
+        }
 
         async function fetchStudents() {
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
             try {
-                const response = await fetch('/api/users', { credentials: 'include' }); // Assuming this route returns all users for admin
+                const response = await fetch('/api/users?role=student', { credentials: 'include' });
                 if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error || 'Failed to load students');
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const users = await response.json();
-                const students = users.filter(user => user.role === 'student');
-                
-                selectStudent.innerHTML = '<option value="">-- Select a Student --</option>'; // Clear loading/default
-                if (students.length > 0) {
-                    students.forEach(student => {
-                        const option = document.createElement('option');
-                        option.value = student.id;
-                        option.textContent = `${student.last_name}, ${student.first_name} (${student.admission_number || 'N/A'}) - ${student.class_level || 'N/A'}`;
-                        selectStudent.appendChild(option);
-                    });
-                } else {
-                    selectStudent.innerHTML = '<option value="">No students found</option>';
-                }
+                allStudentsData = await response.json();
+                populateClassFilter(allStudentsData);
+                applyFilters();
             } catch (error) {
                 console.error('Error fetching students:', error);
-                selectStudent.innerHTML = '<option value="">Error loading students</option>';
-                displayError(error.message);
+                document.getElementById('errorMessage').textContent = 'Failed to load student data. ' + error.message;
+                document.getElementById('errorMessage').classList.remove('hidden');
+            } finally {
+                document.getElementById('loadingIndicator').classList.add('hidden');
             }
         }
-        
-        function displayError(message) {
-            errorMessageDiv.textContent = message;
-            errorMessageDiv.classList.remove('hidden');
+
+        function populateClassFilter(students) {
+            const classFilterSelect = document.getElementById('classFilter');
+            const uniqueClasses = [...new Set(students.map(s => s.class_id).filter(Boolean))].sort((a, b) => a - b);
+            classFilterSelect.innerHTML = '<option value="">All Classes</option>';
+            uniqueClasses.forEach(classId => {
+                const option = document.createElement('option');
+                option.value = classId;
+                option.textContent = `Class ${classId}`;
+                classFilterSelect.appendChild(option);
+            });
         }
-        function clearError() {
-            errorMessageDiv.textContent = '';
-            errorMessageDiv.classList.add('hidden');
+
+        function applyFilters() {
+            const studentFilterText = document.getElementById('studentFilter').value.toLowerCase();
+            const classFilterValue = document.getElementById('classFilter').value;
+            const filteredStudents = allStudentsData.filter(student => {
+                const matchesName = student.full_name.toLowerCase().includes(studentFilterText) ||
+                                    student.username.toLowerCase().includes(studentFilterText) ||
+                                    (student.admission_number && student.admission_number.toLowerCase().includes(studentFilterText));
+                const matchesClass = classFilterValue === '' || student.class_id == classFilterValue;
+                return matchesName && matchesClass;
+            });
+            displayStudents(filteredStudents);
         }
 
-        generateReportBtn.addEventListener('click', async () => {
-            clearError();
-            const studentId = selectStudent.value;
-            const term = document.getElementById('selectTerm').value;
-            const session = document.getElementById('selectSession').value;
-
-            if (!studentId) {
-                displayError('Please select a student.');
-                return;
-            }
-            if (!term) {
-                displayError('Please select a term.');
-                return;
-            }
-            if (!session || !/^\d{4}-\d{4}$/.test(session)) {
-                displayError('Please enter a valid session (e.g., 2023-2024).');
+        function displayStudents(students) {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = ''; // Clear previous entries
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No students found matching your criteria.</td></tr>';
                 return;
             }
 
-            loadingSpinner.style.display = 'block';
-            reportPreviewArea.classList.add('hidden');
-            reportIframe.classList.add('hidden');
-            viewFullReportLink.classList.add('hidden');
-            generateReportBtn.disabled = true;
-            generateReportBtn.textContent = 'Generating...';
+            students.forEach(student => {
+                const profilePicSrc = student.profile_picture_url || 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Use a default avatar if none exists
+                const row = `
+                    <tr>
+                        <td><img src="${profilePicSrc}" alt="Profile" class="profile-pic-thumbnail"></td>
+                        <td>${student.full_name}</td>
+                        <td>${student.username}</td>
+                        <td>${student.admission_number || 'N/A'}</td>
+                        <td>${student.class_id || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-view-report" onclick="viewStudentReports(${student.id})">View Report</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
 
+        function viewStudentReports(studentId) {
+            window.location.href = `view-report.html?studentId=${studentId}`;
+        }
 
-            try {
-                // The actual report generation will happen in view-report.html,
-                // this page just constructs the URL to it.
-                const reportUrl = `view-report.html?studentId=${studentId}&term=${term}&session=${encodeURIComponent(session)}`;
-                
-                reportIframe.src = reportUrl;
-                reportIframe.onload = () => { // Wait for iframe to load
-                    loadingSpinner.style.display = 'none';
-                    reportPreviewArea.classList.remove('hidden');
-                    reportIframe.classList.remove('hidden');
-                    viewFullReportLink.href = reportUrl;
-                    viewFullReportLink.classList.remove('hidden');
-                    generateReportBtn.disabled = false;
-                    generateReportBtn.textContent = 'Generate Report';
-                };
-                reportIframe.onerror = () => {
-                     loadingSpinner.style.display = 'none';
-                     displayError("Failed to load the report preview in the iframe.");
-                     generateReportBtn.disabled = false;
-                     generateReportBtn.textContent = 'Generate Report';
-                }
+        document.getElementById('studentFilter').addEventListener('input', applyFilters);
+        document.getElementById('classFilter').addEventListener('change', applyFilters);
 
-
-            } catch (error) {
-                console.error('Error setting up report generation:', error);
-                loadingSpinner.style.display = 'none';
-                displayError('An error occurred while preparing the report.');
-                generateReportBtn.disabled = false;
-                generateReportBtn.textContent = 'Generate Report';
-            }
-        });
-        
         document.getElementById('logoutLink').addEventListener('click', async (e) => {
           e.preventDefault();
           try {
@@ -246,8 +267,11 @@
         });
 
         // Initial setup
-        fetchStudents();
-        // Check admin status (basic client-side, server is authoritative)
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData();
+            await fetchStudents();
+        });
+
         async function checkAdmin() {
             try {
                 const response = await fetch('/api/users/me', {credentials: 'include'});

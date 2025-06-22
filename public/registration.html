@@ -35,412 +35,256 @@
     }
     
     .form-group {
-      margin-bottom: 1.5rem; /* Increased spacing */
-    }
-    
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px; /* Increased gap */
+      margin-bottom: 1.5rem;
     }
 
-    /* Make single column on smaller screens */
+    .form-group label {
+      display: block;
+      margin-bottom: 0.6rem; /* Slightly more space for labels */
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"],
+    .form-group input[type="number"],
+    .form-group select {
+      width: 100%;
+      padding: 12px; /* Increased padding */
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--cream-dark);
+      background-color: var(--input-bg);
+      font-size: 1em;
+      box-sizing: border-box; /* Include padding in width */
+    }
+
+    .form-group input[type="file"] {
+        border: 1px solid var(--cream-dark);
+        padding: 10px;
+        background-color: var(--input-bg);
+        border-radius: var(--border-radius-sm);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px; /* Larger button */
+      background-color: var(--primary-blue);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-sm);
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-top: 1rem; /* Space above button */
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-link {
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .text-link:hover {
+        text-decoration: underline;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .error-message {
+        color: var(--danger-red);
+        background-color: #ffebeb;
+        border: 1px solid var(--danger-red);
+        padding: 10px;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    /* Grid for student-specific fields */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
     @media (max-width: 600px) {
         .form-grid {
             grid-template-columns: 1fr;
         }
     }
-    
-    .error-message, .success-message-inline {
-      font-size: 0.9rem;
-      margin-top: 6px;
-      display: block;
-      padding: 8px;
-      border-radius: 4px;
-    }
-
-    .error-message {
-      color: var(--danger-red);
-      background-color: #ffebee; /* Light red background */
-      border: 1px solid var(--danger-red);
-    }
-
-    .success-message-inline {
-        color: var(--success-green);
-        background-color: #e8f5e9; /* Light green background */
-        border: 1px solid var(--success-green);
-        text-align: center;
-    }
-    
-    .alternate-link {
-      text-align: center;
-      margin-top: 2rem;
-      font-size: 0.95rem;
-    }
-    .alternate-link a {
-        color: var(--primary-blue);
-        font-weight: 500;
-    }
-
-    /* Profile Picture Upload Styling */
-    .profile-picture-group {
-        margin-bottom: 1.5rem;
-        padding: 15px;
-        border: 1px dashed #ccc;
-        border-radius: 8px;
-        background-color: #f9f9f9;
-    }
-    .profile-picture-group label {
-        font-weight: 600;
-        display: block;
-        margin-bottom: 8px;
-    }
-    #profile_picture_preview_container {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-top: 10px;
-    }
-    #profile_picture_preview {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%; /* Circular preview */
-        object-fit: cover;
-        border: 2px solid #ddd;
-        background-color: #e9ecef;
-    }
-    #profile_picture_preview.hidden {
-        display: none;
-    }
-    #profile_picture_filename {
-        font-size: 0.9em;
-        color: #555;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    input[type="file"] {
-        border: 1px solid #ccc;
-        padding: 8px;
-        border-radius: 4px;
-        background-color: white;
-        cursor: pointer;
-    }
-    input[type="file"]:hover {
-        border-color: var(--primary-blue);
-    }
-
-    /* Global success message styling (from dashboard.html, for consistency) */
-    .success-message-modal {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: var(--success-green);
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        z-index: 1001;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        opacity: 0;
-        transition: opacity 0.5s ease, top 0.5s ease;
-    }
-    .success-message-modal.show {
-        opacity: 1;
-        top: 50px;
-    }
-    .success-message-modal svg.checkmark {
-        width: 24px;
-        height: 24px;
-        stroke-width: 3;
-        stroke: white;
-    }
-    .checkmark-circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2; stroke-miterlimit: 10; stroke: #7ac142; fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
-    .checkmark { width: 56px; height: 56px; border-radius: 50%; display: block; stroke-width: 2; stroke: #fff; stroke-miterlimit: 10; margin: 10% auto; box-shadow: inset 0px 0px 0px #7ac142; animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
-    .checkmark-check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
-    @keyframes stroke { 100% { stroke-dashoffset: 0; } }
-    @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
-    @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 30px #7ac142; } }
-
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <a href="dashboard.html" class="logo">CBT System</a>
-      <div class="nav-links" id="navLinks">
-         <a href="#" id="logoutLinkNav" style="display:none;">Logout</a>
-      </div>
+        <div class="logo">CBT System</div>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
+        </ul>
     </nav>
   </header>
+
   <main>
     <div class="auth-container">
-      <div class="form-header"> <h1 id="formTitle">Create Account</h1> <p id="formSubtitle">For authorized administrators only.</p> </div>
-      <div id="globalFormError" class="error-message hidden" style="margin-bottom:1rem; text-align:left;"></div>
+      <div class="form-header">
+        <h1>Register New User</h1>
+        <p>Create an account for students, teachers, or administrators.</p>
+      </div>
+      <div id="registrationErrorDiv" class="error-message hidden"></div>
       <form id="registrationForm" enctype="multipart/form-data">
         <div class="form-group">
-          <label for="role">Register As *</label>
-          <select id="role" name="role" required onchange="toggleStudentFields()">
-            <option value="teacher">Teacher</option>
+          <label for="full_name">Full Name:</label>
+          <input type="text" id="full_name" name="full_name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="role">Role:</label>
+          <select id="role" name="role" required>
             <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
             <option value="admin">Admin</option>
           </select>
         </div>
-        <div class="form-grid">
-          <div class="form-group"> <label for="first_name">First Name *</label> <input type="text" id="first_name" name="first_name" required> </div>
-          <div class="form-group"> <label for="last_name">Last Name *</label> <input type="text" id="last_name" name="last_name" required> </div>
-        </div>
-        <div class="form-group"> <label for="email">Email *</label> <input type="email" id="email" name="email" required> <span id="emailError" class="error-message hidden"></span> </div>
-        <div class="form-group"> <label for="username">Username (Optional)</label> <input type="text" id="username" name="username" placeholder="Auto-generated if blank"> <small>If blank, auto-generated (email prefix for staff, admission no. for students).</small></div>
 
-        <div id="studentFields" class="hidden">
-          <div class="form-group">
-            <label for="admission_number">Admission Number *</label>
-            <input type="text" id="admission_number" name="admission_number" placeholder="SNA/YY/001 (e.g. SNA/23/001)">
-            <span id="admissionError" class="error-message hidden"></span>
-          </div>
-          <div class="form-group">
-            <label for="class_level">Class Level *</label>
-            <select id="class_level" name="class_level">
-              <option value="">Select Class...</option>
-              <option value="Primary 1">Primary 1</option> <option value="Primary 2">Primary 2</option> <option value="Primary 3">Primary 3</option>
-              <option value="Primary 4">Primary 4</option> <option value="Primary 5">Primary 5</option> <option value="Primary 6">Primary 6</option>
-              <option value="JSS 1">JSS 1</option> <option value="JSS 2">JSS 2</option> <option value="JSS 3">JSS 3</option>
-              <option value="SS 1">SS 1</option> <option value="SS 2">SS 2</option> <option value="SS 3">SS 3</option>
-            </select>
-            <span id="classLevelError" class="error-message hidden"></span>
-          </div>
-          <div class="form-group profile-picture-group">
-            <label for="profile_picture">Student Profile Picture (Optional)</label>
-            <input type="file" id="profile_picture" name="profile_picture" accept="image/jpeg, image/png, image/gif">
-            <div id="profile_picture_preview_container">
-              <img id="profile_picture_preview" alt="Profile Preview" class="hidden">
-              <span id="profile_picture_filename"></span>
+        <div class="form-grid" id="studentFields" style="display: none;">
+            <div class="form-group">
+                <label for="admission_number">Admission Number:</label>
+                <input type="text" id="admission_number" name="admission_number">
             </div>
-            <span id="pictureError" class="error-message hidden"></span>
-          </div>
-           <div class="form-grid">
-              <div class="form-group"> <label for="dob">Date of Birth (Optional)</label> <input type="date" id="dob" name="dob"> </div>
-              <div class="form-group"> <label for="gender">Gender (Optional)</label> <select id="gender" name="gender"> <option value="">Select Gender...</option> <option value="Male">Male</option> <option value="Female">Female</option> <option value="Other">Other</option></select> </div>
-           </div>
+            <div class="form-group">
+                <label for="class_id">Class (e.g., 10, 12):</label>
+                <input type="number" id="class_id" name="class_id" min="1">
+            </div>
         </div>
-        
+
         <div class="form-group">
-          <label for="password">Password *</label>
-          <input type="password" id="password" name="password" placeholder="Create password" required oninput="checkPasswordStrength(this.value)">
-          <div class="password-strength"> <div class="strength-bar"></div> <small id="passwordCriteria" class="text-muted">Min. 8 chars, 1 uppercase, 1 number, 1 symbol.</small> </div>
+            <label for="profilePicture">Profile Picture (Optional):</label>
+            <input type="file" id="profilePicture" name="profile_picture" accept="image/*">
         </div>
-        <div class="form-group"> <label for="password_confirm">Confirm Password *</label> <input type="password" id="password_confirm" name="password_confirm" placeholder="Confirm password" required> <span id="passwordConfirmError" class="error-message hidden"></span> </div>
-        <div class="form-group"> <label class="checkbox-label"> <input type="checkbox" name="terms" required> I acknowledge this registration is performed by an authorized admin. </label> </div>
         
-        <button type="submit" class="btn primary-btn" style="width: 100%;">Create Account</button>
-        <div class="alternate-link"> Already have an account? <a href="login.html">Login</a> </div>
+        <button type="submit" class="btn btn-primary">Register</button>
       </form>
+
+      <p class="text-center" style="margin-top: 1.5rem;">
+        <a href="login.html" class="text-link">Already have an account? Login here.</a>
+      </p>
     </div>
   </main>
-  <footer> <p>&copy; 2025 SNA CBT System. All rights reserved.</p> </footer>
+
+  <footer>
+    <p>&copy; 2025 CBT System</p>
+  </footer>
 
   <script>
-    const studentFieldsDiv = document.getElementById('studentFields');
-    const admissionNumberInput = document.getElementById('admission_number');
-    const classLevelSelect = document.getElementById('class_level');
-    const profilePictureInput = document.getElementById('profile_picture');
-    const profilePicturePreview = document.getElementById('profile_picture_preview');
-    const profilePictureFilename = document.getElementById('profile_picture_filename');
-    const pictureError = document.getElementById('pictureError');
-    const globalFormError = document.getElementById('globalFormError');
-
-    function toggleStudentFields() {
-      const role = document.getElementById('role').value;
-      const isStudent = role === 'student';
-      studentFieldsDiv.classList.toggle('hidden', !isStudent);
-      admissionNumberInput.required = isStudent;
-      classLevelSelect.required = isStudent;
-      const title = document.getElementById('formTitle');
-      const subtitle = document.getElementById('formSubtitle');
-      if (isStudent) {
-        title.textContent = 'Register New Student';
-        subtitle.textContent = 'Enter student details below.';
-      } else {
-        title.textContent = `Register New ${role.charAt(0).toUpperCase() + role.slice(1)}`;
-        subtitle.textContent = `Enter ${role} details below.`;
-        profilePicturePreview.classList.add('hidden');
-        profilePictureFilename.textContent = '';
-        if(profilePictureInput) profilePictureInput.value = '';
-      }
-    }
-
-    function checkPasswordStrength(password) {
-      const strengthBar = document.querySelector('.strength-bar');
-      let strength = 0;
-      if (password.length >= 8) strength++;
-      if (/[A-Z]/.test(password)) strength++;
-      if (/[0-9]/.test(password)) strength++;
-      if (/[^A-Za-z0-9]/.test(password)) strength++; // Special character
-      
-      const width = strength * 25;
-      strengthBar.style.width = `${width}%`;
-      
-      if (strength === 0) strengthBar.style.background = '#e74c3c'; // Weak
-      else if (strength < 3) strengthBar.style.background = '#f39c12'; // Medium
-      else strengthBar.style.background = '#2ecc71'; // Strong
-    }
-
-    profilePictureInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        pictureError.classList.add('hidden');
-        pictureError.textContent = '';
-
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                pictureError.textContent = 'File is too large. Maximum 5MB allowed.';
-                pictureError.classList.remove('hidden');
-                profilePicturePreview.classList.add('hidden');
-                profilePictureFilename.textContent = '';
-                this.value = ''; // Clear the input
-                return;
-            }
-            if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-                pictureError.textContent = 'Invalid file type. Only JPG, PNG, GIF allowed.';
-                pictureError.classList.remove('hidden');
-                profilePicturePreview.classList.add('hidden');
-                profilePictureFilename.textContent = '';
-                this.value = ''; // Clear the input
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                profilePicturePreview.src = e.target.result;
-                profilePicturePreview.classList.remove('hidden');
-            }
-            reader.readAsDataURL(file);
-            profilePictureFilename.textContent = file.name;
+    document.getElementById('role').addEventListener('change', function() {
+        const studentFields = document.getElementById('studentFields');
+        if (this.value === 'student') {
+            studentFields.style.display = 'grid'; // Show student fields
+            document.getElementById('admission_number').setAttribute('required', 'required');
+            document.getElementById('class_id').setAttribute('required', 'required');
         } else {
-            profilePicturePreview.removeAttribute('src'); // Clear src
-            profilePicturePreview.classList.add('hidden');
-            profilePictureFilename.textContent = '';
+            studentFields.style.display = 'none'; // Hide student fields
+            document.getElementById('admission_number').removeAttribute('required');
+            document.getElementById('class_id').removeAttribute('required');
+            // Clear values when hidden to prevent accidental submission
+            document.getElementById('admission_number').value = '';
+            document.getElementById('class_id').value = '';
         }
     });
 
+    // Ensure student fields are hidden on initial load if default role isn't student
     document.addEventListener('DOMContentLoaded', () => {
-      toggleStudentFields();
-      loadUserDataAndNav(); // For nav links
-      const form = document.getElementById('registrationForm');
-      const emailError = document.getElementById('emailError');
-      const admissionError = document.getElementById('admissionError');
-      const classLevelError = document.getElementById('classLevelError');
-      const passwordInput = document.getElementById('password');
-      const passwordConfirmInput = document.getElementById('password_confirm');
-      const passwordConfirmError = document.getElementById('passwordConfirmError');
-
-      function clearErrors() {
-          globalFormError.classList.add('hidden'); globalFormError.textContent = '';
-          emailError.classList.add('hidden'); emailError.textContent = '';
-          admissionError.classList.add('hidden'); admissionError.textContent = '';
-          classLevelError.classList.add('hidden'); classLevelError.textContent = '';
-          pictureError.classList.add('hidden'); pictureError.textContent = '';
-          passwordConfirmError.classList.add('hidden'); passwordConfirmError.textContent = '';
-      }
-      function displayError(element, message) {
-          element.textContent = message;
-          element.classList.remove('hidden');
-      }
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        clearErrors();
-        if (passwordInput.value !== passwordConfirmInput.value) {
-            displayError(passwordConfirmError, "Passwords do not match."); return;
-        }
-        const formData = new FormData(form);
-        const role = document.getElementById('role').value;
-        if (role === 'student') {
-            if (!admissionNumberInput.value) { displayError(admissionError, 'Admission number required.'); return; }
-            const admissionRegex = /^SNA\/\d{2}\/\d{3}$/i; 
-            if (!admissionRegex.test(admissionNumberInput.value)) {
-                displayError(admissionError, 'Invalid admission number. Use SNA/YY/001 (e.g. SNA/23/001)'); return;
-            }
-            if (!classLevelSelect.value) { displayError(classLevelError, 'Class level required.'); return; }
-        } else {
-            formData.delete('admission_number'); formData.delete('class_level');
-            if (!profilePictureInput.files[0] || role !== 'student') {
-                formData.delete('profile_picture');
-            }
-        }
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true; submitButton.textContent = 'Creating Account...';
-        try {
-          const response = await fetch('/api/users/register', { method: 'POST', body: formData, credentials: 'include' });
-          const responseData = await response.json();
-          if (response.ok) {
-            form.reset(); toggleStudentFields(); checkPasswordStrength('');
-            if(profilePicturePreview) { profilePicturePreview.removeAttribute('src'); profilePicturePreview.classList.add('hidden');}
-            if(profilePictureFilename) profilePictureFilename.textContent = '';
-            showGlobalSuccessMessage(`${role.charAt(0).toUpperCase() + role.slice(1)} account created successfully!`);
-          } else {
-            const errField = responseData.field;
-            const errMsg = responseData.error || 'Registration failed.';
-            if (errField === 'email') displayError(emailError, errMsg);
-            else if (errField === 'admission_number') displayError(admissionError, errMsg);
-            else if (errField === 'class_level') displayError(classLevelError, errMsg);
-            else if (errField === 'profile_picture') displayError(pictureError, errMsg);
-            else { globalFormError.textContent = errMsg; globalFormError.classList.remove('hidden');}
-          }
-        } catch (error) {
-          globalFormError.textContent = 'A network error occurred. Please try again.'; globalFormError.classList.remove('hidden');
-        } finally {
-            submitButton.disabled = false; submitButton.textContent = 'Create Account';
-        }
-      });
+        document.getElementById('role').dispatchEvent(new Event('change'));
     });
 
-    function showGlobalSuccessMessage(message) {
-        let successModal = document.getElementById('globalSuccessModal');
-        if (!successModal) {
-            successModal = document.createElement('div');
-            successModal.id = 'globalSuccessModal';
-            successModal.className = 'success-message-modal';
-            successModal.innerHTML = `
-                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                </svg>
-                <span id="globalSuccessText"></span>`;
-            document.body.appendChild(successModal);
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const registrationErrorDiv = document.getElementById('registrationErrorDiv');
+        registrationErrorDiv.classList.add('hidden'); // Hide any previous errors
+        registrationErrorDiv.textContent = '';
+
+        const formData = new FormData(this); // Collects all form data, including file
+
+        // Conditionally append student-specific fields if role is not student
+        const roleValue = document.getElementById('role').value;
+        if (roleValue !== 'student') {
+            // Ensure student-specific fields are not sent or are empty for non-students
+            formData.append('admission_number', '');
+            formData.append('class_id', '');
         }
-        document.getElementById('globalSuccessText').textContent = message;
-        successModal.classList.add('show');
-        setTimeout(() => {
-            successModal.classList.remove('show');
-        }, 4000);
-    }
-    async function loadUserDataAndNav() {
+
         try {
-            const response = await fetch('/api/users/me', {credentials: 'include'});
-            if(!response.ok && response.status === 401) {
-                 document.getElementById('navLinks').innerHTML = '<a href="login.html">Login</a>';
-                 document.getElementById('logoutLinkNav').style.display = 'none';
-                 return;
+            const response = await fetch('/api/users/register', {
+                method: 'POST',
+                body: formData, // FormData handles multipart/form-data
+                credentials: 'include' // Send cookies (for auth if needed, though register is usually unauthenticated)
+            });
+
+            const responseData = await response.json();
+
+            if (response.ok) {
+                alert('User registered successfully! You can now log in.');
+                window.location.href = 'manage-users.html'; // Redirect to manage users or login
+            } else {
+                registrationErrorDiv.textContent = responseData.error || 'Registration failed.';
+                registrationErrorDiv.classList.remove('hidden');
             }
-            if(!response.ok) throw new Error("Failed to fetch user data for nav");
-            const user = await response.json();
-            createNavigationLinks(user);
-        } catch(e) {
-            console.error("Nav User data error", e);
-            document.getElementById('navLinks').innerHTML = '<a href="login.html">Login</a>';
-            document.getElementById('logoutLinkNav').style.display = 'none';
+        } catch (error) {
+            console.error('Registration network error:', error);
+            registrationErrorDiv.textContent = 'An unexpected network error occurred.';
+            registrationErrorDiv.classList.remove('hidden');
+        }
+    });
+
+    async function loadUserData() {
+        try {
+            const response = await fetch('/api/users/me', { credentials: 'include' });
+            if (response.ok) {
+                const user = await response.json();
+                document.getElementById('navUsername').textContent = user.username;
+                createNavigationLinks(user); // If you have this function for dynamic nav
+            }
+            // If not authenticated, let it pass, as registration doesn't require auth
+        } catch (error) {
+            console.error("Error loading user data for navigation:", error);
+            // This page might be accessed without login, so don't redirect on error
         }
     }
-     function createNavigationLinks(user) {
+
+    window.addEventListener('DOMContentLoaded', loadUserData);
+
+    // This function is assumed to be in auth.js or common.js
+    function createNavigationLinks(user) {
         const navLinksContainer = document.getElementById('navLinks');
-        Array.from(navLinksContainer.children).forEach(child => {
-            if (child.id !== 'logoutLink') child.remove();
-        });
+        // Clear existing links except logout
+        navLinksContainer.innerHTML = '<li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>'; 
 
         const dashboardLink = document.createElement('a');
         dashboardLink.href = 'dashboard.html'; dashboardLink.textContent = 'Dashboard';

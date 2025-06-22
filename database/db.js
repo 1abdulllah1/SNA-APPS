@@ -13,10 +13,12 @@ if (process.env.DATABASE_URL) {
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
+    port: parseInt(process.env.DB_PORT, 10) // Corrected placement
   });
 }
-port: parseInt(process.env.DB_PORT, 10)
+
+// The repeated 'port: parseInt(process.env.DB_PORT, 10)' line after the else block is removed.
+// It should look like this now.
 
 
 module.exports = pool;

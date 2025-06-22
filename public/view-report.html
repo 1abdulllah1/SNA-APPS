@@ -27,223 +27,360 @@
             border-bottom: 4px solid #0d47a1;
         }
         .school-logo { max-width: 90px; margin-bottom: 10px; }
-        .school-name { font-size: 26px; font-weight: 700; color: #0d47a1; margin: 0; }
-        .school-address { font-size: 13px; margin: 5px 0; }
-        .report-title { font-size: 20px; font-weight: 700; background-color: #0d47a1; color: white; padding: 5px; margin: 15px 0 10px 0; border-radius: 4px;}
+        .school-name { font-size: 26px; font-weight: 700; color: #0d47a1; margin-bottom: 5px; }
+        .school-address { font-size: 14px; color: #555; }
+        .report-title { font-size: 24px; font-weight: 700; color: #333; margin-top: 20px; text-align: center;}
+        .student-info, .summary-section, .comments-section, .signature-section {
+            margin-top: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px 20px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .info-item p { margin: 5px 0; font-size: 15px; }
+        .info-item strong { color: #0d47a1; }
 
-        .student-info-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-top: 15px; font-size: 13px;}
-        .student-details { display: grid; grid-template-columns: 100px 1fr; gap: 4px 10px; align-items: center;}
-        .student-details strong { text-align: left; font-weight: 500;}
-        .student-profile-pic { width: 110px; height: 130px; object-fit: cover; border: 4px solid #dee2e6; border-radius: 8px; justify-self: center; }
-
-        .section-title { font-size: 16px; font-weight: 700; color: #0d47a1; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #e0e0e0; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border: 1px solid #ccc; padding: 7px; text-align: center; }
-        th { background-color: #f2f2f2; font-weight: 700; }
-        td:first-child { text-align: left; font-weight: 500; }
-        
-        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;}
-        .summary-box, .comments-box { border: 1px solid #ccc; border-radius: 5px; padding: 10px; font-size: 13px;}
-        .summary-box h4 { margin: 0 0 10px 0; font-size: 14px; color: #0d47a1; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        
-        .comments-section p { margin: 5px 0; }
-        .comments-section [contenteditable="true"] { background-color: #fffbe6; outline: 1px dashed #fd7e14; padding: 5px; border-radius: 4px; min-height: 40px;}
-
-        .admin-controls { text-align: center; padding: 1rem; background-color: #f8f9fa; border-radius: 8px; margin-top: 2rem; }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0d47a1;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .scores-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .scores-table th, .scores-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .scores-table th {
+            background-color: #f0f0f0;
+            font-weight: 600;
+            color: #333;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .summary-table td {
+            border: 1px solid #e0e0e0;
+            padding: 8px 10px;
+            font-size: 15px;
+        }
+        .summary-table td:first-child {
+            font-weight: 500;
+            color: #555;
+        }
+        .comments-section textarea {
+            width: 100%;
+            min-height: 80px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 15px;
+            resize: vertical;
+        }
+        .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+        }
+        .signature-item { text-align: center; }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            margin-top: 50px;
+            padding-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+        .actions-bar {
+            text-align: center;
+            margin: 20px auto;
+            max-width: 210mm;
+        }
+        .actions-bar button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .btn-edit { background-color: #ffc107; color: white; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-print { background-color: #007bff; color: white; }
         .hidden { display: none; }
+
         @media print {
+            .actions-bar, header, footer { display: none; }
             body { background-color: #fff; }
-            .report-card-container { margin: 0; box-shadow: none; }
-            .admin-controls { display: none; }
-            .comments-section [contenteditable="true"] { background: transparent; outline: none; padding: 0; }
+            .report-card-container {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                min-height: auto;
+                padding: 0; /* Adjust padding for print if necessary */
+            }
+        }
+        .loading-message, .error-message {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        .error-message {
+            color: var(--danger-red);
+            background-color: #ffebeb;
+            border: 1px solid var(--danger-red);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+        }
+        .profile-picture-display {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #0d47a1;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .student-profile-pic-container {
+            text-align: center;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="loadingMessage" style="text-align: center; padding: 4rem; font-size: 1.2rem;">Loading Report Card...</div>
-    <div id="errorMessage" class="hidden" style="background: #fff2f2; color: #d8000c; padding: 1rem; margin: 1rem auto; border: 1px solid #ffbaba; border-radius: 8px; max-width: 800px;"></div>
+    <header>
+        <nav>
+            <div class="logo">CBT System</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    <div class="report-card-container hidden" id="reportCardContent">
-        <header class="report-header">
-            <h1 class="school-name">SEALED NECTAR ACADEMY</h1>
-            <p class="school-address">15, Nasirudeen Street, Off CDA Road, Off Ikola Road, Ota, Ogun State.</p>
-            <h2 class="report-title">STUDENT'S PROGRESS REPORT</h2>
-        </header>
-
-        <section class="student-info-grid">
-            <div class="student-details">
-                <strong>Student Name:</strong> <span id="studentName"></span>
-                <strong>Admission No:</strong> <span id="admissionNumber"></span>
-                <strong>Class:</strong> <span id="studentClass"></span>
-                <strong>Session:</strong> <span id="reportSession"></span>
-                <strong>Term:</strong> <span id="reportTerm"></span>
-                <strong>Date of Birth:</strong> <span id="studentDOB"></span>
-            </div>
-            <img id="studentProfilePic" src="" alt="Student Picture" class="student-profile-pic">
-        </section>
-
-        <div class="section-title">ACADEMIC PERFORMANCE (COGNITIVE DOMAIN)</div>
-        <table class="cognitive-ratings">
-            <thead>
-                <tr>
-                    <th rowspan="2">SUBJECTS</th>
-                    <th rowspan="2">C.A (40)</th>
-                    <th rowspan="2">EXAM (60)</th>
-                    <th rowspan="2">TOTAL (100)</th>
-                    <th colspan="3">TERM'S SUMMARY</th>
-                    <th rowspan="2">CUM. AVG</th>
-                    <th rowspan="2">GRADE</th>
-                    <th rowspan="2">REMARK</th>
-                </tr>
-                <tr>
-                    <th>1ST TERM</th>
-                    <th>2ND TERM</th>
-                    <th>3RD TERM</th>
-                </tr>
-            </thead>
-            <tbody id="cognitiveRatingsBody"></tbody>
-            <tfoot>
-                <tr style="font-weight: 700; background-color: #f2f2f2;">
-                    <td colspan="3">GRAND TOTAL:</td>
-                    <td id="grandTotalScore"></td>
-                    <td colspan="6"></td>
-                </tr>
-            </tfoot>
-        </table>
-        
-        <div class="summary-grid">
-             <div class="summary-box">
-                <h4>PERFORMANCE SUMMARY</h4>
-                <div class="summary-item"><strong>Total Score Obtained:</strong> <span id="totalScoreObtained"></span></div>
-                <div class="summary-item"><strong>Total Score Obtainable:</strong> <span id="totalPossibleMarks"></span></div>
-                <div class="summary-item"><strong>Overall Percentage:</strong> <span id="overallPercentage" style="font-weight:bold;"></span></div>
-                <div class="summary-item"><strong>Position in Class:</strong> <span id="classPosition" style="font-weight:bold;"></span></div>
-             </div>
-             <div class="summary-box">
-                <h4>GRADING KEY</h4>
-                <div class="summary-item"><span>A* (90-100) - Distinction</span></div>
-                <div class="summary-item"><span>A (80-89) - Excellent</span></div>
-                <div class="summary-item"><span>B2 (75-79) - Very Good</span></div>
-                <div class="summary-item"><span>B3 (70-74) - Good</span></div>
-                <div class="summary-item"><span>C (60-69) - Credit</span></div>
-                <div class="summary-item"><span>D (50-59) - Pass</span></div>
-                <div class="summary-item"><span>F (0-49) - Fail</span></div>
-             </div>
-        </div>
-
-        <div class="comments-section" style="margin-top: 15px;">
-            <div class="section-title">COMMENTS & OTHER DETAILS</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 13px;">
-                <div><strong>Teacher's Comment:</strong><p id="teacherComment"></p></div>
-                <div><strong>Principal's Comment:</strong><p id="principalComment"></p></div>
-                <div><strong>Next Term Begins:</strong><p id="nextTermBegins"></p></div>
-            </div>
-        </div>
-
-        <div class="admin-controls">
-            <button id="editBtn" class="btn primary-btn">Enable Editing</button>
-            <button id="saveBtn" class="btn success-btn hidden">Save Changes</button>
-            <button onclick="window.print()" class="btn secondary-btn">Print Report</button>
-        </div>
+    <div class="actions-bar">
+        <button class="btn btn-edit" id="editBtn">Edit Report</button>
+        <button class="btn btn-save hidden" id="saveBtn">Save Report</button>
+        <button class="btn btn-print" onclick="window.print()">Print Report</button>
     </div>
 
+    <main>
+        <div class="report-card-container">
+            <div id="loadingMessage" class="loading-message">Loading report...</div>
+            <div id="errorMessage" class="error-message hidden"></div>
+            <div id="reportContent" class="hidden">
+                <div class="report-header">
+                    <img src="https://via.placeholder.com/90x90.png?text=School+Logo" alt="School Logo" class="school-logo">
+                    <h1 class="school-name">Sealed Nectar Academy</h1>
+                    <p class="school-address">123 School Road, Knowledge City, State, Country</p>
+                </div>
+
+                <div class="student-profile-pic-container">
+                    <img id="studentProfilePicture" class="profile-picture-display" src="https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png" alt="Student Profile Picture">
+                </div>
+
+                <h2 class="report-title">Student Progress Report</h2>
+                <h3 class="report-title" id="reportTerm"></h3>
+                
+                <div class="student-info">
+                    <h3 class="section-title">Student Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><p><strong>Name:</strong> <span id="studentFullName"></span></p></div>
+                        <div class="info-item"><p><strong>Admission No:</strong> <span id="studentAdmissionNo"></span></p></div>
+                        <div class="info-item"><p><strong>Class:</strong> <span id="studentClass"></span></p></div>
+                        <div class="info-item"><p><strong>Academic Year:</strong> <span id="academicYear"></span></p></div>
+                        <div class="info-item"><p><strong>Date Generated:</strong> <span id="dateGenerated"></span></p></div>
+                    </div>
+                </div>
+
+                <div class="scores-section">
+                    <h3 class="section-title">Subject Scores</h3>
+                    <table class="scores-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Total Score</th>
+                                <th>Score Obtained</th>
+                                <th>Grade</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subjectScoresBody">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="summary-section">
+                    <h3 class="section-title">Overall Summary</h3>
+                    <table class="summary-table">
+                        <tr>
+                            <td>Grand Total Score:</td>
+                            <td id="grandTotalScore"></td>
+                        </tr>
+                        <tr>
+                            <td>Total Score Obtained:</td>
+                            <td id="totalScoreObtained"></td>
+                        </tr>
+                        <tr>
+                            <td>Total Possible Marks:</td>
+                            <td id="totalPossibleMarks"></td>
+                        </tr>
+                        <tr>
+                            <td>Overall Percentage:</td>
+                            <td id="overallPercentage"></td>
+                        </tr>
+                        <tr>
+                            <td>Class Position:</td>
+                            <td id="classPosition"></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="comments-section">
+                    <h3 class="section-title">Comments</h3>
+                    <div>
+                        <p><strong>Teacher's Comment:</strong></p>
+                        <textarea id="teacherComment" rows="3" disabled></textarea>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <p><strong>Principal's Comment:</strong></p>
+                        <textarea id="principalComment" rows="3" disabled></textarea>
+                    </div>
+                </div>
+
+                <div class="info-item" style="margin-top: 25px;">
+                    <p><strong>Next Term Begins:</strong> <span id="nextTermBegins"></span></p>
+                </div>
+
+                <div class="signature-section">
+                    <div class="signature-item">
+                        <div class="signature-line">Teacher's Signature</div>
+                    </div>
+                    <div class="signature-item">
+                        <div class="signature-line">Principal's Signature</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Sealed Nectar Academy. All rights reserved.</p>
+    </footer>
+
 <script>
-    let reportData = {};
-    const params = new URLSearchParams(window.location.search);
-    const studentId = params.get('studentId');
-    const term = params.get('term');
-    const session = params.get('session');
+    let currentReportData = null; // Store fetched report data
+    let currentUser = null; // Store current user data
 
-    function toggleEdit(isEditing) {
-        ['teacherComment', 'principalComment', 'nextTermBegins'].forEach(id => {
-            const el = document.getElementById(id);
-            el.contentEditable = isEditing;
-            el.style.backgroundColor = isEditing ? '#fffbe6' : 'transparent';
-            el.style.outline = isEditing ? '1px dashed #fd7e14' : 'none';
-        });
-        document.getElementById('editBtn').classList.toggle('hidden', isEditing);
-        document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
-    }
-
-    async function saveReportData() {
-        const cumulativeDataToSave = reportData.subjects.map(s => ({ subjectName: s.subjectName, finalScore: parseFloat(s.finalScore) }));
-        const payload = {
-            studentId, term: reportData.term, session: reportData.session,
-            teacherComment: document.getElementById('teacherComment').textContent,
-            principalComment: document.getElementById('principalComment').textContent,
-            nextTermBegins: document.getElementById('nextTermBegins').textContent,
-            classLevel: reportData.student.class_level,
-            cumulativeData: JSON.stringify(cumulativeDataToSave)
-        };
-
+    async function loadUserData() {
         try {
-            const response = await fetch('/api/exam-results/report/meta', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-            });
-            if (!response.ok) throw new Error('Failed to save data.');
-            alert('Report data saved successfully!');
-            toggleEdit(false);
-        } catch (error) { alert(error.message); }
+            const response = await fetch('/api/users/me', { credentials: 'include' });
+            if (!response.ok) {
+                window.location.href = '/login.html';
+                return null;
+            }
+            currentUser = await response.json();
+            document.getElementById('navUsername').textContent = currentUser.username;
+            createNavigationLinks(currentUser); // If you have this function for dynamic nav
+            return currentUser;
+        } catch (error) {
+            console.error("Error loading user data for navigation:", error);
+            window.location.href = '/login.html';
+            return null;
+        }
     }
 
     async function loadReport() {
-        if (!studentId || !term || !session) {
-            displayError('Student ID, Term, and Session are required to generate a report.');
+        document.getElementById('loadingMessage').classList.remove('hidden');
+        document.getElementById('errorMessage').classList.add('hidden');
+        document.getElementById('reportContent').classList.add('hidden');
+        document.getElementById('editBtn').classList.add('hidden'); // Hide edit button by default
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('studentId');
+        const term = urlParams.get('term');
+        const academicYear = urlParams.get('academicYear');
+
+        if (!studentId || !term || !academicYear) {
+            displayError('Missing student ID, term, or academic year parameters.');
             return;
         }
 
         try {
-            const response = await fetch(`/api/exam-results/report/compile?studentId=${studentId}&term=${term}&session=${session}`);
+            const response = await fetch(`/api/report-cards/${studentId}?term=${term}&academicYear=${academicYear}`, { credentials: 'include' });
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || "Failed to compile report data.");
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch report card data.');
             }
-            reportData = await response.json();
-            renderReport(reportData);
+            currentReportData = await response.json();
+            displayReport(currentReportData);
 
-            document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('reportCardContent').classList.remove('hidden');
+            if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) {
+                document.getElementById('editBtn').classList.remove('hidden'); // Show edit button for admins/teachers
+            }
+
         } catch (error) {
-            displayError("Error: " + error.message);
+            displayError(`Error loading report: ${error.message}`);
+            console.error("Load report error:", error);
+        } finally {
+            document.getElementById('loadingMessage').classList.add('hidden');
         }
     }
 
-    function renderReport(data) {
-        // Populate student details
-        document.getElementById('studentName').textContent = `${data.student.first_name} ${data.student.last_name}`;
-        document.getElementById('admissionNumber').textContent = data.student.admission_number || 'N/A';
-        document.getElementById('studentClass').textContent = data.student.class_level || 'N/A';
-        document.getElementById('reportSession').textContent = data.session;
-        document.getElementById('reportTerm').textContent = data.term;
-        document.getElementById('studentDOB').textContent = data.student.dob ? new Date(data.student.dob).toLocaleDateString() : 'N/A';
+    function displayReport(data) {
+        document.getElementById('reportContent').classList.remove('hidden');
+        document.getElementById('studentFullName').textContent = data.student.full_name;
+        document.getElementById('studentAdmissionNo').textContent = data.student.admission_number || 'N/A';
+        document.getElementById('studentClass').textContent = data.student.class_id || 'N/A';
+        document.getElementById('academicYear').textContent = data.academicYear;
+        document.getElementById('reportTerm').textContent = `${data.term} Term Report`;
+        document.getElementById('dateGenerated').textContent = new Date(data.dateGenerated).toLocaleDateString();
 
-        const profilePic = document.getElementById('studentProfilePic');
-        profilePic.src = data.student.profile_picture_url || 'placeholder.png'; // Use a placeholder image
+        // Display student profile picture
+        const profilePicElement = document.getElementById('studentProfilePicture');
+        if (data.student.profile_picture_url) {
+            profilePicElement.src = data.student.profile_picture_url;
+        } else {
+            profilePicElement.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Default avatar
+        }
 
-        // Populate the cognitive ratings table
-        const tbody = document.getElementById('cognitiveRatingsBody');
-        tbody.innerHTML = ''; 
-        if(data.subjects && data.subjects.length > 0) {
-            data.subjects.forEach(s => {
-                tbody.innerHTML += `
+
+        const subjectScoresBody = document.getElementById('subjectScoresBody');
+        subjectScoresBody.innerHTML = '';
+        if (data.subjects && data.subjects.length > 0) {
+            data.subjects.forEach(subject => {
+                const row = `
                     <tr>
-                        <td>${s.subjectName}</td>
-                        <td>${s.ca_scaled}</td>
-                        <td>${s.exam_scaled}</td>
-                        <td><b>${s.finalScore}</b></td>
-                        <td>${s.firstTerm}</td>
-                        <td>${s.secondTerm}</td>
-                        <td>${s.thirdTerm}</td>
-                        <td>${s.cumulativeAvg}</td>
-                        <td>${s.grade}</td>
-                        <td>${s.remark}</td>
+                        <td>${subject.subject_name}</td>
+                        <td>${subject.total_score}</td>
+                        <td>${subject.score_obtained}</td>
+                        <td>${subject.grade || 'N/A'}</td>
+                        <td>${subject.remarks || 'N/A'}</td>
                     </tr>
                 `;
+                subjectScoresBody.innerHTML += row;
             });
         } else {
-             tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No subject results found for this student.</td></tr>`;
+            subjectScoresBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No subject results found for this student.</td></tr>`;
         }
         
         // Populate summary
@@ -254,9 +391,58 @@
         document.getElementById('classPosition').textContent = data.summary.position;
 
         // Populate editable meta fields
-        document.getElementById('teacherComment').textContent = data.meta?.teacher_comment || '';
-        document.getElementById('principalComment').textContent = data.meta?.principal_comment || '';
+        document.getElementById('teacherComment').value = data.meta?.teacher_comment || ''; // Use .value for textarea
+        document.getElementById('principalComment').value = data.meta?.principal_comment || ''; // Use .value for textarea
         document.getElementById('nextTermBegins').textContent = data.meta?.next_term_begins || 'TBA';
+    }
+
+    function toggleEdit(isEditing) {
+        document.getElementById('teacherComment').disabled = !isEditing;
+        document.getElementById('principalComment').disabled = !isEditing;
+        document.getElementById('editBtn').classList.toggle('hidden', isEditing);
+        document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
+    }
+
+    async function saveReportData() {
+        if (!currentReportData || !currentUser || !(currentUser.is_admin || currentUser.role === 'teacher')) {
+            alert('You do not have permission to save this report.');
+            return;
+        }
+
+        const studentId = currentReportData.student.id;
+        const term = currentReportData.term;
+        const academicYear = currentReportData.academicYear;
+        const teacherComment = document.getElementById('teacherComment').value;
+        const principalComment = document.getElementById('principalComment').value;
+
+        try {
+            const response = await fetch(`/api/report-cards/${studentId}/meta`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    term,
+                    academicYear,
+                    teacher_comment: teacherComment,
+                    principal_comment: principalComment
+                }),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to save report comments.');
+            }
+            alert('Report comments saved successfully!');
+            toggleEdit(false); // Switch back to view mode
+            // Optionally, re-load the report to ensure data consistency
+            await loadReport();
+
+        } catch (error) {
+            alert('Error saving report: ' + error.message);
+            console.error('Save report error:', error);
+        }
     }
 
     function displayError(message) {
@@ -266,9 +452,49 @@
         errorDiv.classList.remove('hidden');
     }
 
-    window.addEventListener('DOMContentLoaded', loadReport);
+    window.addEventListener('DOMContentLoaded', async () => {
+        await loadUserData(); // Load user data for navigation and permissions
+        if (currentUser) { // Only attempt to load report if user data is successfully loaded
+            loadReport();
+        }
+    });
+
     document.getElementById('editBtn').addEventListener('click', () => toggleEdit(true));
     document.getElementById('saveBtn').addEventListener('click', saveReportData);
+
+    // This function is assumed to be in auth.js or common.js
+    function createNavigationLinks(user) {
+        const navLinksContainer = document.getElementById('navLinks');
+        // Clear existing links except logout
+        navLinksContainer.innerHTML = '<li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>'; 
+
+        const dashboardLink = document.createElement('a');
+        dashboardLink.href = 'dashboard.html'; dashboardLink.textContent = 'Dashboard';
+        dashboardLink.classList.add('nav-link'); navLinksContainer.prepend(dashboardLink);
+
+        if (user.is_admin || user.role === 'teacher') {
+            const createExamLink = document.createElement('a');
+            createExamLink.href = 'create-exam.html'; createExamLink.textContent = 'Create Exam';
+            createExamLink.classList.add('nav-link');
+            navLinksContainer.insertBefore(createExamLink, document.getElementById('logoutLink'));
+        }
+        if (user.is_admin) {
+            const manageUsersLink = document.createElement('a');
+            manageUsersLink.href = 'manage-users.html'; manageUsersLink.textContent = 'Manage Users';
+            manageUsersLink.classList.add('nav-link');
+            navLinksContainer.insertBefore(manageUsersLink, document.getElementById('logoutLink'));
+
+            const registerLink = document.createElement('a');
+            registerLink.href = 'registration.html'; registerLink.textContent = 'Register User';
+            registerLink.classList.add('nav-link');
+            navLinksContainer.insertBefore(registerLink, document.getElementById('logoutLink'));
+            
+            const reportsLink = document.createElement('a');
+            reportsLink.href = 'admin-reports.html'; reportsLink.textContent = 'Student Reports';
+            reportsLink.classList.add('nav-link');
+            navLinksContainer.insertBefore(reportsLink, document.getElementById('logoutLink'));
+        }
+    }
 </script>
 </body>
 </html>

@@ -17,166 +17,263 @@
         .form-group { margin-bottom: 1.5rem; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-        .profile-picture-group { margin-bottom: 1.5rem; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; background-color: #f9f9f9; }
-        #profile_picture_preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #ddd; background-color: #e9ecef; display: block; margin: 0 auto 15px auto; }
-        .checkbox-group label { display: inline-block; margin-right: 15px;}
+        
+        /* Profile Picture specific styles */
+        .profile-picture-group {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 15px;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .profile-picture-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-blue);
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .file-upload-label {
+            display: inline-block;
+            background-color: var(--secondary-blue);
+            color: white;
+            padding: 8px 15px;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+        .file-upload-label:hover {
+            background-color: #0056b3;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+        }
+        .hidden { display: none; }
+        .error-message {
+            color: var(--danger-red);
+            background-color: #ffebeb;
+            border: 1px solid var(--danger-red);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <header>
-      <nav>
-        <div class="nav-container"> <a href="dashboard.html" class="logo">CBT System</a> <div class="nav-links" id="navLinks"> <a href="#" id="logoutLinkNavEditUser" style="display:none;">Logout</a></div> </div>
-      </nav>
+        <nav>
+            <div class="logo">CBT System</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
+            </ul>
+        </nav>
     </header>
+
     <main>
         <div class="auth-container">
-            <div class="form-header"> <h1>Edit User Profile</h1> <p id="editingUserIdentifier"></p> </div>
-            <div id="loadingIndicatorUserEdit" style="text-align:center; padding:20px;">Loading user data...</div>
-            <div id="formUserEditError" class="error-message hidden"></div>
-
-            <form id="editUserForm" class="hidden" enctype="multipart/form-data">
-                <input type="hidden" id="userId" name="userId">
+            <div class="form-header">
+                <h1>Edit User</h1>
+                <p>Update user information and roles.</p>
+            </div>
+            <div id="editErrorDiv" class="error-message hidden"></div>
+            <form id="editUserForm">
+                <input type="hidden" id="userId">
                 
-                <div class="form-grid">
-                    <div class="form-group"> <label for="edit_first_name">First Name *</label> <input type="text" id="edit_first_name" name="first_name" required> </div>
-                    <div class="form-group"> <label for="edit_last_name">Last Name *</label> <input type="text" id="edit_last_name" name="last_name" required> </div>
+                <div class="profile-picture-group">
+                    <img id="profilePicturePreview" class="profile-picture-preview" src="https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png" alt="Profile Picture">
+                    <label for="profilePictureInput" class="file-upload-label">Upload New Picture</label>
+                    <input type="file" id="profilePictureInput" name="profile_picture" accept="image/*">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="removeProfilePicture">
+                        <label for="removeProfilePicture">Remove Current Picture</label>
+                    </div>
                 </div>
-                <div class="form-group"> <label for="edit_email">Email *</label> <input type="email" id="edit_email" name="email" required> </div>
-                <div class="form-group"> <label for="edit_username">Username</label> <input type="text" id="edit_username" name="username"> </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">New Password (leave blank to keep current):</label>
+                    <input type="password" id="password" name="password">
+                </div>
                 
                 <div class="form-group">
-                    <label for="edit_role">Role *</label>
-                    <select id="edit_role" name="role" required onchange="toggleEditStudentFields()">
-                        <option value="student">Student</option> <option value="teacher">Teacher</option> <option value="admin">Admin</option>
+                    <label for="full_name">Full Name:</label>
+                    <input type="text" id="full_name" name="full_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role:</label>
+                    <select id="role" name="role" required>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="admin">Admin</option>
                     </select>
                 </div>
 
-                <div id="editStudentFields" class="hidden">
-                    <div class="form-group"> <label for="edit_admission_number">Admission Number</label> <input type="text" id="edit_admission_number" name="admission_number" placeholder="SNA/YY/001"> </div>
+                <div class="form-grid" id="studentFields" style="display: none;">
                     <div class="form-group">
-                        <label for="edit_class_level">Class Level</label>
-                        <select id="edit_class_level" name="class_level">
-                            <option value="">Select Class...</option>
-                            <option value="Primary 1">Primary 1</option><option value="Primary 2">Primary 2</option><option value="Primary 3">Primary 3</option>
-                            <option value="Primary 4">Primary 4</option><option value="Primary 5">Primary 5</option><option value="Primary 6">Primary 6</option>
-                            <option value="JSS 1">JSS 1</option><option value="JSS 2">JSS 2</option><option value="JSS 3">JSS 3</option>
-                            <option value="SS 1">SS 1</option><option value="SS 2">SS 2</option><option value="SS 3">SS 3</option>
-                        </select>
+                        <label for="admission_number">Admission Number (for students):</label>
+                        <input type="text" id="admission_number" name="admission_number">
                     </div>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group"> <label for="edit_dob">Date of Birth</label> <input type="date" id="edit_dob" name="dob"> </div>
-                    <div class="form-group"> <label for="edit_gender">Gender</label> <select id="edit_gender" name="gender"> <option value="">Select Gender...</option> <option value="Male">Male</option> <option value="Female">Female</option> <option value="Other">Other</option></select> </div>
-                </div>
-
-                <div class="form-group profile-picture-group">
-                    <label>Profile Picture</label>
-                    <img id="profile_picture_preview" src="https://placehold.co/120x120/e9ecef/333?text=Pic" alt="Profile Preview">
-                    <input type="file" id="edit_profile_picture" name="profile_picture" accept="image/jpeg, image/png, image/gif" style="margin-top:10px;">
-                    <div class="checkbox-group" style="margin-top:10px;">
-                        <label><input type="checkbox" id="remove_profile_picture" name="remove_profile_picture" value="true"> Remove current picture</label>
+                    <div class="form-group">
+                        <label for="class_id">Class (for students):</label>
+                        <input type="number" id="class_id" name="class_id" min="1">
                     </div>
                 </div>
 
-                <fieldset style="margin-top:1.5rem; padding:1rem; border:1px solid #ccc; border-radius:var(--border-radius-sm);">
-                    <legend>Change Password (Optional)</legend>
-                    <div class="form-group checkbox-group">
-                         <label><input type="checkbox" id="change_password_checkbox" name="change_password"> Change Password</label>
-                    </div>
-                    <div id="password_fields" class="hidden">
-                        <div class="form-group"> <label for="edit_password">New Password</label> <input type="password" id="edit_password" name="password" placeholder="Leave blank to keep current"> </div>
-                        <div class="form-group"> <label for="edit_password_confirm">Confirm New Password</label> <input type="password" id="edit_password_confirm" name="password_confirm"> </div>
-                    </div>
-                </fieldset>
-                
-                <div style="margin-top: 2rem; display:flex; justify-content:space-between;">
-                    <button type="button" class="btn secondary-btn" onclick="window.location.href='manage-users.html'">Cancel</button>
-                    <button type="submit" class="btn primary-btn">Save Changes</button>
-                </div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
         </div>
     </main>
-    <footer> <p>&copy; 2025 SNA CBT System. All rights reserved.</p> </footer>
-    <script>
-        const urlParamsEdit = new URLSearchParams(window.location.search);
-        const userIdToEdit = urlParamsEdit.get('userId');
-        const editStudentFieldsDiv = document.getElementById('editStudentFields');
 
-        function toggleEditStudentFields() {
-            const role = document.getElementById('edit_role').value;
-            editStudentFieldsDiv.classList.toggle('hidden', role !== 'student');
-            document.getElementById('edit_admission_number').required = (role === 'student');
-            document.getElementById('edit_class_level').required = (role === 'student');
+    <footer>
+        <p>&copy; 2025 CBT System</p>
+    </footer>
+
+    <script>
+        let userIdToEdit = null;
+        let originalProfilePictureUrl = ''; // To store the original URL
+
+        async function loadUserForEditing() {
+            const urlParams = new URLSearchParams(window.location.search);
+            userIdToEdit = urlParams.get('userId');
+            if (!userIdToEdit) {
+                document.getElementById('editErrorDiv').textContent = 'User ID not provided.';
+                document.getElementById('editErrorDiv').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/${userIdToEdit}`, { credentials: 'include' });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch user data.');
+                }
+                const user = await response.json();
+                
+                document.getElementById('username').value = user.username;
+                document.getElementById('email').value = user.email;
+                document.getElementById('full_name').value = user.full_name;
+                document.getElementById('role').value = user.role;
+                document.getElementById('admission_number').value = user.admission_number || '';
+                document.getElementById('class_id').value = user.class_id || '';
+
+                originalProfilePictureUrl = user.profile_picture_url || '';
+                const profilePicturePreview = document.getElementById('profilePicturePreview');
+                if (originalProfilePictureUrl) {
+                    profilePicturePreview.src = originalProfilePictureUrl;
+                } else {
+                    profilePicturePreview.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Default avatar
+                }
+
+                toggleStudentFields(); // Show/hide student fields based on role
+            } catch (error) {
+                document.getElementById('editErrorDiv').textContent = 'Error loading user: ' + error.message;
+                document.getElementById('editErrorDiv').classList.remove('hidden');
+            }
         }
-        
-        document.getElementById('change_password_checkbox').addEventListener('change', function() {
-            document.getElementById('password_fields').classList.toggle('hidden', !this.checked);
-            if(this.checked) {
-                document.getElementById('edit_password').required = true;
-                document.getElementById('edit_password_confirm').required = true;
+
+        function toggleStudentFields() {
+            const roleSelect = document.getElementById('role');
+            const studentFields = document.getElementById('studentFields');
+            if (roleSelect.value === 'student') {
+                studentFields.style.display = 'grid';
             } else {
-                document.getElementById('edit_password').required = false;
-                document.getElementById('edit_password_confirm').required = false;
+                studentFields.style.display = 'none';
+                document.getElementById('admission_number').value = '';
+                document.getElementById('class_id').value = '';
+            }
+        }
+
+        document.getElementById('role').addEventListener('change', toggleStudentFields);
+
+        document.getElementById('profilePictureInput').addEventListener('change', function(event) {
+            const preview = document.getElementById('profilePicturePreview');
+            const file = event.target.files[0];
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                document.getElementById('removeProfilePicture').checked = false; // Uncheck remove if new file selected
             }
         });
 
-        async function loadUserForEditing() {
-            if (!userIdToEdit) {
-                document.getElementById('formUserEditError').textContent = "No User ID provided.";
-                document.getElementById('formUserEditError').classList.remove('hidden');
-                document.getElementById('loadingIndicatorUserEdit').style.display = 'none';
-                return;
-            }
-            try {
-                const response = await fetch(`/api/users/${userIdToEdit}`, { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to load user data for editing.');
-                const user = await response.json();
-
-                document.getElementById('userId').value = user.id;
-                document.getElementById('edit_first_name').value = user.first_name || '';
-                document.getElementById('edit_last_name').value = user.last_name || '';
-                document.getElementById('edit_email').value = user.email || '';
-                document.getElementById('edit_username').value = user.username || '';
-                document.getElementById('edit_role').value = user.role || 'student';
-                document.getElementById('edit_admission_number').value = user.admission_number || '';
-                document.getElementById('edit_class_level').value = user.class_level || '';
-                document.getElementById('edit_dob').value = user.dob || ''; // Assumes YYYY-MM-DD format from backend
-                document.getElementById('edit_gender').value = user.gender || '';
-                document.getElementById('profile_picture_preview').src = user.profile_picture_url || 'https://placehold.co/120x120/e9ecef/333?text=Pic';
-                document.getElementById('editingUserIdentifier').textContent = `Editing: ${user.first_name} ${user.last_name} (${user.username})`;
-
-                toggleEditStudentFields(); // Set visibility based on loaded role
-                document.getElementById('loadingIndicatorUserEdit').style.display = 'none';
-                document.getElementById('editUserForm').classList.remove('hidden');
-            } catch (error) {
-                document.getElementById('formUserEditError').textContent = error.message;
-                document.getElementById('formUserEditError').classList.remove('hidden');
-                document.getElementById('loadingIndicatorUserEdit').style.display = 'none';
-            }
-        }
-
-        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const errorDiv = document.getElementById('formUserEditError');
-            errorDiv.classList.add('hidden'); errorDiv.textContent = '';
-            const submitButton = form.querySelector('button[type="submit"]');
-            submitButton.disabled = true; submitButton.textContent = 'Saving...';
-
-            const formData = new FormData(form);
-            // If change_password checkbox is not checked, remove password fields from FormData
-            if (!document.getElementById('change_password_checkbox').checked) {
-                formData.delete('password');
-                formData.delete('password_confirm');
+        document.getElementById('removeProfilePicture').addEventListener('change', function() {
+            const preview = document.getElementById('profilePicturePreview');
+            const fileInput = document.getElementById('profilePictureInput');
+            if (this.checked) {
+                preview.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Show default avatar
+                fileInput.value = ''; // Clear selected file
             } else {
-                 if (formData.get('password') !== formData.get('password_confirm')) {
-                    errorDiv.textContent = "New passwords do not match."; errorDiv.classList.remove('hidden');
-                    submitButton.disabled = false; submitButton.textContent = 'Save Changes'; return;
-                 }
-                 if (!formData.get('password')) { // If checked but empty
-                    errorDiv.textContent = "New password cannot be empty if changing password."; errorDiv.classList.remove('hidden');
-                    submitButton.disabled = false; submitButton.textContent = 'Save Changes'; return;
-                 }
+                // If unchecked, revert to original or selected new one
+                if (fileInput.files.length > 0) {
+                    preview.src = URL.createObjectURL(fileInput.files[0]);
+                } else if (originalProfilePictureUrl) {
+                    preview.src = originalProfilePictureUrl;
+                } else {
+                    preview.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png';
+                }
+            }
+        });
+
+        document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = this.querySelector('button[type="submit"]');
+            const editErrorDiv = document.getElementById('editErrorDiv');
+            editErrorDiv.classList.add('hidden');
+            editErrorDiv.textContent = '';
+            submitButton.disabled = true;
+            submitButton.textContent = 'Saving...';
+
+            const formData = new FormData();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('full_name', document.getElementById('full_name').value);
+            formData.append('role', document.getElementById('role').value);
+            const password = document.getElementById('password').value;
+            if (password) {
+                formData.append('password', password);
+            }
+
+            if (document.getElementById('role').value === 'student') {
+                formData.append('admission_number', document.getElementById('admission_number').value);
+                formData.append('class_id', document.getElementById('class_id').value);
+            }
+
+            // Handle profile picture
+            const profilePictureInput = document.getElementById('profilePictureInput');
+            const removeProfilePicture = document.getElementById('removeProfilePicture').checked;
+
+            if (removeProfilePicture) {
+                formData.append('remove_profile_picture', 'true');
+            } else if (profilePictureInput.files[0]) {
+                formData.append('profile_picture', profilePictureInput.files[0]);
+            } else if (originalProfilePictureUrl && !removeProfilePicture) {
+                 // If no new file, and not removing, and there was an original, signal to keep it.
+                 formData.append('profile_picture_url_exists', 'true'); // Custom flag for backend
             }
 
 
@@ -191,22 +288,72 @@
                     alert('User updated successfully!');
                     window.location.href = 'manage-users.html';
                 } else {
-                    errorDiv.textContent = responseData.error || 'Failed to update user.';
-                    errorDiv.classList.remove('hidden');
+                    editErrorDiv.textContent = responseData.error || 'Failed to update user.';
+                    editErrorDiv.classList.remove('hidden');
                 }
             } catch (error) {
-                errorDiv.textContent = 'An unexpected error occurred: ' + error.message;
-                errorDiv.classList.remove('hidden');
+                editErrorDiv.textContent = 'An unexpected error occurred: ' + error.message;
+                editErrorDiv.classList.remove('hidden');
             } finally {
                 submitButton.disabled = false; submitButton.textContent = 'Save Changes';
             }
         });
         
-        async function loadUserDataAndNavForEdit() { /* Similar to other pages, load user for nav */ }
-        window.addEventListener('DOMContentLoaded', () => {
-            // loadUserDataAndNavForEdit(); // Call function to setup nav
-            loadUserForEditing();
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData(); // Load user data for navigation
+            loadUserForEditing(); // Load specific user for editing
         });
+
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/users/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.href = '/login.html';
+                    return null;
+                }
+                const user = await response.json();
+                document.getElementById('navUsername').textContent = user.username;
+                createNavigationLinks(user);
+                return user;
+            } catch (error) {
+                console.error("Error loading user data for navigation:", error);
+                window.location.href = '/login.html';
+                return null;
+            }
+        }
+        // This function is assumed to be in auth.js or common.js
+        function createNavigationLinks(user) {
+            const navLinksContainer = document.getElementById('navLinks');
+            // Clear existing links except logout
+            navLinksContainer.innerHTML = '<li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>'; 
+
+            const dashboardLink = document.createElement('a');
+            dashboardLink.href = 'dashboard.html'; dashboardLink.textContent = 'Dashboard';
+            dashboardLink.classList.add('nav-link'); navLinksContainer.prepend(dashboardLink);
+
+            if (user.is_admin || user.role === 'teacher') {
+                const createExamLink = document.createElement('a');
+                createExamLink.href = 'create-exam.html'; createExamLink.textContent = 'Create Exam';
+                createExamLink.classList.add('nav-link');
+                navLinksContainer.insertBefore(createExamLink, document.getElementById('logoutLink'));
+            }
+            if (user.is_admin) {
+                const manageUsersLink = document.createElement('a');
+                manageUsersLink.href = 'manage-users.html'; manageUsersLink.textContent = 'Manage Users';
+                manageUsersLink.classList.add('nav-link');
+                navLinksContainer.insertBefore(manageUsersLink, document.getElementById('logoutLink'));
+
+                const registerLink = document.createElement('a');
+                registerLink.href = 'registration.html'; registerLink.textContent = 'Register User';
+                registerLink.classList.add('nav-link');
+                navLinksContainer.insertBefore(registerLink, document.getElementById('logoutLink'));
+                
+                const reportsLink = document.createElement('a');
+                reportsLink.href = 'admin-reports.html'; reportsLink.textContent = 'Student Reports';
+                reportsLink.classList.add('nav-link');
+                navLinksContainer.insertBefore(reportsLink, document.getElementById('logoutLink'));
+            }
+        }
     </script>
     <script src="/js/auth.js"></script>
 </body>

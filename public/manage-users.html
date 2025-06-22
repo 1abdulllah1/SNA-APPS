@@ -14,141 +14,154 @@
     .user-actions button { margin-right: 5px; padding: 6px 10px; font-size: 0.85em; }
     .user-profile-pic-thumbnail { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
     .user-name-cell { display: flex; align-items: center; }
-    #loadingIndicatorUsers { text-align: center; padding: 20px; font-style: italic; }
-    .filter-container { margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; padding: 1rem; background-color: #f9f9f9; border-radius: var(--border-radius-md); }
-    .filter-container input[type="text"], .filter-container select { padding: 8px 12px; }
+    #loadingIndicatorUsers { text-align: center; padding: 20px; font-style: italic; color: #666; }
+    .hidden { display: none; }
+    .error-message {
+            color: var(--danger-red);
+            background-color: #ffebeb;
+            border: 1px solid var(--danger-red);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <div class="nav-container">
-        <a href="dashboard.html" class="logo">CBT System</a>
-        <div class="nav-links" id="navLinks">
-          <a href="#" id="logoutLinkNav" style="display:none;">Logout</a>
-        </div>
-      </div>
+        <div class="logo">CBT System</div>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
+        </ul>
     </nav>
   </header>
-  <main>
-    <h1>Manage Users</h1>
-    <div id="userManagementError" class="error-message hidden"></div>
-    <div class="filter-container">
-        <input type="text" id="searchUser" placeholder="Search by name, email, admission no..." style="flex-grow:1;">
-        <select id="roleFilter">
-            <option value="">All Roles</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-        </select>
-        <button class="btn primary-btn btn-sm" onclick="applyUserFilters()">Search/Filter</button>
-    </div>
 
-    <div id="loadingIndicatorUsers">Loading users...</div>
-    <table class="user-table hidden" id="usersTableElement">
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Email</th>
-          <th>Admission No.</th>
-          <th>Class</th>
-          <th>Role</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="usersBody"></tbody>
-    </table>
+  <main>
+    <section class="user-management-section">
+      <h1>Manage Users</h1>
+      <div id="loadingIndicatorUsers">Loading users...</div>
+      <div id="userManagementError" class="error-message hidden"></div>
+
+      <div class="filter-controls">
+        <label for="roleFilter">Filter by Role:</label>
+        <select id="roleFilter">
+          <option value="">All Roles</option>
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <label for="searchUsers">Search:</label>
+        <input type="text" id="searchUsers" placeholder="Search by name, email, admission no.">
+      </div>
+
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Picture</th>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Admission No.</th>
+            <th>Class</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          </tbody>
+      </table>
+    </section>
   </main>
-  <footer> <p>&copy; 2025 SNA CBT System. All rights reserved.</p> </footer>
+
+  <footer>
+    <p>&copy; 2025 CBT System</p>
+  </footer>
 
   <script>
-    let allUsersData = []; // To store all users for client-side filtering
+    let allUsersData = []; // To store the full list of users
 
-    async function loadUsersAndNav() {
+    async function loadUserDataAndNav() {
         try {
-            const userResponse = await fetch('/api/users/me', {credentials: 'include'});
-            if(!userResponse.ok && userResponse.status === 401) { window.location.href = '/login.html'; return; }
-            if(!userResponse.ok) throw new Error("Failed to fetch current user for nav");
-            const currentUser = await userResponse.json();
-            createNavigationLinks(currentUser); // Assumes createNavigationLinks is defined
-            if (!currentUser.is_admin) {
-                document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to manage users.</p>';
-                document.getElementById('loadingIndicatorUsers').style.display = 'none';
-                return;
+            const response = await fetch('/api/users/me', { credentials: 'include' });
+            if (!response.ok) {
+                window.location.href = '/login.html';
+                return null;
             }
-            await fetchAllUsers(); // Fetch and display users
-        } catch(e) {
-            console.error("Page Init error", e);
-            document.getElementById('userManagementError').textContent = e.message || "Error initializing page.";
-            document.getElementById('userManagementError').classList.remove('hidden');
-            document.getElementById('loadingIndicatorUsers').style.display = 'none';
+            const user = await response.json();
+            document.getElementById('navUsername').textContent = user.username;
+            createNavigationLinks(user); // From auth.js
+            return user;
+        } catch (error) {
+            console.error("Error loading user data for navigation:", error);
+            window.location.href = '/login.html';
+            return null;
         }
     }
 
-    async function fetchAllUsers() {
-      document.getElementById('loadingIndicatorUsers').style.display = 'block';
-      document.getElementById('usersTableElement').classList.add('hidden');
+    async function loadUsers() {
+      document.getElementById('loadingIndicatorUsers').classList.remove('hidden');
+      document.getElementById('userManagementError').classList.add('hidden');
       try {
         const response = await fetch('/api/users', { credentials: 'include' });
         if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            throw new Error(errData.error || "Failed to load users list");
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         allUsersData = await response.json();
-        renderUsersTable(allUsersData);
+        applyUserFilters(); // Apply filters and display
       } catch (error) {
-        console.error('Failed to load users:', error);
-        document.getElementById('userManagementError').textContent = error.message;
+        console.error('Error fetching users:', error);
+        document.getElementById('userManagementError').textContent = 'Failed to load user data: ' + error.message;
         document.getElementById('userManagementError').classList.remove('hidden');
       } finally {
-        document.getElementById('loadingIndicatorUsers').style.display = 'none';
+        document.getElementById('loadingIndicatorUsers').classList.add('hidden');
       }
     }
-    
+
     function applyUserFilters() {
-        const searchTerm = document.getElementById('searchUser').value.toLowerCase();
-        const roleFilter = document.getElementById('roleFilter').value;
-        
-        const filteredUsers = allUsersData.filter(user => {
-            const matchesSearch = (user.first_name?.toLowerCase().includes(searchTerm) ||
-                                 user.last_name?.toLowerCase().includes(searchTerm) ||
-                                 user.email?.toLowerCase().includes(searchTerm) ||
-                                 user.username?.toLowerCase().includes(searchTerm) ||
-                                 user.admission_number?.toLowerCase().includes(searchTerm));
-            const matchesRole = roleFilter ? user.role === roleFilter : true;
-            return matchesSearch && matchesRole;
-        });
-        renderUsersTable(filteredUsers);
+      const roleFilter = document.getElementById('roleFilter').value;
+      const searchFilter = document.getElementById('searchUsers').value.toLowerCase();
+
+      const filteredUsers = allUsersData.filter(user => {
+        const matchesRole = roleFilter === '' || user.role === roleFilter;
+        const matchesSearch = searchFilter === '' ||
+                              user.username.toLowerCase().includes(searchFilter) ||
+                              user.email.toLowerCase().includes(searchFilter) ||
+                              (user.full_name && user.full_name.toLowerCase().includes(searchFilter)) ||
+                              (user.admission_number && user.admission_number.toLowerCase().includes(searchFilter));
+        return matchesRole && matchesSearch;
+      });
+      displayUsers(filteredUsers);
     }
 
-    function renderUsersTable(users) {
-        const container = document.getElementById('usersBody');
-        container.innerHTML = ''; // Clear previous entries
-        if (users.length === 0) {
-            container.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No users found matching your criteria.</td></tr>';
-        } else {
-            users.forEach(user => {
-              const row = document.createElement('tr');
-              const profilePicSrc = user.profile_picture_url ? user.profile_picture_url : `https://placehold.co/40x40/007bff/fff?text=${(user.first_name || 'U').charAt(0)}`;
-              
-              row.innerHTML = `
-                <td class="user-name-cell">
-                  <img src="${profilePicSrc}" alt="Profile Pic" class="user-profile-pic-thumbnail" onerror="this.src='https://placehold.co/40x40/cccccc/333?text=Err'">
-                  ${user.first_name || ''} ${user.last_name || ''} <br><small>(${user.username || 'N/A'})</small>
-                </td>
-                <td>${user.email || 'N/A'}</td>
-                <td>${user.admission_number || 'N/A'}</td>
-                <td>${user.class_level || 'N/A'}</td>
-                <td>${user.role || 'N/A'} ${user.is_admin ? '(Admin)' : ''}</td>
-                <td class="user-actions">
-                  <button class="btn btn-secondary btn-sm" onclick="editUser(${user.id})">Edit</button>
-                  <button class="btn delete-btn btn-sm" onclick="deleteUser(${user.id}, this)">Delete</button>
-                </td>
-              `;
-              container.appendChild(row);
-            });
-        }
-        document.getElementById('usersTableElement').classList.remove('hidden');
+    function displayUsers(users) {
+      const userTableBody = document.getElementById('userTableBody');
+      userTableBody.innerHTML = ''; // Clear existing rows
+      if (users.length === 0) {
+        userTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No users found matching your criteria.</td></tr>';
+        return;
+      }
+
+      users.forEach(user => {
+        const profilePicSrc = user.profile_picture_url || 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Default avatar
+        const row = `
+          <tr>
+            <td><img src="${profilePicSrc}" alt="Profile" class="user-profile-pic-thumbnail"></td>
+            <td>${user.username}</td>
+            <td>${user.full_name || 'N/A'}</td>
+            <td>${user.email}</td>
+            <td>${user.role}</td>
+            <td>${user.admission_number || 'N/A'}</td>
+            <td>${user.class_id || 'N/A'}</td>
+            <td class="user-actions">
+              <button class="btn btn-primary btn-sm" onclick="editUser(${user.id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id}, this)">Delete</button>
+            </td>
+          </tr>
+        `;
+        userTableBody.innerHTML += row;
+      });
     }
 
     function editUser(userId) {
@@ -175,8 +188,15 @@
         }
       }
     }
-    // Simplified navigation link creation (ensure it matches your global nav logic)
-    function createNavigationLinks(user) { /* ... Same as in create-exam.html/edit-exam.html ... */ }
+
+    document.getElementById('roleFilter').addEventListener('change', applyUserFilters);
+    document.getElementById('searchUsers').addEventListener('input', applyUserFilters);
+    
+    // Initial load
+    async function loadUsersAndNav() {
+        await loadUserDataAndNav(); // Load user for navigation and check admin status
+        await loadUsers(); // Load all users for management
+    }
     window.addEventListener('DOMContentLoaded', loadUsersAndNav);
   </script>
   <script src="/js/auth.js"></script>
