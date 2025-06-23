@@ -144,25 +144,17 @@
       }
 
       users.forEach(user => {
-        const profilePicSrc = user.profile_picture_url || 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Default avatar
+        // **CORRECTED**: The src is set directly from the user object.
+        // The backend guarantees this URL is valid (e.g., /uploads/... or /images/default_avatar.jpeg)
+        const profilePicSrc = user.profile_picture_url; 
         const row = `
           <tr>
             <td><img src="${profilePicSrc}" alt="Profile" class="user-profile-pic-thumbnail"></td>
-            <td>${user.username}</td>
-            <td>${user.full_name || 'N/A'}</td>
-            <td>${user.email}</td>
-            <td>${user.role}</td>
-            <td>${user.admission_number || 'N/A'}</td>
-            <td>${user.class_id || 'N/A'}</td>
-            <td class="user-actions">
-              <button class="btn btn-primary btn-sm" onclick="editUser(${user.id})">Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id}, this)">Delete</button>
-            </td>
-          </tr>
+            </tr>
         `;
         userTableBody.innerHTML += row;
-      });
-    }
+    });
+}
 
     function editUser(userId) {
       window.location.href = `edit-user.html?userId=${userId}`;

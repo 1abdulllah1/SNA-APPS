@@ -166,6 +166,37 @@ router.get("/report/compile", auth, async (req, res) => {
     }
 });
 
+router.get("/student/:studentId", auth, async (req, res) => {
+    try {
+        const { studentId } = req.params;
+
+        // Ensure the authenticated user is either an admin or the student themselves
+        if (req.user.id !== parseInt(studentId) && !req.user.is_admin) {
+            return res.status(403).json({ error: "Unauthorized access to student results." });
+        }
+
+        const resultsQuery = await pool.query(
+            `SELECT
+                er.result_id,
+                er.exam_id,
+                er.student_id,
+                er.score,
+                er.submission_time,
+                e.title AS exam_title,
+                e.duration_minutes
+             FROM exam_results er
+             JOIN exams e ON er.exam_id = e.exam_id
+             WHERE er.student_id = $1
+             ORDER BY er.submission_time DESC`,
+            [studentId]
+        );
+
+        res.json(resultsQuery.rows);
+    } catch (error) {
+        console.error("Error fetching student results:", error);
+        res.status(500).json({ error: "Failed to fetch student results." });
+    }
+});
 
 // --- Route to save report meta (no changes needed here) ---
 router.post("/report/meta", auth, async (req, res) => {

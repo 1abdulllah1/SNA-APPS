@@ -6,237 +6,269 @@
     <title>Dashboard | CBT System</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Modern UI enhancements */
-        .dashboard-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding: 20px; background-color: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        #userProfilePicture { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-blue); }
-        .exam-card { border-left: 5px solid var(--secondary-blue); /* Add accent color */ }
-        .exam-card.locked-exam { border-left-color: var(--danger-red); background-color: #fff8f8; }
-        .results-table th { background-color: #f8f9fa; color: #333; text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.5px;}
-        .results-table td { padding: 15px 12px; }
-        .results-table tr:hover { background-color: #f0f0f0; }
-        .tab-button.active {
-            background-color: var(--primary-blue);
-            color: white;
-        }
-        .tab-content {
-            border: 1px solid #e0e0e0;
-            border-top: none;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-        .tab-buttons {
-            display: flex;
-            margin-bottom: -1px; /* Overlap with content border */
-        }
-        .tab-button {
-            flex-grow: 1;
-            padding: 12px 20px;
-            border: 1px solid #e0e0e0;
-            border-bottom: none;
-            background-color: #f8f9fa;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-dark);
-            border-radius: 12px 12px 0 0;
-            transition: all 0.2s ease;
-        }
-        .tab-button:not(.active):hover {
-            background-color: #e9ecef;
-        }
-        .welcome-message {
-            font-size: 1.1em;
-            color: #555;
-            margin-top: 5px;
-        }
+        .dashboard-header { display: flex; align-items: center; gap: 20px; }
+        #userProfilePicture { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid #0056b3; }
+        .tab-content { background-color: #fff; padding: 20px; border: 1px solid #ddd; border-top: none; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <header>
         <nav>
-            <div class="logo">CBT System</div>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
-            </ul>
+            <a href="/dashboard.html" class="logo">SNA CBT System</a>
+            <ul class="nav-links" id="navLinksContainer">
+                </ul>
         </nav>
     </header>
 
     <main>
         <div class="dashboard-header">
+            <img id="userProfilePicture" src="/images/default_avatar.jpeg"
+                 onerror="this.onerror=null; this.src='/images/default_avatar.jpeg';"
+                 alt="Profile Picture">
             <div>
-                <img id="userProfilePicture" src="https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png" alt="Profile Picture">
-                <h1 id="welcomeMessage">Welcome, User!</h1>
-                <p id="userRole" class="welcome-message"></p>
-                <p id="admissionClass" class="welcome-message"></p>
+                <h1 id="welcomeMessage">Loading...</h1>
+                <p>Role: <span id="userRole"></span> | Email: <span id="userEmail"></span></p>
             </div>
-            <div>
+        </div>
+
+        <div class="tabs-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="showTab('availableExams')">Available Exams</button>
+                <button class="tab-button" onclick="showTab('myResults')">My Results</button>
+                <button class="tab-button" onclick="showTab('adminPanel')" id="adminPanelTab" style="display: none;">Admin Panel</button>
+            </div>
+
+            <div id="availableExams" class="tab-content">
+                <h2>Available Exams</h2>
+                <div id="examList" class="exam-list">
+                    <p id="loadingIndicatorExams">Loading exams...</p>
+                    </div>
+            </div>
+
+            <div id="myResults" class="tab-content hidden">
+                <h2>My Recent Results</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Exam Title</th>
+                            <th>Date Taken</th>
+                            <th>Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        <tr><td colspan="4" id="loadingIndicatorResults">Loading results...</td></tr>
+                        </tbody>
+                </table>
+                <p id="noResultsMessage" class="hidden">No results available yet.</p>
+                <p id="errorMessageResults" class="error-message hidden"></p>
+            </div>
+
+            <div id="adminPanel" class="tab-content hidden">
+                <h2>Admin Panel</h2>
+                <div class="admin-panel-links">
+                    <a href="create-exam.html" class="btn btn-primary">Create New Exam</a>
+                    <a href="manage-users.html" class="btn btn-primary">Manage Users</a>
+                    <a href="registration.html" class="btn btn-primary">Register New User</a>
+                    <a href="admin-reports.html" class="btn btn-primary">Student Reports</a>
                 </div>
-        </div>
-
-        <div class="tab-buttons">
-            <button class="tab-button active" onclick="showTab('exams')">Available Exams</button>
-            <button class="tab-button" onclick="showTab('results')">My Results</button>
-        </div>
-
-        <div id="examsTab" class="tab-content">
-            <h2>Exams</h2>
-            <div id="examsContainer" class="grid-container">
-                <p>Loading exams...</p>
             </div>
-        </div>
-
-        <div id="resultsTab" class="tab-content hidden">
-            <h2>My Recent Results</h2>
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>Exam Title</th>
-                        <th>Date Taken</th>
-                        <th>Score</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="resultsTableBody">
-                    <tr><td colspan="4" style="text-align: center;">No results found.</td></tr>
-                </tbody>
-            </table>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2025 CBT System</p>
+        <p>&copy; 2025 SNA CBT System</p>
     </footer>
 
     <script>
-        let currentUser = null;
+        let currentUser = null; // Global variable to store current user data
 
+        // Function to load user data and update UI
         async function loadUserData() {
             try {
                 const response = await fetch('/api/users/me', { credentials: 'include' });
                 if (!response.ok) {
-                    window.location.href = '/login.html';
-                    return null;
+                    if (response.status === 401) {
+                        window.location.href = '/login.html'; // Redirect to login if not authenticated
+                    }
+                    throw new Error('Failed to load user data.');
                 }
                 const user = await response.json();
                 currentUser = user; // Store user data globally
-                document.getElementById('navUsername').textContent = user.username;
-                document.getElementById('welcomeMessage').textContent = `Welcome, ${user.full_name || user.username}!`;
-                document.getElementById('userRole').textContent = `Role: ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
-                if (user.role === 'student' && user.admission_number && user.class_id) {
-                    document.getElementById('admissionClass').textContent = `Admission No: ${user.admission_number} | Class: ${user.class_id}`;
-                } else {
-                    document.getElementById('admissionClass').textContent = '';
-                }
 
-                // Set profile picture, use default if none exists
-                const profilePicElement = document.getElementById('userProfilePicture');
+                document.getElementById('welcomeMessage').textContent = `Welcome, ${user.username}!`;
+                document.getElementById('userRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                document.getElementById('userEmail').textContent = user.email;
+
+                // Set profile picture, using default if none or error
+                const profilePictureElement = document.getElementById('userProfilePicture');
                 if (user.profile_picture_url) {
-                    profilePicElement.src = user.profile_picture_url;
+                    profilePictureElement.src = user.profile_picture_url;
                 } else {
-                    profilePicElement.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Default avatar URL
+                    profilePictureElement.src = '/images/default_avatar.jpeg';
                 }
 
-                createNavigationLinks(user); // From auth.js or common.js
-                return user;
+                // Dynamically create navigation links based on user role
+                createNavigationLinks(user);
+
+                // Show admin panel tab if user is admin
+                if (user.is_admin) {
+                    document.getElementById('adminPanelTab').style.display = 'block';
+                }
+
+                return user; // Return user object for further use
             } catch (error) {
-                console.error("Error loading user data:", error);
-                window.location.href = '/login.html';
+                console.error('Error loading user data:', error);
+                // Optionally display an error message on the dashboard or redirect
+                alert('Failed to load user data. Please try logging in again.');
+                window.location.href = '/login.html'; // Critical error, force re-login
                 return null;
             }
         }
 
-        async function loadExams() {
-            const examsContainer = document.getElementById('examsContainer');
-            examsContainer.innerHTML = '<p>Loading exams...</p>';
-            try {
-                const response = await fetch('/api/exams', { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to load exams.');
-                const exams = await response.json();
-                renderExams(exams);
-            } catch (error) {
-                examsContainer.innerHTML = `<p class="error-message">Error loading exams: ${error.message}</p>`;
-                console.error("Error loading exams:", error);
+        function createNavigationLinks(user) {
+            const navLinksContainer = document.getElementById('navLinksContainer');
+            navLinksContainer.innerHTML = ''; // Clear existing links
+
+            const dashboardLink = document.createElement('a');
+            dashboardLink.href = 'dashboard.html'; dashboardLink.textContent = 'Dashboard';
+            dashboardLink.classList.add('nav-link'); navLinksContainer.appendChild(dashboardLink); // Changed to appendChild for correct order
+
+            if (user.is_admin || user.role === 'teacher') {
+                const createExamLink = document.createElement('a');
+                createExamLink.href = 'create-exam.html'; createExamLink.textContent = 'Create Exam';
+                createExamLink.classList.add('nav-link');
+                navLinksContainer.appendChild(createExamLink); // Changed to appendChild
             }
+            if (user.is_admin) {
+                const manageUsersLink = document.createElement('a');
+                manageUsersLink.href = 'manage-users.html'; manageUsersLink.textContent = 'Manage Users';
+                manageUsersLink.classList.add('nav-link');
+                navLinksContainer.appendChild(manageUsersLink); // Changed to appendChild
+
+                const registerLink = document.createElement('a');
+                registerLink.href = 'registration.html'; registerLink.textContent = 'Register User';
+                registerLink.classList.add('nav-link');
+                navLinksContainer.appendChild(registerLink); // Changed to appendChild
+
+                const reportsLink = document.createElement('a');
+                reportsLink.href = 'admin-reports.html'; reportsLink.textContent = 'Student Reports';
+                reportsLink.classList.add('nav-link');
+                navLinksContainer.appendChild(reportsLink); // Changed to appendChild
+            }
+
+            const logoutLink = document.createElement('a');
+            logoutLink.href = '#'; logoutLink.id = 'logoutLink'; logoutLink.textContent = 'Logout';
+            logoutLink.classList.add('nav-link'); navLinksContainer.appendChild(logoutLink);
         }
 
-        function renderExams(exams) {
-            const examsContainer = document.getElementById('examsContainer');
-            examsContainer.innerHTML = ''; // Clear loading message
+        async function loadExams() {
+            const examListDiv = document.getElementById('examList');
+            const loadingIndicator = document.getElementById('loadingIndicatorExams');
+            loadingIndicator.classList.remove('hidden');
+            examListDiv.innerHTML = ''; // Clear previous exams
 
-            if (exams.length === 0) {
-                examsContainer.innerHTML = '<p>No exams available at the moment.</p>';
-                return;
-            }
+            try {
+                const response = await fetch('/api/exams', { credentials: 'include' });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch exams.');
+                }
+                const exams = await response.json();
+                loadingIndicator.classList.add('hidden');
 
-            exams.forEach(exam => {
-                const isLocked = exam.is_locked; // Assuming is_locked property exists
-                const cardClass = `exam-card ${isLocked ? 'locked-exam' : ''}`;
-                const actionButton = currentUser && (currentUser.role === 'teacher' || currentUser.is_admin) ?
-                    `<button class="btn btn-secondary btn-sm" onclick="editExam(${exam.id})">Edit Exam</button>
-                     <button class="btn btn-info btn-sm" onclick="viewExamScores(${exam.id})">View Scores</button>` :
-                    (isLocked ? `<button class="btn btn-secondary btn-sm" disabled>Locked</button>` :
-                                `<button class="btn btn-primary btn-sm" onclick="startExam(${exam.id})">Start Exam</button>`);
+                if (exams.length === 0) {
+                    examListDiv.innerHTML = '<p>No exams available at the moment.</p>';
+                    return;
+                }
 
-                examsContainer.innerHTML += `
-                    <div class="${cardClass}">
-                        <h3>${exam.title}</h3>
-                        <p>Subject: ${exam.subject_name}</p>
-                        <p>Questions: ${exam.question_count}</p>
-                        <p>Duration: ${exam.duration_minutes} minutes</p>
-                        <div class="exam-actions">
-                            ${actionButton}
+                exams.forEach(exam => {
+                    const isLocked = new Date(exam.start_time) > new Date() || new Date(exam.end_time) < new Date();
+                    const lockMessage = isLocked ? `<p class="exam-status locked">Exam not yet available or has ended.</p>` : '';
+                    const actionButton = currentUser.role === 'student' ?
+                        `<button class="btn btn-primary" onclick="startExam(${exam.exam_id})" ${isLocked ? 'disabled' : ''}>${isLocked ? 'Locked' : 'Start Exam'}</button>` :
+                        `<button class="btn btn-secondary btn-sm" onclick="editExam(${exam.exam_id})">Edit Exam</button>
+                         <button class="btn btn-info btn-sm" onclick="viewExamScores(${exam.exam_id})">View Scores</button>`;
+
+                    examListDiv.innerHTML += `
+                        <div class="exam-card ${isLocked ? 'locked-exam' : ''}">
+                            <h3>${exam.title}</h3>
+                            <p><strong>Subject:</strong> ${exam.subject_name}</p>
+                            <p><strong>Class:</strong> ${exam.class_name}</p>
+                            <p><strong>Duration:</strong> ${exam.duration_minutes} minutes</p>
+                            <p><strong>Questions:</strong> ${exam.question_count}</p>
+                            <p><strong>Availability:</strong> ${new Date(exam.start_time).toLocaleString()} - ${new Date(exam.end_time).toLocaleString()}</p>
+                            ${lockMessage}
+                            <div class="exam-actions">
+                                ${actionButton}
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading exams:', error);
+                loadingIndicator.classList.add('hidden');
+                examListDiv.innerHTML = `<p class="error-message">Failed to load exams: ${error.message}</p>`;
+            }
         }
 
         async function loadResults() {
             const resultsTableBody = document.getElementById('resultsTableBody');
-            resultsTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading results...</td></tr>';
+            const loadingIndicator = document.getElementById('loadingIndicatorResults');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            const errorMessageDiv = document.getElementById('errorMessageResults');
+
+            loadingIndicator.classList.remove('hidden');
+            resultsTableBody.innerHTML = ''; // Clear previous results
+            noResultsMessage.classList.add('hidden');
+            errorMessageDiv.classList.add('hidden');
+
             try {
-                const response = await fetch('/api/exam-results/my-results', { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to load results.');
+                // **FIX**: Changed endpoint to fetch all results for the current student
+                const response = await fetch(`/api/exam-results/student/${currentUser.id}`, { credentials: 'include' });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch results.');
+                }
                 const results = await response.json();
-                renderResults(results);
+                loadingIndicator.classList.add('hidden');
+
+                if (results.length === 0) {
+                    noResultsMessage.classList.remove('hidden');
+                    return;
+                }
+
+                results.forEach(result => {
+                    const dateTaken = new Date(result.submission_time).toLocaleString();
+                    const score = result.score !== null ? `${parseFloat(result.score).toFixed(1)}%` : 'N/A';
+                    // **FIX**: The button now correctly links to the results page using the unique `result_id`.
+                    const viewButton = `<button class="btn btn-secondary btn-sm" onclick="viewResultDetails(${result.result_id})">View Details</button>`;
+
+                    resultsTableBody.innerHTML += `
+                        <tr>
+                            <td>${result.exam_title}</td>
+                            <td>${dateTaken}</td>
+                            <td>${score}</td>
+                            <td>${viewButton}</td>
+                        </tr>
+                    `;
+                });
             } catch (error) {
-                resultsTableBody.innerHTML = `<tr><td colspan="4" class="error-message" style="text-align: center;">Error loading results: ${error.message}</td></tr>`;
-                console.error("Error loading results:", error);
+                console.error('Error loading results:', error);
+                loadingIndicator.classList.add('hidden');
+                errorMessageDiv.textContent = `Error loading results: ${error.message}`;
+                errorMessageDiv.classList.remove('hidden');
             }
-        }
-
-        function renderResults(results) {
-            const tbody = document.getElementById('resultsTableBody');
-            tbody.innerHTML = ''; // Clear loading message
-
-            if (results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No results found.</td></tr>';
-                return;
-            }
-
-            results.forEach(result => {
-                const dateTaken = result.date_taken ? new Date(result.date_taken).toLocaleDateString() : 'N/A';
-                const score = result.score !== null ? `${parseFloat(result.score).toFixed(1)}%` : 'N/A';
-                // **FIX**: The button now correctly links to the results page using the unique `result_id`.
-                const viewButton = `<button class="btn btn-secondary btn-sm" onclick="viewResultDetails(${result.result_id})">View Details</button>`;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${result.exam_title}</td>
-                        <td>${dateTaken}</td>
-                        <td>${score}</td>
-                        <td>${viewButton}</td>
-                    </tr>
-                `;
-            });
         }
 
         function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
 
-            document.getElementById(tabId + 'Tab').classList.remove('hidden');
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
             document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
         }
 
@@ -255,18 +287,26 @@
                 await Promise.all([loadExams(), loadResults()]);
             }
 
+            // Moved logout listener here for consistency
             document.getElementById('logoutLink').addEventListener('click', async (e) => {
                 e.preventDefault();
                 try {
-                    await fetch(`/api/users/logout`, { method: 'POST', credentials: 'include' });
-                } catch(err) {
-                    console.error("Logout failed:", err);
-                } finally {
-                    window.location.href = '/login.html';
+                    const response = await fetch(`/api/users/logout`, { method: 'POST', credentials: 'include' });
+                    if (response.ok) {
+                        localStorage.clear(); sessionStorage.clear(); // Clear any local/session storage data
+                        window.location.href = '/login.html';
+                    } else {
+                        alert('Logout failed: ' + ((await response.json().catch(()=>({}))).error || 'Please try again.'));
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('Logout failed due to a network error.');
                 }
             });
+
+            // Initial tab display
+            showTab('availableExams');
         });
     </script>
-    <script src="/js/auth.js"></script>
 </body>
 </html>
