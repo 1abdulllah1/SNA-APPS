@@ -171,8 +171,7 @@
         <nav>
             <div class="logo">CBT System</div>
             <ul class="nav-links" id="navLinks">
-                <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
-                <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
+                <!-- Navigation links will be dynamically inserted here -->
             </ul>
         </nav>
     </header>
@@ -218,8 +217,13 @@
                         <thead>
                             <tr>
                                 <th>Subject</th>
-                                <th>Total Score</th>
-                                <th>Score Obtained</th>
+                                <th>CA (40%)</th>
+                                <th>Exam (60%)</th>
+                                <th>Final Score</th>
+                                <th>1st Term</th>
+                                <th>2nd Term</th>
+                                <th>3rd Term</th>
+                                <th>Cumulative Avg.</th>
                                 <th>Grade</th>
                                 <th>Remarks</th>
                             </tr>
@@ -235,14 +239,6 @@
                         <tr>
                             <td>Grand Total Score:</td>
                             <td id="grandTotalScore"></td>
-                        </tr>
-                        <tr>
-                            <td>Total Score Obtained:</td>
-                            <td id="totalScoreObtained"></td>
-                        </tr>
-                        <tr>
-                            <td>Total Possible Marks:</td>
-                            <td id="totalPossibleMarks"></td>
                         </tr>
                         <tr>
                             <td>Overall Percentage:</td>
@@ -299,7 +295,11 @@
                 return null;
             }
             currentUser = await response.json();
-            document.getElementById('navUsername').textContent = currentUser.username;
+            // Assuming there's no navUsername element in view-report.html based on provided code snippet
+            // const navUsernameElement = document.getElementById('navUsername'); 
+            // if (navUsernameElement) {
+            //     navUsernameElement.textContent = currentUser.username;
+            // }
             createNavigationLinks(currentUser); // If you have this function for dynamic nav
             return currentUser;
         } catch (error) {
@@ -314,6 +314,7 @@
         document.getElementById('errorMessage').classList.add('hidden');
         document.getElementById('reportContent').classList.add('hidden');
         document.getElementById('editBtn').classList.add('hidden'); // Hide edit button by default
+        document.getElementById('saveBtn').classList.add('hidden'); // Hide save button by default
 
         const urlParams = new URLSearchParams(window.location.search);
         const studentId = urlParams.get('studentId');
@@ -321,15 +322,16 @@
         const academicYear = urlParams.get('academicYear');
 
         if (!studentId || !term || !academicYear) {
-            displayError('Missing student ID, term, or academic year parameters.');
+            displayError('Missing student ID, term, or academic year parameters. Please go back to the student reports page.');
             return;
         }
 
         try {
-            const response = await fetch(`/api/report-cards/${studentId}?term=${term}&academicYear=${academicYear}`, { credentials: 'include' });
+            // Updated endpoint to match examResults.js report compilation
+            const response = await fetch(`/api/exam-results/report/compile?studentId=${studentId}&term=${term}&session=${academicYear}`, { credentials: 'include' });
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to fetch report card data.');
+                const errorData = await response.json().catch(() => ({})); // Parse error even if response not ok
+                throw new Error(errorData.error || `Failed to fetch report card data. Status: ${response.status}`);
             }
             currentReportData = await response.json();
             displayReport(currentReportData);
@@ -341,6 +343,10 @@
         } catch (error) {
             displayError(`Error loading report: ${error.message}`);
             console.error("Load report error:", error);
+            // If it's an authorization error, redirect to login
+            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('not authenticated')) {
+                 window.location.href = '/login.html';
+            }
         } finally {
             document.getElementById('loadingMessage').classList.add('hidden');
         }
@@ -350,17 +356,17 @@
         document.getElementById('reportContent').classList.remove('hidden');
         document.getElementById('studentFullName').textContent = data.student.full_name;
         document.getElementById('studentAdmissionNo').textContent = data.student.admission_number || 'N/A';
-        document.getElementById('studentClass').textContent = data.student.class_id || 'N/A';
-        document.getElementById('academicYear').textContent = data.academicYear;
+        document.getElementById('studentClass').textContent = data.classLevel || 'N/A'; // Use classLevel from compiled data
+        document.getElementById('academicYear').textContent = data.session;
         document.getElementById('reportTerm').textContent = `${data.term} Term Report`;
-        document.getElementById('dateGenerated').textContent = new Date(data.dateGenerated).toLocaleDateString();
+        document.getElementById('dateGenerated').textContent = new Date().toLocaleDateString(); // Current date
 
         // Display student profile picture
         const profilePicElement = document.getElementById('studentProfilePicture');
         if (data.student.profile_picture_url) {
             profilePicElement.src = data.student.profile_picture_url;
         } else {
-            profilePicElement.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Default avatar
+            profilePicElement.src = '/images/default_avatar.jpeg'; // Use your actual default avatar path
         }
 
 
@@ -370,23 +376,28 @@
             data.subjects.forEach(subject => {
                 const row = `
                     <tr>
-                        <td>${subject.subject_name}</td>
-                        <td>${subject.total_score}</td>
-                        <td>${subject.score_obtained}</td>
+                        <td>${subject.subjectName}</td>
+                        <td>${subject.ca_scaled}</td>
+                        <td>${subject.exam_scaled}</td>
+                        <td>${subject.finalScore}</td>
+                        <td>${subject.firstTerm}</td>
+                        <td>${subject.secondTerm}</td>
+                        <td>${subject.thirdTerm}</td>
+                        <td>${subject.cumulativeAvg}</td>
                         <td>${subject.grade || 'N/A'}</td>
-                        <td>${subject.remarks || 'N/A'}</td>
+                        <td>${subject.remark || 'N/A'}</td>
                     </tr>
                 `;
                 subjectScoresBody.innerHTML += row;
             });
         } else {
-            subjectScoresBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No subject results found for this student.</td></tr>`;
+            subjectScoresBody.innerHTML = `<tr><td colspan="10" style="text-align: center;">No subject results found for this student for this term.</td></tr>`;
         }
         
         // Populate summary
         document.getElementById('grandTotalScore').textContent = data.summary.totalScoreObtained;
-        document.getElementById('totalScoreObtained').textContent = data.summary.totalScoreObtained;
-        document.getElementById('totalPossibleMarks').textContent = data.summary.totalPossibleMarks;
+        // document.getElementById('totalScoreObtained').textContent = data.summary.totalScoreObtained; // Removed as it's duplicate of grandTotalScore
+        // document.getElementById('totalPossibleMarks').textContent = data.summary.totalPossibleMarks; // Removed as it's derivative of overall percentage
         document.getElementById('overallPercentage').textContent = `${data.summary.overallPercentage}%`;
         document.getElementById('classPosition').textContent = data.summary.position;
 
@@ -405,27 +416,46 @@
 
     async function saveReportData() {
         if (!currentReportData || !currentUser || !(currentUser.is_admin || currentUser.role === 'teacher')) {
-            alert('You do not have permission to save this report.');
+            alert('You do not have permission to save this report.'); // Replace with custom modal
             return;
         }
 
         const studentId = currentReportData.student.id;
         const term = currentReportData.term;
-        const academicYear = currentReportData.academicYear;
+        const session = currentReportData.session; // Use session directly
         const teacherComment = document.getElementById('teacherComment').value;
         const principalComment = document.getElementById('principalComment').value;
+        const classLevel = currentReportData.classLevel; // Use classLevel from loaded data
+        
+        // Prepare cumulative data for saving (optional, only if you collect it in currentReportData)
+        // For simplicity, for now, we'll only save comments and basic meta.
+        // If your backend expects cumulativeData, you'd need to add it here.
+        const cumulativeData = currentReportData.subjects.map(s => ({
+            subjectName: s.subjectName,
+            finalScore: parseFloat(s.finalScore),
+            firstTerm: s.firstTerm !== '-' ? parseFloat(s.firstTerm) : null,
+            secondTerm: s.secondTerm !== '-' ? parseFloat(s.secondTerm) : null,
+            thirdTerm: s.thirdTerm !== '-' ? parseFloat(s.thirdTerm) : null,
+            cumulativeAvg: parseFloat(s.cumulativeAvg)
+        }));
+
 
         try {
-            const response = await fetch(`/api/report-cards/${studentId}/meta`, {
-                method: 'PUT',
+            // Using the POST route for report-card-meta as it handles both insert and update (UPSERT)
+            const response = await fetch(`/api/report-card-meta`, {
+                method: 'POST', // Changed from PUT to POST as per reportCardMeta.js API
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    studentId,
                     term,
-                    academicYear,
-                    teacher_comment: teacherComment,
-                    principal_comment: principalComment
+                    session,
+                    classLevel, // Pass classLevel
+                    teacherComment,
+                    principalComment,
+                    nextTermBegins: document.getElementById('nextTermBegins').textContent === 'TBA' ? null : document.getElementById('nextTermBegins').textContent, // Capture next term begins
+                    cumulativeData // Pass cumulative data
                 }),
                 credentials: 'include'
             });
@@ -434,13 +464,13 @@
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to save report comments.');
             }
-            alert('Report comments saved successfully!');
+            alert('Report comments saved successfully!'); // Replace with custom modal
             toggleEdit(false); // Switch back to view mode
             // Optionally, re-load the report to ensure data consistency
             await loadReport();
 
         } catch (error) {
-            alert('Error saving report: ' + error.message);
+            alert('Error saving report: ' + error.message); // Replace with custom modal
             console.error('Save report error:', error);
         }
     }
@@ -466,35 +496,53 @@
     function createNavigationLinks(user) {
         const navLinksContainer = document.getElementById('navLinks');
         // Clear existing links except logout
-        navLinksContainer.innerHTML = '<li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>'; 
+        navLinksContainer.innerHTML = ''; // Clear all and rebuild
 
-        const dashboardLink = document.createElement('a');
-        dashboardLink.href = 'dashboard.html'; dashboardLink.textContent = 'Dashboard';
-        dashboardLink.classList.add('nav-link'); navLinksContainer.prepend(dashboardLink);
+        const dashboardLink = document.createElement('li');
+        dashboardLink.innerHTML = '<a href="dashboard.html" class="nav-link">Dashboard</a>';
+        navLinksContainer.appendChild(dashboardLink);
 
         if (user.is_admin || user.role === 'teacher') {
-            const createExamLink = document.createElement('a');
-            createExamLink.href = 'create-exam.html'; createExamLink.textContent = 'Create Exam';
-            createExamLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(createExamLink, document.getElementById('logoutLink'));
+            const createExamLink = document.createElement('li');
+            createExamLink.innerHTML = '<a href="create-exam.html" class="nav-link">Create Exam</a>';
+            navLinksContainer.appendChild(createExamLink);
         }
         if (user.is_admin) {
-            const manageUsersLink = document.createElement('a');
-            manageUsersLink.href = 'manage-users.html'; manageUsersLink.textContent = 'Manage Users';
-            manageUsersLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(manageUsersLink, document.getElementById('logoutLink'));
+            const manageUsersLink = document.createElement('li');
+            manageUsersLink.innerHTML = '<a href="manage-users.html" class="nav-link">Manage Users</a>';
+            navLinksContainer.appendChild(manageUsersLink);
 
-            const registerLink = document.createElement('a');
-            registerLink.href = 'registration.html'; registerLink.textContent = 'Register User';
-            registerLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(registerLink, document.getElementById('logoutLink'));
+            const registerLink = document.createElement('li');
+            registerLink.innerHTML = '<a href="registration.html" class="nav-link">Register User</a>';
+            navLinksContainer.appendChild(registerLink);
             
-            const reportsLink = document.createElement('a');
-            reportsLink.href = 'admin-reports.html'; reportsLink.textContent = 'Student Reports';
-            reportsLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(reportsLink, document.getElementById('logoutLink'));
+            const reportsLink = document.createElement('li');
+            reportsLink.innerHTML = '<a href="admin-reports.html" class="nav-link">Student Reports</a>';
+            navLinksContainer.appendChild(reportsLink);
+
+            // New links for navigation bar
+            const manageSubjectsLink = document.createElement('li');
+            manageSubjectsLink.innerHTML = '<a href="manage-subjects.html" class="nav-link">Manage Subjects</a>';
+            navLinksContainer.appendChild(manageSubjectsLink);
+
+            const manageClassesLink = document.createElement('li');
+            manageClassesLink.innerHTML = '<a href="manage-classes.html" class="nav-link">Manage Classes</a>';
+            navLinksContainer.appendChild(manageClassesLink);
+        }
+
+        const logoutLinkItem = document.createElement('li');
+        logoutLinkItem.innerHTML = '<a href="#" id="logoutLink" class="nav-link">Logout</a>';
+        navLinksContainer.appendChild(logoutLinkItem);
+
+        const logoutButton = document.getElementById('logoutLink');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleLogout();
+            });
         }
     }
 </script>
+    <script src="/js/xxx.js"></script>
 </body>
 </html>

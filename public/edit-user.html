@@ -78,9 +78,9 @@
 <body>
     <header>
         <nav>
-            <div class="logo">CBT System</div>
+            <a href="/dashboard.html" class="logo">SNA CBT System</a>
             <ul class="nav-links" id="navLinks">
-                <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
+                <!-- Navigation links will be dynamically inserted here -->
             </ul>
         </nav>
     </header>
@@ -96,7 +96,7 @@
                 <input type="hidden" id="userId">
                 
                 <div class="profile-picture-group">
-                    <img id="profilePicturePreview" class="profile-picture-preview" src="https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png" alt="Profile Picture">
+                    <img id="profilePicturePreview" class="profile-picture-preview" src="/images/default_avatar.jpeg" alt="Profile Picture">
                     <label for="profilePictureInput" class="file-upload-label">Upload New Picture</label>
                     <input type="file" id="profilePictureInput" name="profile_picture" accept="image/*">
                     <div class="checkbox-group">
@@ -142,7 +142,7 @@
                     </div>
                     <div class="form-group">
                         <label for="class_id">Class (for students):</label>
-                        <input type="number" id="class_id" name="class_id" min="1">
+                        <input type="number" id="class_id" name="class_id" min="1"> 
                     </div>
                 </div>
 
@@ -158,6 +158,102 @@
     <script>
         let userIdToEdit = null;
         let originalProfilePictureUrl = ''; // To store the original URL
+        let currentUser = null; // Store current user data
+
+        /**
+         * Dynamically creates navigation links based on user roles for the client-side UI.
+         */
+        function createNavigationLinks(user) {
+            const navLinksContainer = document.getElementById('navLinks');
+            if (navLinksContainer) {
+                navLinksContainer.innerHTML = ''; 
+                
+                const dashboardLink = document.createElement('li');
+                dashboardLink.innerHTML = '<a href="/dashboard.html" class="nav-link">Dashboard</a>';
+                navLinksContainer.appendChild(dashboardLink);
+
+                if (user.is_admin || user.role === 'teacher') {
+                    const createExamLink = document.createElement('li');
+                    createExamLink.innerHTML = '<a href="create-exam.html" class="nav-link">Create Exam</a>';
+                    navLinksContainer.appendChild(createExamLink);
+                }
+
+                if (user.is_admin) {
+                    const manageUsersLink = document.createElement('li');
+                    manageUsersLink.innerHTML = '<a href="manage-users.html" class="nav-link">Manage Users</a>';
+                    navLinksContainer.appendChild(manageUsersLink);
+
+                    const registerLink = document.createElement('li');
+                    registerLink.innerHTML = '<a href="registration.html" class="nav-link">Register User</a>';
+                    navLinksContainer.appendChild(registerLink);
+
+                    const reportsLink = document.createElement('li');
+                    reportsLink.innerHTML = '<a href="admin-reports.html" class="nav-link">Student Reports</a>';
+                    navLinksContainer.appendChild(reportsLink);
+                }
+
+                const logoutLinkItem = document.createElement('li');
+                logoutLinkItem.innerHTML = '<a href="#" id="logoutLink" class="nav-link">Logout</a>';
+                navLinksContainer.appendChild(logoutLinkItem);
+
+                const logoutButton = document.getElementById('logoutLink');
+                if (logoutButton) {
+                    logoutButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleLogout();
+                    });
+                }
+            }
+        }
+
+        /**
+         * Handles user logout by calling the logout API endpoint,
+         * clearing all client-side storage, and redirecting to the login page.
+         */
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/users/logout', { 
+                    method: 'POST', 
+                    credentials: 'include' 
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+                }
+            } catch (error) {
+                console.error('Logout network error:', error);
+            } finally {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/login.html';
+            }
+        }
+
+        /**
+         * Loads current user data from the backend (/api/users/me) for authentication and navigation.
+         * @returns {Promise<object|null>} The user object if authenticated, otherwise null.
+         */
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/users/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.href = '/login.html';
+                    return null;
+                }
+                currentUser = await response.json();
+                const navUsernameElement = document.getElementById('navUsername');
+                if (navUsernameElement) {
+                    navUsernameElement.textContent = currentUser.username;
+                }
+                createNavigationLinks(currentUser);
+                return currentUser;
+            } catch (error) {
+                console.error("Error loading user data for navigation:", error);
+                window.location.href = '/login.html';
+                return null;
+            }
+        }
+
 
         async function loadUserForEditing() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -178,23 +274,21 @@
                 
                 document.getElementById('username').value = user.username;
                 document.getElementById('email').value = user.email;
-                document.getElementById('full_name').value = user.full_name;
+                document.getElementById('full_name').value = user.full_name || ''; 
                 document.getElementById('role').value = user.role;
                 document.getElementById('admission_number').value = user.admission_number || '';
                 document.getElementById('class_id').value = user.class_id || '';
 
-                originalProfilePictureUrl = user.profile_picture_url || '';
+                originalProfilePictureUrl = user.profile_picture_url || '/images/default_avatar.jpeg';
                 const profilePicturePreview = document.getElementById('profilePicturePreview');
-                if (originalProfilePictureUrl) {
-                    profilePicturePreview.src = originalProfilePictureUrl;
-                } else {
-                    profilePicturePreview.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Default avatar
-                }
+                profilePicturePreview.src = originalProfilePictureUrl;
 
-                toggleStudentFields(); // Show/hide student fields based on role
+                toggleStudentFields(); 
             } catch (error) {
                 document.getElementById('editErrorDiv').textContent = 'Error loading user: ' + error.message;
                 document.getElementById('editErrorDiv').classList.remove('hidden');
+                console.error("Error loading user for edit, redirecting to login.", error);
+                window.location.href = '/login.html'; 
             }
         }
 
@@ -217,7 +311,7 @@
             const file = event.target.files[0];
             if (file) {
                 preview.src = URL.createObjectURL(file);
-                document.getElementById('removeProfilePicture').checked = false; // Uncheck remove if new file selected
+                document.getElementById('removeProfilePicture').checked = false; 
             }
         });
 
@@ -225,16 +319,13 @@
             const preview = document.getElementById('profilePicturePreview');
             const fileInput = document.getElementById('profilePictureInput');
             if (this.checked) {
-                preview.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png'; // Show default avatar
-                fileInput.value = ''; // Clear selected file
+                preview.src = '/images/default_avatar.jpeg'; 
+                fileInput.value = ''; 
             } else {
-                // If unchecked, revert to original or selected new one
                 if (fileInput.files.length > 0) {
                     preview.src = URL.createObjectURL(fileInput.files[0]);
-                } else if (originalProfilePictureUrl) {
-                    preview.src = originalProfilePictureUrl;
                 } else {
-                    preview.src = 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png';
+                    preview.src = originalProfilePictureUrl; 
                 }
             }
         });
@@ -263,7 +354,6 @@
                 formData.append('class_id', document.getElementById('class_id').value);
             }
 
-            // Handle profile picture
             const profilePictureInput = document.getElementById('profilePictureInput');
             const removeProfilePicture = document.getElementById('removeProfilePicture').checked;
 
@@ -271,22 +361,18 @@
                 formData.append('remove_profile_picture', 'true');
             } else if (profilePictureInput.files[0]) {
                 formData.append('profile_picture', profilePictureInput.files[0]);
-            } else if (originalProfilePictureUrl && !removeProfilePicture) {
-                 // If no new file, and not removing, and there was an original, signal to keep it.
-                 formData.append('profile_picture_url_exists', 'true'); // Custom flag for backend
-            }
-
+            } 
 
             try {
                 const response = await fetch(`/api/users/${userIdToEdit}`, {
                     method: 'PUT',
-                    body: formData, // FormData handles multipart for file upload
+                    body: formData, 
                     credentials: 'include'
                 });
                 const responseData = await response.json();
                 if (response.ok) {
                     alert('User updated successfully!');
-                    window.location.href = 'manage-users.html';
+                    window.location.href = 'manage-users.html'; 
                 } else {
                     editErrorDiv.textContent = responseData.error || 'Failed to update user.';
                     editErrorDiv.classList.remove('hidden');
@@ -300,61 +386,16 @@
         });
         
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadUserData(); // Load user data for navigation
-            loadUserForEditing(); // Load specific user for editing
+            await new Promise(resolve => setTimeout(resolve, 50)); 
+            
+            // loadUserData will set currentUser and build navigation
+            const user = await loadUserData(); 
+            if (user && user.is_admin) { 
+                await loadUserForEditing(); 
+            } else {
+                window.location.href = '/dashboard.html'; 
+            }
         });
-
-        async function loadUserData() {
-            try {
-                const response = await fetch('/api/users/me', { credentials: 'include' });
-                if (!response.ok) {
-                    window.location.href = '/login.html';
-                    return null;
-                }
-                const user = await response.json();
-                document.getElementById('navUsername').textContent = user.username;
-                createNavigationLinks(user);
-                return user;
-            } catch (error) {
-                console.error("Error loading user data for navigation:", error);
-                window.location.href = '/login.html';
-                return null;
-            }
-        }
-        // This function is assumed to be in auth.js or common.js
-        function createNavigationLinks(user) {
-            const navLinksContainer = document.getElementById('navLinks');
-            // Clear existing links except logout
-            navLinksContainer.innerHTML = '<li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>'; 
-
-            const dashboardLink = document.createElement('a');
-            dashboardLink.href = 'dashboard.html'; dashboardLink.textContent = 'Dashboard';
-            dashboardLink.classList.add('nav-link'); navLinksContainer.prepend(dashboardLink);
-
-            if (user.is_admin || user.role === 'teacher') {
-                const createExamLink = document.createElement('a');
-                createExamLink.href = 'create-exam.html'; createExamLink.textContent = 'Create Exam';
-                createExamLink.classList.add('nav-link');
-                navLinksContainer.insertBefore(createExamLink, document.getElementById('logoutLink'));
-            }
-            if (user.is_admin) {
-                const manageUsersLink = document.createElement('a');
-                manageUsersLink.href = 'manage-users.html'; manageUsersLink.textContent = 'Manage Users';
-                manageUsersLink.classList.add('nav-link');
-                navLinksContainer.insertBefore(manageUsersLink, document.getElementById('logoutLink'));
-
-                const registerLink = document.createElement('a');
-                registerLink.href = 'registration.html'; registerLink.textContent = 'Register User';
-                registerLink.classList.add('nav-link');
-                navLinksContainer.insertBefore(registerLink, document.getElementById('logoutLink'));
-                
-                const reportsLink = document.createElement('a');
-                reportsLink.href = 'admin-reports.html'; reportsLink.textContent = 'Student Reports';
-                reportsLink.classList.add('nav-link');
-                navLinksContainer.insertBefore(reportsLink, document.getElementById('logoutLink'));
-            }
-        }
     </script>
-    <script src="/js/auth.js"></script>
 </body>
 </html>

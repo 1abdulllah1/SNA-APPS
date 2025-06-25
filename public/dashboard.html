@@ -72,6 +72,9 @@
                     <a href="manage-users.html" class="btn btn-primary">Manage Users</a>
                     <a href="registration.html" class="btn btn-primary">Register New User</a>
                     <a href="admin-reports.html" class="btn btn-primary">Student Reports</a>
+                    <!-- New links for Admin Panel -->
+                    <a href="manage-subjects.html" class="btn btn-primary">Manage Subjects</a>
+                    <a href="manage-classes.html" class="btn btn-primary">Manage Classes</a>
                 </div>
             </div>
         </div>
@@ -156,6 +159,17 @@
                 reportsLink.href = 'admin-reports.html'; reportsLink.textContent = 'Student Reports';
                 reportsLink.classList.add('nav-link');
                 navLinksContainer.appendChild(reportsLink); // Changed to appendChild
+
+                // New links for navigation bar
+                const manageSubjectsLink = document.createElement('a');
+                manageSubjectsLink.href = 'manage-subjects.html'; manageSubjectsLink.textContent = 'Manage Subjects';
+                manageSubjectsLink.classList.add('nav-link');
+                navLinksContainer.appendChild(manageSubjectsLink);
+
+                const manageClassesLink = document.createElement('a');
+                manageClassesLink.href = 'manage-classes.html'; manageClassesLink.textContent = 'Manage Classes';
+                manageClassesLink.classList.add('nav-link');
+                navLinksContainer.appendChild(manageClassesLink);
             }
 
             const logoutLink = document.createElement('a');
@@ -193,10 +207,10 @@
                     examListDiv.innerHTML += `
                         <div class="exam-card ${isLocked ? 'locked-exam' : ''}">
                             <h3>${exam.title}</h3>
-                            <p><strong>Subject:</strong> ${exam.subject_name}</p>
-                            <p><strong>Class:</strong> ${exam.class_name}</p>
+                            <p><strong>Subject:</strong> ${exam.subject_name || 'N/A'}</p>
+                            <p><strong>Class:</strong> ${exam.class_name || 'N/A'}</p>
                             <p><strong>Duration:</strong> ${exam.duration_minutes} minutes</p>
-                            <p><strong>Questions:</strong> ${exam.question_count}</p>
+                            <p><strong>Questions:</strong> ${exam.question_count || 'N/A'}</p>
                             <p><strong>Availability:</strong> ${new Date(exam.start_time).toLocaleString()} - ${new Date(exam.end_time).toLocaleString()}</p>
                             ${lockMessage}
                             <div class="exam-actions">
@@ -224,7 +238,7 @@
             errorMessageDiv.classList.add('hidden');
 
             try {
-                // **FIX**: Changed endpoint to fetch all results for the current student
+                // Fetch all results for the current student
                 const response = await fetch(`/api/exam-results/student/${currentUser.id}`, { credentials: 'include' });
                 if (!response.ok) {
                     throw new Error('Failed to fetch results.');
@@ -240,7 +254,7 @@
                 results.forEach(result => {
                     const dateTaken = new Date(result.submission_time).toLocaleString();
                     const score = result.score !== null ? `${parseFloat(result.score).toFixed(1)}%` : 'N/A';
-                    // **FIX**: The button now correctly links to the results page using the unique `result_id`.
+                    // The button now correctly links to the results page using the unique `result_id`.
                     const viewButton = `<button class="btn btn-secondary btn-sm" onclick="viewResultDetails(${result.result_id})">View Details</button>`;
 
                     resultsTableBody.innerHTML += `
@@ -275,9 +289,9 @@
         // --- NAVIGATION FUNCTIONS ---
         function startExam(examId) { window.location.href = `exam.html?examId=${examId}`; }
         function editExam(examId) { window.location.href = `edit-exam.html?examId=${examId}`; }
-        // **FIX**: Redirects to teacher/admin view of results.
+        // Redirects to teacher/admin view of results.
         function viewExamScores(examId) { window.location.href = `results.html?examId=${examId}&view=teacher`; }
-        // **FIX**: New function to view a specific result by its unique ID.
+        // New function to view a specific result by its unique ID.
         function viewResultDetails(resultId) { window.location.href = `results.html?resultId=${resultId}`; }
 
         // --- PAGE INITIALIZATION ---
@@ -296,11 +310,16 @@
                         localStorage.clear(); sessionStorage.clear(); // Clear any local/session storage data
                         window.location.href = '/login.html';
                     } else {
-                        alert('Logout failed: ' + ((await response.json().catch(()=>({}))).error || 'Please try again.'));
+                        // Using a custom modal/message box instead of alert
+                        const errorMsg = ((await response.json().catch(()=>({}))).error || 'Please try again.');
+                        // Replace alert with your custom message display logic
+                        console.error('Logout failed:', errorMsg); 
+                        alert('Logout failed: ' + errorMsg); // Fallback to alert for now
                     }
                 } catch (error) {
                     console.error('Logout error:', error);
-                    alert('Logout failed due to a network error.');
+                    // Replace alert with your custom message display logic
+                    alert('Logout failed due to a network error.'); // Fallback to alert for now
                 }
             });
 
@@ -308,5 +327,6 @@
             showTab('availableExams');
         });
     </script>
+     <script src="/js/xxx.js"></script>
 </body>
 </html>
