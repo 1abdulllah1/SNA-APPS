@@ -21,7 +21,6 @@ cloudinary.config({
 
 // --- Centralized Configuration for File Handling ---
 const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads', 'profile_pictures');
-// FIXED: Using the Cloudinary default avatar URL from download.js
 const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';
 
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -29,28 +28,34 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 }
 
 // Multer setup for local storage (if used, from download.js)
-const localStorage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const extension = path.extname(file.originalname);
-        cb(null, `avatar-${uniqueSuffix}${extension}`);
-    }
-});
-
-// Multer setup for memory storage (for Cloudinary uploads, from download.js)
-const uploadMemory = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
-    fileFilter: (req, file, cb) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
-            req.fileValidationError = 'Only image files (jpg, jpeg, png, gif) are allowed!';
-            return cb(new Error(req.fileValidationError), false);
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: UPLOADS_DIR,
+        filename: (req, file, cb) => {
+            const ext = path.extname(file.originalname);
+            const name = file.fieldname + '-' + Date.now() + ext;
+            cb(null, name);
         }
-        cb(null, true);
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images (jpeg, jpg, png, gif) are allowed.'));
+        }
     }
 });
-
+// Helper function to delete local file (if not using Cloudinary for all)
+const deleteLocalFile = (filePath) => {
+    fs.unlink(filePath, (err) => {
+        if (err) console.error("Error deleting local file:", filePath, err);
+        else console.log("Successfully deleted local file:", filePath);
+    });
+};
 // Helper function to extract public ID from Cloudinary URL (from download.js)
 const getCloudinaryPublicId = (url) => {
     if (!url) return null;
@@ -65,19 +70,20 @@ const getCloudinaryPublicId = (url) => {
     return null;
 };
 
+
 // --- USER LOGIN ---
 router.post("/login", async (req, res) => {
     try {
         const { identifier, password } = req.body;
 
-        // Fetch user from the database
+        // Fetch user from the database, selecting class_level instead of class_id
         const userQuery = await pool.query(
-            "SELECT id, username, email, password_hash, role, is_admin, profile_picture_url, full_name, admission_number, class_id FROM users WHERE username = $1 OR email = $1",
+            "SELECT id, username, email, password, role, is_admin, profile_picture_url, full_name, admission_number, class_level FROM users WHERE username = $1 OR email = $1",
             [identifier]
         );
         const user = userQuery.rows[0];
 
-        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: "Invalid credentials." });
         }
 
@@ -91,17 +97,12 @@ router.post("/login", async (req, res) => {
         // Set the JWT token as an HttpOnly cookie
         res.cookie("jwt", token, {
             httpOnly: true,
-            // *** IMPORTANT FOR LOCAL DEV ON HTTP ***
-            // Explicitly set secure to false for HTTP.
-            secure: true,
-            // Explicitly set sameSite to 'None' to allow sending even if browser
-            // perceives a subtle cross-site context on localhost with HTTP.
-            // WARNING: In production, for 'None', secure MUST be true (HTTPS).
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'Lax',
             maxAge: 3600000 // 1 hour
         });
 
-        // Send successful login response with user details
+        // Send successful login response with user details, including class_level
         res.json({
             message: "Logged in successfully",
             user: {
@@ -113,7 +114,7 @@ router.post("/login", async (req, res) => {
                 profile_picture_url: user.profile_picture_url || DEFAULT_AVATAR_URL,
                 full_name: user.full_name,
                 admission_number: user.admission_number,
-                class_id: user.class_id
+                class_level: user.class_level // Use class_level here
             }
         });
     } catch (error) {
@@ -124,60 +125,146 @@ router.post("/login", async (req, res) => {
 
 
 
-// --- REGISTER USER (Admin only) ---
-router.post("/register", auth.isAdmin, uploadMemory.single('profile_picture'), async (req, res) => {
+// --- REGISTER USER ---
+router.post("/register", upload.single('profile_picture'), async (req, res) => {
     const client = await pool.connect();
     try {
-        if (req.fileValidationError) {
-            return res.status(400).json({ error: req.fileValidationError });
+        await client.query('BEGIN');
+
+        // Include class_level in destructuring
+        const { username, email, password, role, admission_number, first_name, last_name, dob, gender, class_level } = req.body;
+        const profilePictureFile = req.file;
+
+        // Basic server-side validation
+        if (!first_name || !last_name || !email || !password || !role) {
+            return res.status(400).json({ error: "First Name, Last Name, Email, Password, and Role are required." });
         }
 
-        const { username, email, password, role, is_admin, admission_number, class_id, full_name } = req.body; // Added full_name
-
-        if (!username || !email || !password || !role) {
-            return res.status(400).json({ error: "All required fields must be provided." });
+        // Only check admission_number and class_level for students
+        if (role === 'student') {
+            if (!admission_number) {
+                return res.status(400).json({ error: "Admission Number is required for students.", field: "admission_number" });
+            }
+            const admissionRegex = /^SNA\/\d{2}\/\d{3}$/i;
+            if (!admissionRegex.test(admission_number)) {
+                return res.status(400).json({ error: "Invalid admission number format. Expected SNA/YY/001 (e.g., SNA/23/001).", field: "admission_number" });
+            }
+            if (!class_level) {
+                return res.status(400).json({ error: "Class Level is required for students.", field: "class_level" });
+            }
         }
 
-        if (role === 'student' && (!admission_number || !class_id)) {
-            return res.status(400).json({ error: "Admission number and Class must be provided for students." });
+
+        // Check if user already exists
+        let userExistsQuery = 'SELECT id FROM users WHERE email = $1';
+        let userExistsParams = [email];
+        if (username) {
+            userExistsQuery += ' OR username = $2';
+            userExistsParams.push(username);
+        }
+        const userExists = await client.query(userExistsQuery, userExistsParams);
+        
+        if (userExists.rows.length > 0) {
+            if (profilePictureFile) {
+                fs.unlinkSync(profilePictureFile.path); // Delete temp file if user exists
+            }
+            return res.status(409).json({ error: "User with that email or username already exists." });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        let profilePictureUrl = DEFAULT_AVATAR_URL; // Default avatar
 
-        await client.query('BEGIN'); // Start transaction
+        let profile_picture_url = DEFAULT_AVATAR_URL; // Default avatar
 
-        if (req.file) {
-            // Always upload to Cloudinary if a file is provided and multer.memoryStorage is used
-            const result = await cloudinary.uploader.upload(`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`, {
-                folder: 'profile_pictures',
-                public_id: `avatar_${Date.now()}` // Dynamic public ID
-            });
-            profilePictureUrl = result.secure_url;
+        if (profilePictureFile) {
+            try {
+                const uploadResult = await cloudinary.uploader.upload(profilePictureFile.path, {
+                    folder: "cbt_profile_pictures", // Ensure folder name is consistent
+                    eager: [
+                        { width: 150, height: 150, crop: "fill", gravity: "face" }
+                    ]
+                });
+                profile_picture_url = uploadResult.secure_url;
+                fs.unlinkSync(profilePictureFile.path); // Delete local file after Cloudinary upload
+            } catch (cloudinaryError) {
+                console.error("Cloudinary upload error:", cloudinaryError);
+                profile_picture_url = DEFAULT_AVATAR_URL; // Fallback to default
+                if (profilePictureFile) {
+                    fs.unlinkSync(profilePictureFile.path);
+                }
+                console.warn("Continuing registration with default avatar due to Cloudinary upload failure.");
+            }
         }
 
+        // Determine is_admin based on role
+        const is_admin = (role === 'admin');
+        const finalUsername = username || (role === 'student' ? admission_number : email.split('@')[0]); // Auto-generate username
+
+        // Construct the INSERT query using class_level instead of class_id
+        const insertQuery = `
+            INSERT INTO users (username, email, password, role, is_admin, profile_picture_url,
+                               full_name, admission_number, class_level, dob, gender)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            RETURNING id, username, email, role, is_admin, profile_picture_url, full_name, admission_number, class_level, dob, gender`;
+
         const result = await client.query(
-            "INSERT INTO users (username, email, password_hash, role, is_admin, profile_picture_url, admission_number, class_id, full_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, username, email, role, is_admin, profile_picture_url, full_name", // Added full_name
-            [username, email, hashedPassword, role, is_admin === 'true', profilePictureUrl, admission_number || null, class_id || null, full_name || null] // Added full_name
+            insertQuery,
+            [
+                finalUsername,
+                email,
+                hashedPassword,
+                role,
+                is_admin,
+                profile_picture_url,
+                `${first_name} ${last_name}`, // Assuming full_name is combined
+                role === 'student' ? (admission_number || null) : null, // admission_number only for students
+                role === 'student' ? (class_level || null) : null, // class_level for students, null for others
+                dob || null, // Date of birth
+                gender || null // Gender
+            ]
         );
+
+        const newUser = result.rows[0];
+
+        // Generate JWT token (optional for registration, but good for immediate login)
+        const token = jwt.sign(
+            { id: newUser.id, username: newUser.username, role: newUser.role, is_admin: newUser.is_admin },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' } // Token expires in 1 hour
+        );
+
+        // Set JWT as an HttpOnly cookie
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
+            maxAge: 3600000 // 1 hour in milliseconds
+        });
+
         await client.query('COMMIT');
-        res.status(201).json({ message: "User registered successfully", user: result.rows[0] });
+        res.status(201).json({ message: "User registered successfully!", user: newUser });
+
     } catch (error) {
         await client.query('ROLLBACK');
         console.error("Registration error:", error);
-        // Handle specific error codes for duplicates
-        if (error.code === '23505') { // Unique violation
-            if (error.constraint === 'users_username_key') {
-                return res.status(409).json({ error: 'Username already exists.' });
-            }
-            if (error.constraint === 'users_email_key') {
-                return res.status(409).json({ error: 'Email already exists.' });
-            }
-            if (error.constraint === 'users_admission_number_key') {
-                return res.status(409).json({ error: 'Admission number already exists.' });
-            }
+        // Handle specific errors for user feedback
+        if (error.code === '23505') { // Unique violation (e.g., username or email already exists)
+            return res.status(409).json({ error: "A user with that email or username already exists." });
         }
-        res.status(500).json({ error: "Failed to register user." });
+        // Specific check for 'password' column not-null constraint
+        if (error.code === '23502' && error.column === 'password') {
+            return res.status(400).json({ error: "Missing password. Please provide a password." });
+        }
+        if (error.code === '23502' && error.column === 'email') { // Example for other not-nulls
+             return res.status(400).json({ error: "Email is a required field." });
+        }
+        if (error.code === '23502' && error.column === 'role') {
+             return res.status(400).json({ error: "Role is a required field." });
+        }
+        // Catch the specific constraint violation for class_level
+        if (error.code === '23514' && error.constraint === 'class_level_for_students_only') {
+            return res.status(400).json({ error: "Class level is required for students and should not be set for non-students.", field: "class_level" });
+        }
+        res.status(500).json({ error: "Failed to register user. " + error.message });
     } finally {
         client.release();
     }
@@ -185,13 +272,12 @@ router.post("/register", auth.isAdmin, uploadMemory.single('profile_picture'), a
 
 
 // --- GET ALL USERS (Admin only) ---
-// RE-INSTATED: This endpoint MUST be isAdmin to protect sensitive user data
-router.get("/", auth, auth.isAdmin, async (req, res) => { // <--- THIS IS THE CRITICAL CHANGE
+router.get("/", auth, auth.isAdmin, async (req, res) => { // Requires 'auth' then 'auth.isAdmin'
     try {
         console.log("[API] Fetching all users...");
-        // req.user is guaranteed to exist and be an admin here
+        // Select class_level instead of class_id
         const result = await pool.query(
-            "SELECT id, username, email, role, is_admin, profile_picture_url, full_name, admission_number, class_id FROM users ORDER BY username ASC"
+            "SELECT id, username, email, role, is_admin, profile_picture_url, full_name, admission_number, class_level, dob, gender FROM users ORDER BY username ASC"
         );
         res.json(result.rows);
     } catch (error) {
@@ -207,8 +293,9 @@ router.get("/me", auth, async (req, res) => { // Requires only 'auth'
     try {
         // req.user is populated by the 'auth' middleware
         const userId = req.user.id;
+        // Select class_level instead of class_id
         const userQuery = await pool.query(
-            "SELECT id, username, email, role, is_admin, profile_picture_url, full_name, admission_number, class_id FROM users WHERE id = $1",
+            "SELECT id, username, email, role, is_admin, profile_picture_url, full_name, admission_number, class_level, dob, gender FROM users WHERE id = $1",
             [userId]
         );
         const user = userQuery.rows[0];
@@ -226,7 +313,9 @@ router.get("/me", auth, async (req, res) => { // Requires only 'auth'
             profile_picture_url: user.profile_picture_url || DEFAULT_AVATAR_URL,
             full_name: user.full_name,
             admission_number: user.admission_number,
-            class_id: user.class_id
+            class_level: user.class_level, // Use class_level here
+            dob: user.dob,
+            gender: user.gender
         });
     } catch (error) {
         console.error("Error fetching current user:", error);
@@ -235,148 +324,146 @@ router.get("/me", auth, async (req, res) => { // Requires only 'auth'
 });
 
 // --- GET USER BY ID (Auth required, self or admin) ---
-router.get("/:id", auth, async (req, res) => {
+router.get("/:id", auth, auth.isAdmin, async (req, res) => { // Requires 'auth' then 'auth.isAdmin'
     try {
         const { id } = req.params;
-        // Authorize: Admin can view any user, regular user can only view their own profile
-        if (req.user.id !== parseInt(id) && !req.user.is_admin) {
-            console.warn(`[AUTH] Forbidden: User ${req.user.id} tried to access user ${id}'s data without admin privileges.`);
-            return res.status(403).json({ error: "Access denied. You can only view your own profile unless you are an admin." });
-        }
-
-        // Includes class_id, admission_number, and full_name
-        const userQuery = await pool.query(
-            "SELECT id, username, email, role, is_admin, profile_picture_url, admission_number, class_id, full_name FROM users WHERE id = $1",
+        // Select class_level instead of class_id
+        const result = await pool.query(
+            "SELECT id, username, email, role, is_admin, profile_picture_url, full_name, admission_number, class_level, dob, gender FROM users WHERE id = $1",
             [id]
         );
-        if (userQuery.rows.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ error: "User not found." });
         }
-        const user = userQuery.rows[0];
-        user.profile_picture_url = user.profile_picture_url || DEFAULT_AVATAR_URL;
-        res.json(user);
+        res.json(result.rows[0]);
     } catch (error) {
         console.error("Error fetching user by ID:", error);
-        res.status(500).json({ error: "Server error." });
+        res.status(500).json({ error: "Failed to fetch user." });
     }
 });
 
 
 // --- UPDATE USER (Admin can update any user, user can update self) ---
-router.put("/:id", auth, uploadMemory.single('profile_picture'), async (req, res) => {
-    const userId = parseInt(req.params.id);
-    const { username, email, role, is_admin, password, admission_number, class_id, full_name, remove_profile_picture } = req.body; // Added full_name
-
-    // Check authorization: Admin can update any user, non-admin can only update their own profile.
-    if (!req.user.is_admin && req.user.id !== userId) {
-        return res.status(403).json({ error: "Access denied. You can only update your own profile." });
-    }
-
+router.put("/:id", auth, upload.single('profile_picture'), async (req, res) => {
     const client = await pool.connect();
     try {
-        if (req.fileValidationError) {
-            return res.status(400).json({ error: req.fileValidationError });
-        }
-
         await client.query('BEGIN');
 
-        // Fetch current user data to check existing picture and values
-        const currentUserQuery = await client.query('SELECT profile_picture_url, password_hash, role FROM users WHERE id = $1', [userId]); // Added role to fetch
-        if (currentUserQuery.rows.length === 0) {
+        const { id } = req.params;
+        // Include class_level in destructuring
+        const { username, email, password, role, is_admin, first_name, last_name, admission_number, dob, gender, class_level } = req.body;
+        let profile_picture_url = req.body.profile_picture_url || DEFAULT_AVATAR_URL; // Default from body or constant
+
+        // Fetch current user data to determine permissions and existing hash, selecting class_level
+        const currentUserQuery = await client.query("SELECT password, role, is_admin, profile_picture_url, full_name, admission_number, class_level, dob, gender FROM users WHERE id = $1", [id]);
+        const currentUser = currentUserQuery.rows[0];
+
+        if (!currentUser) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: "User not found." });
         }
-        const oldUserData = currentUserQuery.rows[0];
-        let profilePictureUrl = oldUserData.profile_picture_url;
-        let hashedPassword = oldUserData.password_hash;
 
-        // Handle password change
+        // Permission check: Admin can update any user, non-admin can only update their own profile.
+        // req.user.id is from the authenticated token, id is from URL parameter.
+        if (String(req.user.id) !== String(id) && !req.user.is_admin) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: "Access denied. You can only update your own profile." });
+        }
+
+        // If a new password is provided, hash it. Otherwise, keep the existing one.
+        let hashedPassword = currentUser.password;
         if (password) {
             hashedPassword = await bcrypt.hash(password, 10);
         }
 
-        // Handle profile picture update/removal
-        if (remove_profile_picture === 'true') {
-            profilePictureUrl = DEFAULT_AVATAR_URL; // Set to default
-            // Delete old picture from Cloudinary if it's not the default
-            if (oldUserData.profile_picture_url && oldUserData.profile_picture_url !== DEFAULT_AVATAR_URL) {
-                const publicId = getCloudinaryPublicId(oldUserData.profile_picture_url);
-                if (publicId) {
-                    await cloudinary.uploader.destroy(publicId);
+        // Handle profile picture upload
+        if (req.file) {
+            try {
+                // Delete old image from Cloudinary if it's not the default and exists
+                if (currentUser.profile_picture_url && currentUser.profile_picture_url !== DEFAULT_AVATAR_URL) {
+                    const publicId = getCloudinaryPublicId(currentUser.profile_picture_url);
+                    if (publicId) await cloudinary.uploader.destroy(`cbt_profile_pictures/${publicId}`);
                 }
+
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: "cbt_profile_pictures",
+                    eager: [
+                        { width: 150, height: 150, crop: "fill", gravity: "face" }
+                    ]
+                });
+                profile_picture_url = uploadResult.secure_url;
+                fs.unlinkSync(req.file.path); // Delete local temp file
+            } catch (cloudinaryError) {
+                console.error("Cloudinary profile picture update error:", cloudinaryError);
+                if (req.file) fs.unlinkSync(req.file.path);
+                profile_picture_url = currentUser.profile_picture_url || DEFAULT_AVATAR_URL;
+                console.warn("Continuing profile update with existing/default avatar due to Cloudinary upload failure.");
             }
-        } else if (req.file) {
-            // New file uploaded, delete old one (if not default) and upload new
-            if (oldUserData.profile_picture_url && oldUserData.profile_picture_url !== DEFAULT_AVATAR_URL) {
-                const publicId = getCloudinaryPublicId(oldUserData.profile_picture_url);
-                if (publicId) {
-                    await cloudinary.uploader.destroy(publicId);
-                }
+        } else if (req.body.clear_profile_picture === 'true') {
+            // Option to clear profile picture (set to default)
+            if (currentUser.profile_picture_url && currentUser.profile_picture_url !== DEFAULT_AVATAR_URL) {
+                const publicId = getCloudinaryPublicId(currentUser.profile_picture_url);
+                if (publicId) await cloudinary.uploader.destroy(`cbt_profile_pictures/${publicId}`);
             }
-            const result = await cloudinary.uploader.upload(`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`, {
-                folder: "profile_pictures",
-                public_id: `avatar_${Date.now()}`
-            });
-            profilePictureUrl = result.secure_url;
-        } else if (!oldUserData.profile_picture_url) {
-             // If no new file and no old picture, ensure it defaults
-            profilePictureUrl = DEFAULT_AVATAR_URL;
+            profile_picture_url = DEFAULT_AVATAR_URL;
         }
 
 
-        let queryText;
-        let queryParams;
+        const updateFields = [];
+        const queryParams = [];
+        let paramIndex = 1;
 
-        // Admin can update any user's fields, including role and is_admin
+        const addField = (field, value) => {
+            // Only add the field if the value is explicitly provided (not undefined)
+            // or if it's a specific field like password where null might be intentional for hashing.
+            // For profile_picture_url, allow explicit setting to DEFAULT_AVATAR_URL.
+            if (value !== undefined || field === 'profile_picture_url' || field === 'password') {
+                updateFields.push(`${field} = $${paramIndex++}`);
+                queryParams.push(value);
+            }
+        };
+
+        // Fields that can be updated by either user (self) or admin
+        addField('username', username);
+        addField('email', email);
+        addField('password', hashedPassword);
+        addField('profile_picture_url', profile_picture_url);
+        addField('full_name', (first_name && last_name) ? `${first_name} ${last_name}` : currentUser.full_name);
+        addField('dob', dob);
+        addField('gender', gender);
+
+        // Fields only updated by Admin
         if (req.user.is_admin) {
-            queryText = `
-                UPDATE users
-                SET username = COALESCE($1, username),
-                    email = COALESCE($2, email),
-                    role = COALESCE($3, role),
-                    is_admin = COALESCE($4, is_admin),
-                    password_hash = $5,
-                    profile_picture_url = $6,
-                    admission_number = COALESCE($7, admission_number),
-                    class_id = COALESCE($8, class_id),
-                    full_name = COALESCE($9, full_name)
-                WHERE id = $10
-                RETURNING id, username, email, role, is_admin, profile_picture_url, admission_number, class_id, full_name
-            `;
-            queryParams = [
-                username, email, role, (is_admin === 'true'), hashedPassword,
-                profilePictureUrl, admission_number || null, class_id || null, full_name || null, userId
-            ];
-
-            // If the role is explicitly changed to non-student, nullify admission_number and class_id
-            if (role && role !== 'student' && oldUserData.role === 'student') {
-                 queryText = queryText.replace(', admission_number = COALESCE($7, admission_number), class_id = COALESCE($8, class_id)', ', admission_number = NULL, class_id = NULL');
-                 queryParams.splice(6, 2); // Remove admission_number and class_id from params
-            } else if (role === 'student' && (!admission_number || !class_id) && oldUserData.role !== 'student') {
-                // If changing to student, ensure admission_number and class_id are provided
-                await client.query('ROLLBACK');
-                return res.status(400).json({ error: "Admission number and Class must be provided when setting role to student." });
+            addField('role', role);
+            addField('is_admin', is_admin);
+            // Admin can set admission_number and class_level
+            if (role === 'student') {
+                addField('admission_number', admission_number || null);
+                addField('class_level', class_level || null); // Set class_level for students
+            } else {
+                addField('admission_number', null);
+                addField('class_level', null); // Set class_level to null for non-students
             }
-
-
         } else {
-            // Non-admin users can only update their own username, email, password, and profile picture, and full_name
-            queryText = `
-                UPDATE users
-                SET username = COALESCE($1, username),
-                    email = COALESCE($2, email),
-                    password_hash = $3,
-                    profile_picture_url = $4,
-                    full_name = COALESCE($5, full_name)
-                WHERE id = $6
-                RETURNING id, username, email, role, is_admin, profile_picture_url, admission_number, class_id, full_name
-            `;
-            queryParams = [
-                username, email, hashedPassword, profilePictureUrl, full_name || null, userId
-            ];
+            // Non-admin cannot change role or admin status; ensure these are not updated
+            // Also ensure student-specific fields are not updated by non-admins if not for self
+            addField('admission_number', currentUser.admission_number);
+            addField('class_level', currentUser.class_level); // Keep existing class_level
         }
 
-        const result = await client.query(queryText, queryParams);
+        if (updateFields.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: "No fields provided for update." });
+        }
+
+        // Add the id for the WHERE clause
+        updateFields.push(`id = $${paramIndex++}`);
+        queryParams.push(id);
+
+        // Update RETURNING clause to use class_level
+        const query = `UPDATE users SET ${updateFields.slice(0, -1).join(', ')} WHERE id = $${paramIndex - 1} RETURNING id, username, email, role, is_admin, profile_picture_url, full_name, admission_number, class_level, dob, gender`;
+        
+        const result = await client.query(query, queryParams);
 
         if (result.rows.length === 0) {
             await client.query('ROLLBACK');
@@ -384,72 +471,74 @@ router.put("/:id", auth, uploadMemory.single('profile_picture'), async (req, res
         }
 
         await client.query('COMMIT');
-        res.json({ message: "User updated successfully", user: result.rows[0] });
+        res.status(200).json({ message: "User updated successfully", user: result.rows[0] });
 
     } catch (error) {
         await client.query('ROLLBACK');
         console.error("Update user error:", error);
-        // Handle unique constraint errors for username/email/admission_number
-        if (error.code === '23505') {
-            if (error.constraint === 'users_username_key') {
-                return res.status(409).json({ error: 'Username already exists.' });
-            }
-            if (error.constraint === 'users_email_key') {
-                return res.status(409).json({ error: 'Email already exists.' });
-            }
-            if (error.constraint === 'users_admission_number_key') {
-                return res.status(409).json({ error: 'Admission number already exists.' });
-            }
+        if (error.code === '23505') { // Unique violation
+            return res.status(409).json({ error: "Another user already uses that username or email." });
+        }
+        if (error.code === '23514' && error.constraint === 'class_level_for_students_only') {
+            return res.status(400).json({ error: "Class level is required for students and should not be set for non-students.", field: "class_level" });
         }
         res.status(500).json({ error: "Failed to update user. " + error.message });
     } finally {
-        client.release();
+        if (client) { client.release(); }
     }
 });
 
 
 // --- DELETE USER (Admin only) ---
-router.delete("/:id", auth, auth.isAdmin, async (req, res) => { // <--- THIS WAS THE MISSING FIX FOR DELETE
+router.delete("/:id", auth, auth.isAdmin, async (req, res) => {
     const { id } = req.params;
     let client;
     try {
         client = await pool.connect();
         await client.query('BEGIN'); // Start transaction
 
-        // 1. Get user's profile picture URL before deleting
-        const userPhotoQuery = await client.query('SELECT profile_picture_url FROM users WHERE id = $1', [id]);
-        const userPhotoUrl = userPhotoQuery.rows[0]?.profile_picture_url;
+        // 1. Fetch user's profile picture URL before deleting to delete from Cloudinary
+        const userResult = await client.query('SELECT profile_picture_url FROM users WHERE id = $1', [id]);
+        const userToDelete = userResult.rows[0];
 
-        // 2. Delete user's related data (e.g., CBT results, if any)
-        // Add more deletion queries for related tables here as needed
-        // await client.query('DELETE FROM cbt_results WHERE user_id = $1', [id]);
-        // await client.query('DELETE FROM user_sessions WHERE user_id = $1', [id]);
+        if (userToDelete && userToDelete.profile_picture_url && userToDelete.profile_picture_url !== DEFAULT_AVATAR_URL) {
+            try {
+                const publicId = getCloudinaryPublicId(userToDelete.profile_picture_url); // Use helper function
+                if (publicId) await cloudinary.uploader.destroy(`cbt_profile_pictures/${publicId}`);
+                console.log(`Deleted Cloudinary image for user ${id}: ${publicId}`);
+            } catch (cloudinaryError) {
+                console.error(`Failed to delete Cloudinary image for user ${id}:`, cloudinaryError);
+                // Log the error but don't prevent user deletion if image deletion fails
+            }
+        }
 
-        // 3. Delete the user
-        const deleteUser = await client.query("DELETE FROM users WHERE id = $1 RETURNING id", [id]);
+        // 2. Delete ALL related data first from child tables
+        // Add more specific deletion queries for ALL related tables here based on your schema
+        // This is CRUCIAL for foreign key constraints!
+        await client.query('DELETE FROM exam_results WHERE user_id = $1', [id]);
+        // await client.query('DELETE FROM sessions WHERE user_id = $1', [id]); // REMOVED: This table does not exist based on your error
+        // IMPORTANT: Add DELETE FROM table_name WHERE user_id = $1; for every table in your database
+        // that has a foreign key referencing the users.id. Examples:
+        // await client.query('DELETE FROM user_progress WHERE user_id = $1', [id]);
+        // await client.query('DELETE FROM user_settings WHERE user_id = $1', [id]);
+        // await client.query('DELETE FROM quizzes_taken WHERE user_id = $1', [id]);
 
-        if (deleteUser.rows.length === 0) {
+
+        // 3. Finally, delete the user from the users table
+        const deleteUserResult = await client.query("DELETE FROM users WHERE id = $1 RETURNING id", [id]);
+
+        if (deleteUserResult.rows.length === 0) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: "User not found." });
         }
 
-        // 4. Delete profile picture from Cloudinary if it's not the default
-        if (userPhotoUrl && userPhotoUrl !== DEFAULT_AVATAR_URL && userPhotoUrl.includes('cloudinary.com')) {
-            const publicIdMatch = userPhotoUrl.match(/\/v\d+\/(profile_pictures\/[^/.]+)/);
-            if (publicIdMatch && publicIdMatch[1]) {
-                const publicId = publicIdMatch[1];
-                await cloudinary.uploader.destroy(publicId);
-                console.log(`Cloudinary: Deleted image with public ID: ${publicId}`);
-            }
-        }
-
         await client.query('COMMIT'); // Commit transaction
-        res.status(200).json({ message: "User and associated data (like sessions, results, reports) deleted successfully." });
+        res.status(200).json({ message: "User and all associated data deleted successfully." });
 
     } catch (error) {
         if (client) { await client.query('ROLLBACK'); }
         console.error("Delete user error:", error);
-         if (error.code === '23503') { // Foreign key violation
+         if (error.code === '23503') { // Foreign key violation (should ideally not happen if all dependencies are deleted above)
             return res.status(400).json({ error: `Cannot delete user: still referenced by other records. Please resolve dependencies. Detail: ${error.detail || error.message}` });
         }
         res.status(500).json({ error: "Failed to delete user. " + error.message });
@@ -463,7 +552,7 @@ router.delete("/:id", auth, auth.isAdmin, async (req, res) => { // <--- THIS WAS
 router.post("/logout", (req, res) => {
     res.clearCookie('jwt', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Only secure in production
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'Lax'
     });
     res.status(200).json({ message: "Logged out successfully" });
@@ -472,14 +561,15 @@ router.post("/logout", (req, res) => {
 // Debug route (optional, for development)
 router.get('/debug-users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, username, email, role, is_admin, profile_picture_url, admission_number, class_id FROM users');
+    // Select class_level instead of class_id
+    const result = await pool.query('SELECT id, username, email, role, is_admin, profile_picture_url, admission_number, class_level, dob, gender FROM users');
     result.rows.forEach(user => {
         user.profile_picture_url = user.profile_picture_url || DEFAULT_AVATAR_URL;
     });
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Error fetching debug users:", error);
+    res.status(500).json({ error: "Failed to fetch debug users." });
   }
 });
 

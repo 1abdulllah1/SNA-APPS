@@ -257,8 +257,10 @@
       const role = document.getElementById('role').value;
       const isStudent = role === 'student';
       studentFieldsDiv.classList.toggle('hidden', !isStudent);
+      // Ensure required attribute is set/unset based on role
       admissionNumberInput.required = isStudent;
       classLevelSelect.required = isStudent;
+
       const title = document.getElementById('formTitle');
       const subtitle = document.getElementById('formSubtitle');
       if (isStudent) {
@@ -267,6 +269,9 @@
       } else {
         title.textContent = `Register New ${role.charAt(0).toUpperCase() + role.slice(1)}`;
         subtitle.textContent = `Enter ${role} details below.`;
+        // Clear student-specific fields when not registering a student
+        admissionNumberInput.value = '';
+        classLevelSelect.value = '';
         profilePicturePreview.classList.add('hidden');
         profilePictureFilename.textContent = '';
         if(profilePictureInput) profilePictureInput.value = '';
@@ -366,8 +371,13 @@
             }
             if (!classLevelSelect.value) { displayError(classLevelError, 'Class level required.'); return; }
         } else {
-            formData.delete('admission_number'); formData.delete('class_level');
-            if (!profilePictureInput.files[0] || role !== 'student') {
+            // For non-student roles, remove student-specific fields from formData
+            formData.delete('admission_number'); 
+            formData.delete('class_level');
+            // If a profile picture was selected for a non-student, it should also be removed
+            // as it's not applicable (or handled differently based on your backend logic).
+            // This line ensures profile_picture is only sent if role is student AND file exists.
+            if (profilePictureInput.files[0] && role !== 'student') { // Check if file exists and role is not student
                 formData.delete('profile_picture');
             }
         }
@@ -419,54 +429,89 @@
             successModal.classList.remove('show');
         }, 4000);
     }
+    
     async function loadUserDataAndNav() {
+        const navLinksContainer = document.getElementById('navLinks');
+        const logoutLinkNav = document.getElementById('logoutLinkNav'); // Correctly target the logout link in nav
+
         try {
             const response = await fetch('/api/users/me', {credentials: 'include'});
-            if(!response.ok && response.status === 401) {
-                 document.getElementById('navLinks').innerHTML = '<a href="login.html">Login</a>';
-                 document.getElementById('logoutLinkNav').style.display = 'none';
-                 return;
+            if(!response.ok) {
+                 // If not authorized or any other error, display only Login link
+                 navLinksContainer.innerHTML = '<a href="login.html">Login</a>';
+                 // Ensure the logoutLinkNav is hidden or removed if it somehow appears
+                 if (logoutLinkNav) logoutLinkNav.style.display = 'none'; // Check before accessing style
+                 return; // Exit function if not authorized
             }
-            if(!response.ok) throw new Error("Failed to fetch user data for nav");
             const user = await response.json();
             createNavigationLinks(user);
         } catch(e) {
             console.error("Nav User data error", e);
-            document.getElementById('navLinks').innerHTML = '<a href="login.html">Login</a>';
-            document.getElementById('logoutLinkNav').style.display = 'none';
+            // On network error or other client-side issue, default to Login link
+            navLinksContainer.innerHTML = '<a href="login.html">Login</a>';
+            if (logoutLinkNav) logoutLinkNav.style.display = 'none'; // Check before accessing style
         }
     }
+
      function createNavigationLinks(user) {
         const navLinksContainer = document.getElementById('navLinks');
+        // Clear existing dynamic links, keep static ones if any
         Array.from(navLinksContainer.children).forEach(child => {
-            if (child.id !== 'logoutLink') child.remove();
+            // Only remove children that are not the logoutLinkNav initially defined in HTML
+            if (child.id !== 'logoutLinkNav') { 
+                child.remove();
+            }
         });
+
+        // Ensure logoutLinkNav is visible if user is logged in
+        const logoutLinkNav = document.getElementById('logoutLinkNav');
+        if (logoutLinkNav) {
+            logoutLinkNav.style.display = 'block'; // Or 'inline' or 'inline-block' based on your CSS
+            logoutLinkNav.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                    if (response.ok) {
+                        window.location.href = 'login.html'; // Redirect to login page
+                    } else {
+                        console.error('Logout failed:', await response.json());
+                        alert('Logout failed. Please try again.'); // Use a custom modal in production
+                    }
+                } catch (error) {
+                    console.error('Network error during logout:', error);
+                    alert('Network error during logout. Please try again.'); // Use a custom modal in production
+                }
+            });
+        }
+
 
         const dashboardLink = document.createElement('a');
         dashboardLink.href = 'dashboard.html'; dashboardLink.textContent = 'Dashboard';
-        dashboardLink.classList.add('nav-link'); navLinksContainer.prepend(dashboardLink);
+        dashboardLink.classList.add('nav-link'); 
+        // Insert dashboard link at the beginning of the nav links, before logout link
+        navLinksContainer.insertBefore(dashboardLink, logoutLinkNav);
 
         if (user.is_admin || user.role === 'teacher') {
             const createExamLink = document.createElement('a');
             createExamLink.href = 'create-exam.html'; createExamLink.textContent = 'Create Exam';
             createExamLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(createExamLink, document.getElementById('logoutLink'));
+            navLinksContainer.insertBefore(createExamLink, logoutLinkNav);
         }
         if (user.is_admin) {
             const manageUsersLink = document.createElement('a');
             manageUsersLink.href = 'manage-users.html'; manageUsersLink.textContent = 'Manage Users';
             manageUsersLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(manageUsersLink, document.getElementById('logoutLink'));
+            navLinksContainer.insertBefore(manageUsersLink, logoutLinkNav);
 
             const registerLink = document.createElement('a');
             registerLink.href = 'registration.html'; registerLink.textContent = 'Register User';
             registerLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(registerLink, document.getElementById('logoutLink'));
+            navLinksContainer.insertBefore(registerLink, logoutLinkNav);
             
             const reportsLink = document.createElement('a');
             reportsLink.href = 'admin-reports.html'; reportsLink.textContent = 'Student Reports';
             reportsLink.classList.add('nav-link');
-            navLinksContainer.insertBefore(reportsLink, document.getElementById('logoutLink'));
+            navLinksContainer.insertBefore(reportsLink, logoutLinkNav);
         }
     }
   </script>

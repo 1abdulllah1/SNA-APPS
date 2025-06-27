@@ -35,21 +35,13 @@ router.get("/report/compile", auth, async (req, res) => {
 
     const client = await pool.connect();
     try {
-        const studentRes = await client.query("SELECT * FROM users WHERE id = $1 AND role = 'student'", [studentId]);
+        // Fetch student details, explicitly selecting class_level
+        const studentRes = await client.query("SELECT id, full_name, admission_number, class_level, profile_picture_url FROM users WHERE id = $1 AND role = 'student'", [studentId]);
         if (studentRes.rows.length === 0) throw new Error("Student not found.");
         const student = studentRes.rows[0];
-        // Ensure class_id is used for class level if available, otherwise fallback to class_level from users table.
-        // It's assumed your 'users' table has 'class_id' for student records.
-        const classLevelId = student.class_id; 
-
-        // Fetch the actual class level name using class_id
-        let classLevelName = 'Unknown Class';
-        if (classLevelId) {
-            const classRes = await client.query("SELECT name FROM classes WHERE class_id = $1", [classLevelId]);
-            if (classRes.rows.length > 0) {
-                classLevelName = classRes.rows[0].name;
-            }
-        }
+        
+        // Directly use student.class_level which is now stored in the users table
+        const classLevelName = student.class_level || 'Unknown Class'; // Use the class_level directly
 
 
         // 1. Get ALL subjects registered for the student's class. This is the definitive list.
@@ -57,18 +49,24 @@ router.get("/report/compile", auth, async (req, res) => {
         // Assuming 'subjects' table has a 'class_id' column for this purpose, or a linking table.
         // For simplicity, let's assume subjects apply generally or based on a common 'level' field
         // if your subjects table has it, otherwise, we fetch all subjects.
-        // Adjust this query based on how your subjects are associated with classes/levels.
-        // For now, I'll assume subjects might have an associated 'class_level' or are general.
         // If your subjects are truly universal, you'd just select all.
+        // Note: The previous code was fetching all subjects without a class filter.
+        // If subjects are tied to class_level, you would need a lookup table or a direct column.
+        // For now, I will keep it fetching all subjects, or you can adjust if subjects are linked by class_level.
         const subjectsRes = await client.query(`
             SELECT s.name, s.subject_id FROM subjects s
-            -- JOIN class_subjects cs ON s.subject_id = cs.subject_id WHERE cs.class_id = $1
+            -- If your subjects are associated with class_level (e.g., via a linking table or a column on 'subjects' table)
+            -- You would add a WHERE clause here. Example: WHERE s.class_level = $1
             ORDER BY s.name
         `);
         const allClassSubjects = subjectsRes.rows.map(s => ({ name: s.name, subject_id: s.subject_id })); // Store both name and ID
         
         // 2. Fetch ALL results for ALL students in the class for the term/session.
-        // Use student's class_id for filtering.
+        // Use student's class_level for filtering. (Assumes users table has class_level)
+        // This query needs to join with users on class_level if that's how you filter students in a class.
+        // Or if you only care about results for the *specific student* (studentId), remove the user class_level filter.
+        // Given your goal is to calculate class position, you need all students in that *class_level*.
+        // Therefore, we need to filter exam_results by students in the same class_level as the target student.
         const allClassResultsRes = await client.query(`
             SELECT r.student_id, s.name AS subject_name, e.exam_type, 
                    r.raw_score_obtained, r.total_possible_marks,
@@ -77,8 +75,8 @@ router.get("/report/compile", auth, async (req, res) => {
             JOIN exams e ON r.exam_id = e.exam_id
             JOIN users u ON r.student_id = u.id
             JOIN subjects s ON e.subject_id = s.subject_id
-            WHERE u.class_id = $1 AND e.term = $2 AND e.session = $3
-        `, [classLevelId, term.toUpperCase(), session]);
+            WHERE u.class_level = $1 AND e.term = $2 AND e.session = $3
+        `, [student.class_level, term.toUpperCase(), session]); // Use student.class_level here
         
         // 3. Organize results by student and then by subject.
         const studentScores = {};
@@ -97,9 +95,13 @@ router.get("/report/compile", auth, async (req, res) => {
 
         // 4. Calculate total score for EVERY student to determine class position.
         const studentTotals = {};
-        Object.keys(studentScores).forEach(sId => {
+        // Get all unique student IDs from the results
+        const studentIdsInClass = Array.from(new Set(allClassResultsRes.rows.map(r => r.student_id)));
+
+        studentIdsInClass.forEach(sId => {
             studentTotals[sId] = 0; // Initialize total score
-            Object.values(studentScores[sId]).forEach(subjectResults => {
+            const currentStudentScores = studentScores[sId] || {}; // Get scores for this specific student ID
+            Object.values(currentStudentScores).forEach(subjectResults => {
                 const totalCAScore = subjectResults.CAs.reduce((sum, ca) => sum + (ca.score || 0), 0);
                 const totalCAMax = subjectResults.CAs.reduce((sum, ca) => sum + (ca.max || 0), 0);
                 const scaledCA = totalCAMax > 0 ? (totalCAScore / totalCAMax) * 40 : 0;
@@ -115,7 +117,7 @@ router.get("/report/compile", auth, async (req, res) => {
         // 5. Rank students
         const rankedStudents = Object.entries(studentTotals).map(([sId, totalScore]) => ({ studentId: sId, totalScore }));
         rankedStudents.sort((a, b) => b.totalScore - a.totalScore);
-        const studentRank = rankedStudents.findIndex(s => s.studentId == studentId) + 1;
+        const studentRank = rankedStudents.findIndex(s => String(s.studentId) === String(studentId)) + 1; // Ensure string comparison for IDs
         
         // 6. Fetch previous term scores for the TARGET student for cumulative calculation
         const prevTerms = [];
@@ -189,10 +191,16 @@ router.get("/report/compile", auth, async (req, res) => {
         const metaRes = await client.query("SELECT * FROM report_card_meta WHERE student_id = $1 AND term = $2 AND session = $3", [studentId, term.toUpperCase(), session]);
         
         res.json({
-            student,
+            student: {
+                id: student.id,
+                full_name: student.full_name,
+                admission_number: student.admission_number,
+                profile_picture_url: student.profile_picture_url
+                // No class_level here, as it's directly passed as a top-level property
+            },
             term: term.toUpperCase(),
             session,
-            classLevel: classLevelName, // Provide the actual class name
+            classLevel: classLevelName, // This is the crucial line for the frontend
             subjects: processedSubjects,
             meta: metaRes.rows.length > 0 ? metaRes.rows[0] : {},
             summary: {
@@ -281,10 +289,9 @@ router.get("/exam/:examId", auth, async (req, res) => {
                 u.full_name,
                 u.username,
                 u.admission_number,
-                c.name AS class_name
+                u.class_level AS class_name -- Use class_level directly from users table
              FROM exam_results er
              JOIN users u ON er.student_id = u.id
-             LEFT JOIN classes c ON u.class_id = c.class_id
              WHERE er.exam_id = $1
              ORDER BY er.submission_time DESC`,
             [examId]

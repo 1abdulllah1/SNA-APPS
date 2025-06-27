@@ -3,312 +3,479 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Progress Report</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Student Progress Report | SNA CBT System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Link to your main stylesheet -->
+    <link rel="stylesheet" href="styles.css">
     <style>
-        body {
-            background-color: #e9ecef;
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            -webkit-print-color-adjust: exact;
-        }
-        .report-card-container {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 1.5rem auto;
-            padding: 12mm;
-            background: #fff;
-            box-shadow: 0 0 25px rgba(0,0,0,0.15);
-            color: #333;
-        }
-        .report-header {
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 4px solid #0d47a1;
-        }
-        .school-logo { max-width: 90px; margin-bottom: 10px; }
-        .school-name { font-size: 26px; font-weight: 700; color: #0d47a1; margin-bottom: 5px; }
-        .school-address { font-size: 14px; color: #555; }
-        .report-title { font-size: 24px; font-weight: 700; color: #333; margin-top: 20px; text-align: center;}
-        .student-info, .summary-section, .comments-section, .signature-section {
-            margin-top: 25px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px 20px;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-        }
-        .info-item p { margin: 5px 0; font-size: 15px; }
-        .info-item strong { color: #0d47a1; }
+        /* Base styles from styles.css are assumed */
 
-        .section-title {
-            font-size: 18px;
+        /* Professional Navbar Styling */
+        header {
+            background-color: #1a237e; /* Deep blue, primary color */
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-family: 'Inter', sans-serif;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav .logo {
+            color: #e8eaf6; /* Light grey-blue for contrast */
+            font-size: 1.8rem;
             font-weight: 700;
-            color: #0d47a1;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #e0e0e0;
+            text-decoration: none;
+            transition: color 0.3s ease;
         }
-        .scores-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        .scores-table th, .scores-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-        }
-        .scores-table th {
-            background-color: #f0f0f0;
-            font-weight: 600;
-            color: #333;
-        }
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        .summary-table td {
-            border: 1px solid #e0e0e0;
-            padding: 8px 10px;
-            font-size: 15px;
-        }
-        .summary-table td:first-child {
-            font-weight: 500;
-            color: #555;
-        }
-        .comments-section textarea {
-            width: 100%;
-            min-height: 80px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 10px;
-            font-family: 'Roboto', sans-serif;
-            font-size: 15px;
-            resize: vertical;
-        }
-        .signature-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px dashed #ccc;
-        }
-        .signature-item { text-align: center; }
-        .signature-line {
-            border-bottom: 1px solid #333;
-            margin-top: 50px;
-            padding-bottom: 5px;
-            font-size: 14px;
-            color: #555;
-        }
-        .actions-bar {
-            text-align: center;
-            margin: 20px auto;
-            max-width: 210mm;
-        }
-        .actions-bar button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-        .btn-edit { background-color: #ffc107; color: white; }
-        .btn-save { background-color: #28a745; color: white; }
-        .btn-print { background-color: #007bff; color: white; }
-        .hidden { display: none; }
 
-        @media print {
-            .actions-bar, header, footer { display: none; }
-            body { background-color: #fff; }
-            .report-card-container {
-                box-shadow: none;
-                margin: 0;
+        nav .logo:hover {
+            color: #ffffff;
+        }
+
+        .nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 25px; /* Spacing between links */
+        }
+
+        .nav-links li {
+            position: relative;
+        }
+
+        .nav-links .nav-link {
+            color: #c5cae9; /* Lighter blue for links */
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 500;
+            padding: 8px 0;
+            transition: color 0.3s ease, transform 0.2s ease;
+            position: relative;
+            white-space: nowrap; /* Prevent wrapping for nav items */
+        }
+
+        .nav-links .nav-link::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background-color: #ffffff; /* Underline color */
+            transition: width 0.3s ease;
+        }
+
+        .nav-links .nav-link:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .nav-links .nav-link:hover::after,
+        .nav-links .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Responsive Navbar (for smaller screens) */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .nav-links {
+                flex-direction: column;
                 width: 100%;
-                min-height: auto;
-                padding: 0; /* Adjust padding for print if necessary */
+                gap: 5px;
+                margin-top: 15px;
+            }
+            .nav-links .nav-link {
+                padding: 10px 15px;
+                width: calc(100% - 30px); /* Adjust for padding */
+                border-radius: 6px;
+            }
+            .nav-links .nav-link:hover::after,
+            .nav-links .nav-link.active::after {
+                width: 0; /* Hide underline on small screens */
+            }
+            .nav-links .nav-link:hover {
+                 background-color: rgba(255, 255, 255, 0.1);
+                 transform: none;
             }
         }
-        .loading-message, .error-message {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-            color: #666;
+
+
+        /* Report Card Container Professional Enhancements */
+        .report-card-container {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ffffff;
+            border-radius: 12px; /* Softer corners */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Deeper shadow */
+            padding: 30px 40px; /* Increased padding */
+            line-height: 1.6;
+            color: #34495e; /* Darker text for readability */
         }
-        .error-message {
-            color: var(--danger-red);
-            background-color: #ffebeb;
-            border: 1px solid var(--danger-red);
-            padding: 10px;
-            border-radius: var(--border-radius-sm);
-            margin-bottom: 1rem;
+
+        .report-header {
+            border-bottom: 5px solid #283593; /* Darker, richer blue border */
+            padding-bottom: 15px;
+            margin-bottom: 25px;
         }
-        .profile-picture-display {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #0d47a1;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+        .school-logo {
+            max-width: 100px; /* Slightly larger logo */
+            height: auto;
+            border-radius: 8px; /* Slightly rounded logo */
         }
-        .student-profile-pic-container {
-            text-align: center;
+
+        .school-name {
+            font-size: 2.2rem; /* Larger school name */
+            color: #1a237e; /* Primary school color */
+            margin-bottom: 8px;
+        }
+
+        .school-address {
+            font-size: 0.95rem;
+            color: #546e7a; /* Muted grey for address */
+        }
+
+        .report-title {
+            font-size: 2.0rem;
+            color: #1a237e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-size: 1.5rem; /* Larger section titles */
+            color: #283593;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
             margin-bottom: 20px;
         }
+
+        .info-item strong {
+            color: #283593; /* Consistent blue for labels */
+        }
+        .info-item p {
+            font-size: 1.05rem;
+            margin: 7px 0;
+        }
+
+        /* Table Styling */
+        .scores-table, .summary-table {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden; /* Ensures rounded corners on tables */
+        }
+
+        .scores-table th {
+            background-color: #e8eaf6; /* Light blue header */
+            color: #283593;
+            padding: 12px 15px;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .scores-table td {
+            padding: 10px 15px;
+            font-size: 0.92rem;
+            color: #455a64;
+        }
+
+        .scores-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* Comments section */
+        .comments-section textarea {
+            border: 1px solid #c5cae9; /* Light blue border */
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 1rem;
+            color: #34495e;
+            background-color: #fcfdff; /* Slightly off-white background */
+        }
+        .comments-section textarea:disabled {
+            background-color: #eceff1; /* Disabled background */
+            cursor: not-allowed;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            border-top: 1px dashed #90a4ae; /* Muted dashed line */
+            padding-top: 30px;
+            margin-top: 50px;
+        }
+
+        .signature-line {
+            border-bottom: 2px solid #546e7a; /* Darker signature line */
+            margin-top: 60px; /* More space for signature */
+            font-size: 0.9rem;
+            color: #546e7a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Action bar buttons */
+        .actions-bar button {
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .actions-bar button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .btn-edit { background-color: #ffa000; } /* Darker yellow */
+        .btn-edit:hover { background-color: #ffb300; }
+        .btn-save { background-color: #388e3c; } /* Darker green */
+        .btn-save:hover { background-color: #43a047; }
+        .btn-print { background-color: #1976d2; } /* Darker blue */
+        .btn-print:hover { background-color: #2196f3; }
+
+        /* General Modal Styling (ensure consistency) */
+        .modal-content {
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        }
+        .modal-header {
+            background-color: #1a237e; /* Match header color */
+            border-radius: 10px 10px 0 0;
+        }
+        .btn-primary { background-color: #283593; }
+        .btn-primary:hover { background-color: #3949ab; }
+        .btn-danger { background-color: #d32f2f; }
+        .btn-danger:hover { background-color: #e53935; }
+        .btn-secondary { background-color: #757575; }
+        .btn-secondary:hover { background-color: #8d8d8d; }
+        .profile-picture-display{height: 120px; width: 78px;}
     </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">CBT System</div>
-            <ul class="nav-links" id="navLinks">
-                <!-- Navigation links will be dynamically inserted here -->
-            </ul>
-        </nav>
-    </header>
+  <header>
+    <nav>
+        <a href="/dashboard.html" class="logo">SNA CBT System</a>
+        <ul class="nav-links" id="navLinks">
+            <!-- Navigation links will be dynamically inserted here by JS -->
+        </ul>
+    </nav>
+  </header>
 
-    <div class="actions-bar">
-        <button class="btn btn-edit" id="editBtn">Edit Report</button>
-        <button class="btn btn-save hidden" id="saveBtn">Save Report</button>
-        <button class="btn btn-print" onclick="window.print()">Print Report</button>
-    </div>
+  <div class="actions-bar">
+      <button class="btn btn-edit" id="editBtn">Edit Report</button>
+      <button class="btn btn-save hidden" id="saveBtn">Save Report</button>
+      <button class="btn btn-print" onclick="window.print()">Print Report</button>
+  </div>
 
-    <main>
-        <div class="report-card-container">
-            <div id="loadingMessage" class="loading-message">Loading report...</div>
-            <div id="errorMessage" class="error-message hidden"></div>
-            <div id="reportContent" class="hidden">
-                <div class="report-header">
-                    <img src="https://via.placeholder.com/90x90.png?text=School+Logo" alt="School Logo" class="school-logo">
-                    <h1 class="school-name">Sealed Nectar Academy</h1>
-                    <p class="school-address">123 School Road, Knowledge City, State, Country</p>
+  <main>
+    <div class="report-card-container">
+        <div id="loadingMessage" class="loading-message">Loading report...</div>
+        <div id="errorMessage" class="error-message hidden"></div>
+        <div id="reportContent" class="hidden">
+            <div class="report-header">
+                <!-- School Logo: IMPORTANT - Replace this URL with your actual school logo's Cloudinary URL -->
+                <!-- Upload your school logo to Cloudinary, copy its "Secure URL", and paste it below. -->
+                <!-- Example: https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/vXXXXXXXXXX/your_school_logo.png -->
+                <img src="https://res.cloudinary.com/dyphku0jr/image/upload/v1751046319/new_t7avzn.jpg" alt="School Logo" class="school-logo" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dyphku0jr/image/upload/v1751055034/vector-education-logo_779267-2080_i9yfuv.jpg';">
+                <h1 class="school-name">Sealed Nectar Academy</h1>
+                <p class="school-address">15, Nasirudeen street, 10/10 Bus-stop, Ota, Ogun state<br>Email| sealednec@gmail.com   Tell| 08065257209</p>
+            </div>
+
+            <div class="student-profile-pic-container">
+                <!-- Student Profile Picture: This will be dynamically loaded from fetched data -->
+                <!-- Its fallback URL explicitly uses the Cloudinary default avatar defined in your users.js -->
+                <img id="studentProfilePicture" class="profile-picture-display" src="https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg" alt="Student Profile Picture" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';">
+            </div>
+
+            <h2 class="report-title">Student Progress Report</h2>
+            <h3 class="report-title" id="reportTerm"></h3>
+            
+            <div class="student-info">
+                <h3 class="section-title">Student Information</h3>
+                <div class="info-grid">
+                    <div class="info-item"><p><strong>Name:</strong> <span id="studentFullName"></span></p></div>
+                    <div class="info-item"><p><strong>Admission No:</strong> <span id="studentAdmissionNo"></span></p></div>
+                    <div class="info-item"><p><strong>Class:</strong> <span id="studentClass"></span></p></div>
+                    <div class="info-item"><p><strong>Academic Year:</strong> <span id="academicYear"></span></p></div>
+                    <div class="info-item"><p><strong>Date Generated:</strong> <span id="dateGenerated"></span></p></div>
                 </div>
+            </div>
 
-                <div class="student-profile-pic-container">
-                    <img id="studentProfilePicture" class="profile-picture-display" src="https://res.cloudinary.com/your-cloud-name/image/upload/v1/profile_pictures/default-avatar.png" alt="Student Profile Picture">
-                </div>
-
-                <h2 class="report-title">Student Progress Report</h2>
-                <h3 class="report-title" id="reportTerm"></h3>
-                
-                <div class="student-info">
-                    <h3 class="section-title">Student Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item"><p><strong>Name:</strong> <span id="studentFullName"></span></p></div>
-                        <div class="info-item"><p><strong>Admission No:</strong> <span id="studentAdmissionNo"></span></p></div>
-                        <div class="info-item"><p><strong>Class:</strong> <span id="studentClass"></span></p></div>
-                        <div class="info-item"><p><strong>Academic Year:</strong> <span id="academicYear"></span></p></div>
-                        <div class="info-item"><p><strong>Date Generated:</strong> <span id="dateGenerated"></span></p></div>
-                    </div>
-                </div>
-
-                <div class="scores-section">
-                    <h3 class="section-title">Subject Scores</h3>
-                    <table class="scores-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>CA (40%)</th>
-                                <th>Exam (60%)</th>
-                                <th>Final Score</th>
-                                <th>1st Term</th>
-                                <th>2nd Term</th>
-                                <th>3rd Term</th>
-                                <th>Cumulative Avg.</th>
-                                <th>Grade</th>
-                                <th>Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody id="subjectScoresBody">
-                            </tbody>
-                    </table>
-                </div>
-
-                <div class="summary-section">
-                    <h3 class="section-title">Overall Summary</h3>
-                    <table class="summary-table">
+            <div class="scores-section">
+                <h3 class="section-title">Subject Scores</h3>
+                <table class="scores-table">
+                    <thead>
                         <tr>
-                            <td>Grand Total Score:</td>
-                            <td id="grandTotalScore"></td>
+                            <th>Subject</th>
+                            <th>CA (40%)</th>
+                            <th>Exam (60%)</th>
+                            <th>Final Score</th>
+                            <th>1st Term</th>
+                            <th>2nd Term</th>
+                            <th>3rd Term</th>
+                            <th>Cumulative Avg.</th>
+                            <th>Grade</th>
+                            <th>Remarks</th>
                         </tr>
-                        <tr>
-                            <td>Overall Percentage:</td>
-                            <td id="overallPercentage"></td>
-                        </tr>
-                        <tr>
-                            <td>Class Position:</td>
-                            <td id="classPosition"></td>
-                        </tr>
-                    </table>
-                </div>
+                    </thead>
+                    <tbody id="subjectScoresBody">
+                        <!-- Subject scores will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="comments-section">
-                    <h3 class="section-title">Comments</h3>
-                    <div>
-                        <p><strong>Teacher's Comment:</strong></p>
-                        <textarea id="teacherComment" rows="3" disabled></textarea>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <p><strong>Principal's Comment:</strong></p>
-                        <textarea id="principalComment" rows="3" disabled></textarea>
-                    </div>
-                </div>
+            <div class="summary-section">
+                <h3 class="section-title">Overall Summary</h3>
+                <table class="summary-table">
+                    <tr>
+                        <td>Grand Total Score:</td>
+                        <td id="grandTotalScore"></td>
+                    </tr>
+                    <tr>
+                        <td>Overall Percentage:</td>
+                        <td id="overallPercentage"></td>
+                    </tr>
+                    <tr>
+                        <td>Class Position:</td>
+                        <td id="classPosition"></td>
+                    </tr>
+                </table>
+            </div>
 
-                <div class="info-item" style="margin-top: 25px;">
-                    <p><strong>Next Term Begins:</strong> <span id="nextTermBegins"></span></p>
+            <div class="comments-section">
+                <h3 class="section-title">Comments</h3>
+                <div>
+                    <p><strong>Teacher's Comment:</strong></p>
+                    <textarea id="teacherComment" rows="3" disabled></textarea>
                 </div>
+                <div style="margin-top: 15px;">
+                    <p><strong>Principal's Comment:</strong></p>
+                    <textarea id="principalComment" rows="3" disabled></textarea>
+                </div>
+            </div>
 
-                <div class="signature-section">
-                    <div class="signature-item">
-                        <div class="signature-line">Teacher's Signature</div>
-                    </div>
-                    <div class="signature-item">
-                        <div class="signature-line">Principal's Signature</div>
-                    </div>
+            <div class="info-item" style="margin-top: 25px;">
+                <p><strong>Next Term Begins:</strong> <span id="nextTermBegins"></span></p>
+            </div>
+
+            <div class="signature-section">
+                <div class="signature-item">
+                    <div class="signature-line">Teacher's Signature</div>
+                </div>
+                <div class="signature-item">
+                    <div class="signature-line">Principal's Signature</div>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+  </main>
 
-    <footer>
-        <p>&copy; 2025 Sealed Nectar Academy. All rights reserved.</p>
-    </footer>
+  <footer>
+    <p>&copy; 2025 Sealed Nectar Academy. All rights reserved.</p>
+  </footer>
+
+<!-- Modals for alerts and confirmations (copied for self-containment) -->
+<div id="confirmationModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Action</h2>
+            <span class="close-button" onclick="closeModal('confirmationModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="confirmationMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmAction(true)">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="alertDialog" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="alertTitle">Alert</h2>
+            <span class="close-button" onclick="closeModal('alertDialog')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="alertMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
+        </div>
+    </div>
+</div>
 
 <script>
     let currentReportData = null; // Store fetched report data
     let currentUser = null; // Store current user data
 
+    // --- Modal Functions (Copied for self-containment from previous snippets) ---
+    let currentConfirmationCallback = null; 
+
+    function showConfirmation(message) {
+        return new Promise(resolve => {
+            document.getElementById('confirmationMessage').textContent = message;
+            document.getElementById('confirmationModal').style.display = 'flex'; 
+            currentConfirmationCallback = resolve;
+        });
+    }
+
+    function confirmAction(result) {
+        if (currentConfirmationCallback) {
+            currentConfirmationCallback(result);
+            currentConfirmationCallback = null; 
+        }
+        closeModal('confirmationModal');
+    }
+
+    function showAlert(message, title = "Alert") {
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertMessage').textContent = message;
+        document.getElementById('alertDialog').style.display = 'flex'; 
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    // --- End Modal Functions ---
+
+    /**
+     * Fetches current user data to determine authentication status and permissions.
+     * Redirects to login if not authenticated.
+     */
     async function loadUserData() {
         try {
             const response = await fetch('/api/users/me', { credentials: 'include' });
             if (!response.ok) {
+                // If not authenticated, redirect to login page
                 window.location.href = '/login.html';
-                return null;
+                return null; // Ensure null is returned to stop further processing
             }
             currentUser = await response.json();
-            // Assuming there's no navUsername element in view-report.html based on provided code snippet
-            // const navUsernameElement = document.getElementById('navUsername'); 
-            // if (navUsernameElement) {
-            //     navUsernameElement.textContent = currentUser.username;
-            // }
-            createNavigationLinks(currentUser); // If you have this function for dynamic nav
+            createNavigationLinks(currentUser); // Dynamically build navigation based on user role
             return currentUser;
         } catch (error) {
             console.error("Error loading user data for navigation:", error);
+            // On any error during user data fetch, assume not logged in and redirect
             window.location.href = '/login.html';
             return null;
         }
     }
 
+    /**
+     * Loads the student's report based on URL parameters.
+     * Displays loading, error, or report content accordingly.
+     */
     async function loadReport() {
         document.getElementById('loadingMessage').classList.remove('hidden');
         document.getElementById('errorMessage').classList.add('hidden');
@@ -322,68 +489,85 @@
         const academicYear = urlParams.get('academicYear');
 
         if (!studentId || !term || !academicYear) {
-            displayError('Missing student ID, term, or academic year parameters. Please go back to the student reports page.');
+            displayError('Missing student ID, term, or academic year parameters in URL. Please go back to the student reports page to select a report.');
             return;
         }
 
         try {
-            // Updated endpoint to match examResults.js report compilation
+            // Fetch the compiled report data from the backend
             const response = await fetch(`/api/exam-results/report/compile?studentId=${studentId}&term=${term}&session=${academicYear}`, { credentials: 'include' });
+            
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({})); // Parse error even if response not ok
-                throw new Error(errorData.error || `Failed to fetch report card data. Status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({})); // Attempt to parse error message
+                // Check for specific authorization errors
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error('You are not authorized to view this report. Please log in with appropriate permissions.');
+                }
+                throw new Error(errorData.error || `Failed to fetch report card data. Server responded with status: ${response.status}`);
             }
+
             currentReportData = await response.json();
             displayReport(currentReportData);
 
+            // Show edit/save buttons only for authorized users (admin or teacher)
             if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) {
-                document.getElementById('editBtn').classList.remove('hidden'); // Show edit button for admins/teachers
+                document.getElementById('editBtn').classList.remove('hidden');
             }
 
         } catch (error) {
             displayError(`Error loading report: ${error.message}`);
             console.error("Load report error:", error);
-            // If it's an authorization error, redirect to login
-            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('not authenticated')) {
-                 window.location.href = '/login.html';
+            // Redirect to login if authorization error occurred
+            if (error.message.includes('authorized') || error.message.includes('log in with appropriate permissions')) {
+                 setTimeout(() => { window.location.href = '/login.html'; }, 2000); // Redirect after a short delay
             }
         } finally {
             document.getElementById('loadingMessage').classList.add('hidden');
         }
     }
 
+    /**
+     * Populates the report card HTML elements with fetched data.
+     * @param {Object} data - The report data object from the backend.
+     */
     function displayReport(data) {
         document.getElementById('reportContent').classList.remove('hidden');
-        document.getElementById('studentFullName').textContent = data.student.full_name;
+
+        // Student Information Section
+        document.getElementById('studentFullName').textContent = data.student.full_name || 'N/A';
         document.getElementById('studentAdmissionNo').textContent = data.student.admission_number || 'N/A';
-        document.getElementById('studentClass').textContent = data.classLevel || 'N/A'; // Use classLevel from compiled data
-        document.getElementById('academicYear').textContent = data.session;
-        document.getElementById('reportTerm').textContent = `${data.term} Term Report`;
+        // Crucial fix: Ensure classLevel is fetched and displayed. It should come from the backend's compiled report data.
+        document.getElementById('studentClass').textContent = data.classLevel || 'Unknown Class'; 
+        document.getElementById('academicYear').textContent = data.session || 'N/A';
+        document.getElementById('reportTerm').textContent = `${data.term || 'N/A'} Term Report`;
         document.getElementById('dateGenerated').textContent = new Date().toLocaleDateString(); // Current date
 
-        // Display student profile picture
+        // Student Profile Picture
         const profilePicElement = document.getElementById('studentProfilePicture');
-        if (data.student.profile_picture_url) {
-            profilePicElement.src = data.student.profile_picture_url;
-        } else {
-            profilePicElement.src = '/images/default_avatar.jpeg'; // Use your actual default avatar path
-        }
+        // Use the profile_picture_url from the fetched student data, with Cloudinary default as fallback
+        const defaultCloudinaryAvatar = 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';
+        profilePicElement.src = data.student.profile_picture_url || defaultCloudinaryAvatar;
+        // Ensure the onerror fallback is also to a valid Cloudinary URL
+        profilePicElement.onerror = function() {
+            this.onerror = null; // Prevent infinite loop
+            this.src = defaultCloudinaryAvatar;
+        };
 
-
+        // Subject Scores Table
         const subjectScoresBody = document.getElementById('subjectScoresBody');
         subjectScoresBody.innerHTML = '';
         if (data.subjects && data.subjects.length > 0) {
             data.subjects.forEach(subject => {
                 const row = `
                     <tr>
-                        <td>${subject.subjectName}</td>
-                        <td>${subject.ca_scaled}</td>
-                        <td>${subject.exam_scaled}</td>
-                        <td>${subject.finalScore}</td>
-                        <td>${subject.firstTerm}</td>
-                        <td>${subject.secondTerm}</td>
-                        <td>${subject.thirdTerm}</td>
-                        <td>${subject.cumulativeAvg}</td>
+                        <td>${subject.subjectName || 'N/A'}</td>
+                        <td>${subject.ca_scaled !== undefined ? subject.ca_scaled : 'N/A'}</td>
+                        <td>${subject.exam_scaled !== undefined ? subject.exam_scaled : 'N/A'}</td>
+                        <td>${subject.finalScore !== undefined ? subject.finalScore : 'N/A'}</td>
+                        <td>${subject.firstTerm !== undefined ? subject.firstTerm : 'N/A'}</td>
+                        <td>${subject.secondTerm !== undefined ? subject.secondTerm : 'N/A'}</td>
+                        <td>${subject.thirdTerm !== undefined ? subject.thirdTerm : 'N/A'}</td>
+                        <td>${subject.cumulativeAvg !== undefined ? subject.cumulativeAvg : 'N/A'}</td>
                         <td>${subject.grade || 'N/A'}</td>
                         <td>${subject.remark || 'N/A'}</td>
                     </tr>
@@ -391,22 +575,24 @@
                 subjectScoresBody.innerHTML += row;
             });
         } else {
-            subjectScoresBody.innerHTML = `<tr><td colspan="10" style="text-align: center;">No subject results found for this student for this term.</td></tr>`;
+            subjectScoresBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #546e7a;">No subject results found for this student for this term.</td></tr>`;
         }
         
-        // Populate summary
-        document.getElementById('grandTotalScore').textContent = data.summary.totalScoreObtained;
-        // document.getElementById('totalScoreObtained').textContent = data.summary.totalScoreObtained; // Removed as it's duplicate of grandTotalScore
-        // document.getElementById('totalPossibleMarks').textContent = data.summary.totalPossibleMarks; // Removed as it's derivative of overall percentage
-        document.getElementById('overallPercentage').textContent = `${data.summary.overallPercentage}%`;
-        document.getElementById('classPosition').textContent = data.summary.position;
+        // Overall Summary
+        document.getElementById('grandTotalScore').textContent = data.summary?.totalScoreObtained !== undefined ? data.summary.totalScoreObtained : 'N/A';
+        document.getElementById('overallPercentage').textContent = data.summary?.overallPercentage !== undefined ? `${data.summary.overallPercentage}%` : 'N/A';
+        document.getElementById('classPosition').textContent = data.summary?.position || 'N/A';
 
-        // Populate editable meta fields
-        document.getElementById('teacherComment').value = data.meta?.teacher_comment || ''; // Use .value for textarea
-        document.getElementById('principalComment').value = data.meta?.principal_comment || ''; // Use .value for textarea
+        // Comments Section
+        document.getElementById('teacherComment').value = data.meta?.teacher_comment || '';
+        document.getElementById('principalComment').value = data.meta?.principal_comment || '';
         document.getElementById('nextTermBegins').textContent = data.meta?.next_term_begins || 'TBA';
     }
 
+    /**
+     * Toggles the edit mode for comments and button visibility.
+     * @param {boolean} isEditing - True to enable edit mode, false to disable.
+     */
     function toggleEdit(isEditing) {
         document.getElementById('teacherComment').disabled = !isEditing;
         document.getElementById('principalComment').disabled = !isEditing;
@@ -414,22 +600,23 @@
         document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
     }
 
+    /**
+     * Saves the edited report comments and meta-data to the backend.
+     */
     async function saveReportData() {
         if (!currentReportData || !currentUser || !(currentUser.is_admin || currentUser.role === 'teacher')) {
-            alert('You do not have permission to save this report.'); // Replace with custom modal
+            showAlert('You do not have permission to save this report.', 'Permission Denied');
             return;
         }
 
         const studentId = currentReportData.student.id;
         const term = currentReportData.term;
-        const session = currentReportData.session; // Use session directly
+        const session = currentReportData.session;
         const teacherComment = document.getElementById('teacherComment').value;
         const principalComment = document.getElementById('principalComment').value;
-        const classLevel = currentReportData.classLevel; // Use classLevel from loaded data
-        
-        // Prepare cumulative data for saving (optional, only if you collect it in currentReportData)
-        // For simplicity, for now, we'll only save comments and basic meta.
-        // If your backend expects cumulativeData, you'd need to add it here.
+        const classLevel = currentReportData.classLevel; // Ensure classLevel is included
+
+        // Prepare cumulative data (assuming it's part of the structure expected by backend)
         const cumulativeData = currentReportData.subjects.map(s => ({
             subjectName: s.subjectName,
             finalScore: parseFloat(s.finalScore),
@@ -439,11 +626,9 @@
             cumulativeAvg: parseFloat(s.cumulativeAvg)
         }));
 
-
         try {
-            // Using the POST route for report-card-meta as it handles both insert and update (UPSERT)
             const response = await fetch(`/api/report-card-meta`, {
-                method: 'POST', // Changed from PUT to POST as per reportCardMeta.js API
+                method: 'POST', // Assuming your backend uses POST for UPSERT
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -451,11 +636,11 @@
                     studentId,
                     term,
                     session,
-                    classLevel, // Pass classLevel
+                    classLevel, // Pass classLevel to backend
                     teacherComment,
                     principalComment,
-                    nextTermBegins: document.getElementById('nextTermBegins').textContent === 'TBA' ? null : document.getElementById('nextTermBegins').textContent, // Capture next term begins
-                    cumulativeData // Pass cumulative data
+                    nextTermBegins: document.getElementById('nextTermBegins').textContent === 'TBA' ? null : document.getElementById('nextTermBegins').textContent,
+                    cumulativeData
                 }),
                 credentials: 'include'
             });
@@ -464,17 +649,19 @@
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to save report comments.');
             }
-            alert('Report comments saved successfully!'); // Replace with custom modal
+            showAlert('Report comments saved successfully!', 'Success');
             toggleEdit(false); // Switch back to view mode
-            // Optionally, re-load the report to ensure data consistency
-            await loadReport();
-
+            await loadReport(); // Reload to ensure UI reflects any backend updates
         } catch (error) {
-            alert('Error saving report: ' + error.message); // Replace with custom modal
+            showAlert('Error saving report: ' + error.message, 'Save Error');
             console.error('Save report error:', error);
         }
     }
 
+    /**
+     * Displays an error message on the page.
+     * @param {string} message - The error message to display.
+     */
     function displayError(message) {
         document.getElementById('loadingMessage').classList.add('hidden');
         const errorDiv = document.getElementById('errorMessage');
@@ -482,67 +669,93 @@
         errorDiv.classList.remove('hidden');
     }
 
+    // --- Navigation Functions (Assumed to be in a shared file like xxx.js, but duplicated for self-containment) ---
+    function createNavigationLinks(user) {
+        const navLinksContainer = document.getElementById('navLinks');
+        navLinksContainer.innerHTML = ''; // Clear all existing links
+
+        const links = [
+            { href: "/dashboard.html", text: "Dashboard" },
+            { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
+            { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
+            { href: "/registration.html", text: "Register User", roles: ['admin'] },
+            { href: "/admin-reports.html", text: "Student Reports", roles: ['admin'] },
+            { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
+            { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
+        ];
+
+        links.forEach(linkInfo => {
+            const shouldDisplay = !linkInfo.roles || linkInfo.roles.some(role => {
+                if (role === 'admin') return user.is_admin;
+                return user.role === role;
+            });
+
+            if (shouldDisplay) {
+                const listItem = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = linkInfo.href;
+                link.textContent = linkInfo.text;
+                link.classList.add('nav-link');
+                
+                // Add 'active' class if the current page matches the link's href
+                if (window.location.pathname === linkInfo.href) {
+                    link.classList.add('active');
+                }
+
+                listItem.appendChild(link);
+                navLinksContainer.appendChild(listItem);
+            }
+        });
+
+        // Always add logout link at the end
+        const logoutLinkItem = document.createElement('li');
+        const logoutLink = document.createElement('a');
+        logoutLink.href = "#";
+        logoutLink.id = "logoutLink";
+        logoutLink.textContent = "Logout";
+        logoutLink.classList.add('nav-link');
+        logoutLinkItem.appendChild(logoutLink);
+        navLinksContainer.appendChild(logoutLinkItem);
+
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleLogout();
+        });
+    }
+
+    async function handleLogout() {
+        try {
+            const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+            }
+        } catch (error) {
+            console.error('Network error during logout:', error);
+        } finally {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/login.html';
+        }
+    }
+    // --- End Navigation Functions ---
+
+    // Initial page load logic
     window.addEventListener('DOMContentLoaded', async () => {
-        await loadUserData(); // Load user data for navigation and permissions
-        if (currentUser) { // Only attempt to load report if user data is successfully loaded
+        // Load user data first for permission checks and navbar rendering
+        await loadUserData();
+        // Only proceed to load the report if currentUser is successfully fetched (i.e., user is authenticated)
+        if (currentUser) {
             loadReport();
         }
     });
 
+    // Event Listeners for report actions
     document.getElementById('editBtn').addEventListener('click', () => toggleEdit(true));
     document.getElementById('saveBtn').addEventListener('click', saveReportData);
 
-    // This function is assumed to be in auth.js or common.js
-    function createNavigationLinks(user) {
-        const navLinksContainer = document.getElementById('navLinks');
-        // Clear existing links except logout
-        navLinksContainer.innerHTML = ''; // Clear all and rebuild
-
-        const dashboardLink = document.createElement('li');
-        dashboardLink.innerHTML = '<a href="dashboard.html" class="nav-link">Dashboard</a>';
-        navLinksContainer.appendChild(dashboardLink);
-
-        if (user.is_admin || user.role === 'teacher') {
-            const createExamLink = document.createElement('li');
-            createExamLink.innerHTML = '<a href="create-exam.html" class="nav-link">Create Exam</a>';
-            navLinksContainer.appendChild(createExamLink);
-        }
-        if (user.is_admin) {
-            const manageUsersLink = document.createElement('li');
-            manageUsersLink.innerHTML = '<a href="manage-users.html" class="nav-link">Manage Users</a>';
-            navLinksContainer.appendChild(manageUsersLink);
-
-            const registerLink = document.createElement('li');
-            registerLink.innerHTML = '<a href="registration.html" class="nav-link">Register User</a>';
-            navLinksContainer.appendChild(registerLink);
-            
-            const reportsLink = document.createElement('li');
-            reportsLink.innerHTML = '<a href="admin-reports.html" class="nav-link">Student Reports</a>';
-            navLinksContainer.appendChild(reportsLink);
-
-            // New links for navigation bar
-            const manageSubjectsLink = document.createElement('li');
-            manageSubjectsLink.innerHTML = '<a href="manage-subjects.html" class="nav-link">Manage Subjects</a>';
-            navLinksContainer.appendChild(manageSubjectsLink);
-
-            const manageClassesLink = document.createElement('li');
-            manageClassesLink.innerHTML = '<a href="manage-classes.html" class="nav-link">Manage Classes</a>';
-            navLinksContainer.appendChild(manageClassesLink);
-        }
-
-        const logoutLinkItem = document.createElement('li');
-        logoutLinkItem.innerHTML = '<a href="#" id="logoutLink" class="nav-link">Logout</a>';
-        navLinksContainer.appendChild(logoutLinkItem);
-
-        const logoutButton = document.getElementById('logoutLink');
-        if (logoutButton) {
-            logoutButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                handleLogout();
-            });
-        }
-    }
 </script>
-    <script src="/js/xxx.js"></script>
+<!-- Assuming xxx.js contains additional global utilities or is no longer needed if functions are self-contained -->
+<!-- <script src="/js/xxx.js"></script> -->
 </body>
 </html>
