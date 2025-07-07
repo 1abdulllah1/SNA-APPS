@@ -87,8 +87,9 @@ router.put('/:id', auth, auth.isAdmin, async (req, res) => { // Use auth.isAdmin
     return res.status(400).json({ error: "Class level name and code are required for update." });
   }
   try {
+    // FIX: Removed 'updated_at = NOW()' as the column does not exist in the schema.
     const updatedClassLevel = await pool.query(
-      "UPDATE class_levels SET level_name = $1, level_code = $2, updated_at = NOW() WHERE level_id = $3 RETURNING *",
+      "UPDATE class_levels SET level_name = $1, level_code = $2 WHERE level_id = $3 RETURNING *",
       [level_name, level_code.toUpperCase(), id]
     );
     if (updatedClassLevel.rows.length === 0) {
