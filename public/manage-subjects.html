@@ -6,208 +6,207 @@
     <title>Manage Subjects | CBT System</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        main { max-width: 800px; }
-        .management-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
+        main { max-width: 900px; }
+        .management-container { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
+        .form-container { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .list-container { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .subject-list { list-style: none; padding: 0; }
+        .subject-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .subject-list li:last-child { border-bottom: none; }
+        .hidden { display: none; }
+        .error-message {
+            color: var(--danger-red);
+            background-color: #ffebeb;
+            border: 1px solid var(--danger-red);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 1rem;
         }
-        @media (min-width: 768px) {
-            .management-container { grid-template-columns: 2fr 3fr; }
-        }
-        .form-container { background-color: #f8f9fa; padding: 1.5rem; border-radius: var(--border-radius-md); border: 1px solid #dee2e6; }
-        .form-container h2 { margin-top: 0; color: var(--primary-blue); border-bottom: 2px solid var(--secondary-blue); padding-bottom: 0.5rem; margin-bottom: 1.5rem;}
-        .table-container { background: white; padding: 1rem; border-radius: var(--border-radius-md); box-shadow: var(--shadow-soft); }
-        .subjects-table { width: 100%; border-collapse: collapse; }
-        .subjects-table th, .subjects-table td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        .subjects-table th { background-color: var(--primary-blue); color: white; }
-        .subjects-table tr:hover { background-color: #f1f3f5; }
-        .actions-cell button { margin-right: 5px; }
-        .form-actions { display: flex; gap: 10px; margin-top: 1rem; }
     </style>
 </head>
 <body>
     <header>
         <nav>
-            <div class="nav-container">
-                <a href="dashboard.html" class="logo">CBT System</a>
-                <div class="nav-links" id="navLinks"></div>
-            </div>
+            <a href="/dashboard.html" class="logo">SNA CBT System</a>
+            <ul class="nav-links" id="navLinksContainer">
+                </ul>
         </nav>
     </header>
 
-    <main id="mainContent">
-        <h1>Manage Subjects</h1>
-        <div id="errorMessage" class="error-message hidden"></div>
-        <div id="successMessage" class="success-message hidden"></div>
-        <div id="loadingIndicator">Loading...</div>
+    <main>
+        <div class="container">
+            <h1>Manage Subjects</h1>
+            <div id="managementError" class="error-message hidden"></div>
 
-        <div class="management-container hidden">
-            <div class="form-container">
-                <h2 id="formTitle">Add New Subject</h2>
-                <form id="subjectForm">
-                    <input type="hidden" id="subjectId" name="subjectId">
-                    <div class="form-group">
-                        <label for="subjectName">Subject Name *</label>
-                        <input type="text" id="subjectName" name="subjectName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="subjectCode">Subject Code *</label>
-                        <input type="text" id="subjectCode" name="subjectCode" placeholder="e.g., MATHS, PHY" required>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn primary-btn" id="submitBtn">Add Subject</button>
-                        <button type="button" class="btn secondary-btn" id="cancelBtn" onclick="resetForm()">Cancel</button>
-                    </div>
-                </form>
-            </div>
-            <div class="table-container">
-                <table class="subjects-table">
-                    <thead>
-                        <tr>
-                            <th>Subject Name</th>
-                            <th>Code</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="subjectsTableBody">
-                        </tbody>
-                </table>
+            <div class="management-container">
+                <div class="form-container">
+                    <h2>Add/Edit Subject</h2>
+                    <form id="subjectForm" class="app-form">
+                        <div class="form-group">
+                            <label for="subjectName">Subject Name:</label>
+                            <input type="text" id="subjectName" name="subjectName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectCode">Subject Code:</label>
+                            <input type="text" id="subjectCode" name="subjectCode" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="classLevel">Assign to Class Level:</label>
+                            <select id="classLevel" name="classLevel" required>
+                                <option value="">Select Class Level</option>
+                                </select>
+                        </div>
+                        <button type="submit" class="btn primary-btn">Add Subject</button>
+                    </form>
+                </div>
+
+                <div class="list-container">
+                    <h2>Existing Subjects</h2>
+                    <ul id="subjectList" class="subject-list">
+                        <li>Loading subjects...</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </main>
-    <footer><p>&copy; 2025 SNA CBT System. All rights reserved.</p></footer>
 
-<script>
-    const form = document.getElementById('subjectForm');
-    const formTitle = document.getElementById('formTitle');
-    const subjectIdInput = document.getElementById('subjectId');
-    const subjectNameInput = document.getElementById('subjectName');
-    const subjectCodeInput = document.getElementById('subjectCode');
-    const submitBtn = document.getElementById('submitBtn');
-    const tableBody = document.getElementById('subjectsTableBody');
-    const errorDiv = document.getElementById('errorMessage');
-    const successDiv = document.getElementById('successMessage');
+    <footer>
+        <p>&copy; 2024 SNA CBT System. All rights reserved.</p>
+    </footer>
 
-    function showAlert(type, message) {
-        const div = type === 'error' ? errorDiv : successDiv;
-        div.textContent = message;
-        div.classList.remove('hidden');
-        setTimeout(() => div.classList.add('hidden'), 5000);
-    }
+    <script>
+        let allClassLevels = [];
 
-    async function fetchSubjects() {
-        try {
-            const response = await fetch('/api/subjects', { credentials: 'include' });
-            if (!response.ok) throw new Error('Failed to fetch subjects.');
-            const subjects = await response.json();
-            renderSubjectsTable(subjects);
-        } catch (error) {
-            showAlert('error', error.message);
+        async function loadClassLevelsForDropdown() {
+            try {
+                const response = await fetch('/api/class-levels', { credentials: 'include' });
+                if (!response.ok) throw new Error('Failed to fetch class levels.');
+                allClassLevels = await response.json();
+                const classLevelSelect = document.getElementById('classLevel');
+                classLevelSelect.innerHTML = '<option value="">Select Class Level</option>';
+                allClassLevels.forEach(level => {
+                    const option = document.createElement('option');
+                    option.value = level.level_id;
+                    option.textContent = level.level_name;
+                    classLevelSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching class levels:", error);
+                document.getElementById('managementError').textContent = 'Failed to load class levels.';
+                document.getElementById('managementError').classList.remove('hidden');
+            }
         }
-    }
 
-    function renderSubjectsTable(subjects) {
-        tableBody.innerHTML = '';
-        if (subjects.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No subjects found.</td></tr>';
-            return;
+        async function loadSubjects() {
+            const subjectList = document.getElementById('subjectList');
+            const errorDiv = document.getElementById('managementError');
+            errorDiv.classList.add('hidden');
+            subjectList.innerHTML = '<li>Loading subjects...</li>';
+
+            try {
+                const response = await fetch('/api/subjects', { credentials: 'include' });
+                if (!response.ok) {
+                    if (response.status === 401) window.location.href = '/login.html';
+                    throw new Error('Failed to fetch subjects.');
+                }
+                const subjects = await response.json();
+                subjectList.innerHTML = '';
+
+                if (subjects.length === 0) {
+                    subjectList.innerHTML = '<li>No subjects found.</li>';
+                    return;
+                }
+
+                subjects.forEach(subject => {
+                    const li = document.createElement('li');
+                    const classLevelName = allClassLevels.find(level => String(level.level_id) === String(subject.class_level_id))?.level_name || 'N/A';
+                    li.innerHTML = `
+                        <span>${subject.name} (${subject.subject_code}) - ${classLevelName}</span>
+                        <div>
+                            <button class="btn secondary-btn" onclick="editSubject('${subject.subject_id}', '${subject.name}', '${subject.subject_code}', '${subject.class_level_id}')">Edit</button>
+                            <button class="btn danger-btn" onclick="deleteSubject('${subject.subject_id}')">Delete</button>
+                        </div>
+                    `;
+                    subjectList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                subjectList.innerHTML = '<li>Error loading subjects.</li>';
+            }
         }
-        subjects.forEach(subject => {
-            const row = tableBody.insertRow();
-            row.innerHTML = `
-                <td>${subject.name}</td>
-                <td>${subject.subject_code}</td>
-                <td class="actions-cell">
-                    <button class="btn btn-secondary btn-sm" onclick="showEditForm(${subject.subject_id}, '${subject.name}', '${subject.subject_code}')">Edit</button>
-                    <button class="btn delete-btn btn-sm" onclick="handleDelete(${subject.subject_id})">Delete</button>
-                </td>
-            `;
-        });
-    }
 
-    function showEditForm(id, name, code) {
-        formTitle.textContent = 'Edit Subject';
-        subjectIdInput.value = id;
-        subjectNameInput.value = name;
-        subjectCodeInput.value = code;
-        submitBtn.textContent = 'Save Changes';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+        document.getElementById('subjectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const subjectName = document.getElementById('subjectName').value.trim();
+            const subjectCode = document.getElementById('subjectCode').value.trim();
+            const classLevelId = document.getElementById('classLevel').value;
+            const errorDiv = document.getElementById('managementError');
+            errorDiv.classList.add('hidden');
 
-    function resetForm() {
-        form.reset();
-        formTitle.textContent = 'Add New Subject';
-        subjectIdInput.value = '';
-        submitBtn.textContent = 'Add Subject';
-    }
-
-    async function handleFormSubmit(e) {
-        e.preventDefault();
-        const id = subjectIdInput.value;
-        const name = subjectNameInput.value;
-        const code = subjectCodeInput.value;
-        const url = id ? `/api/subjects/${id}` : '/api/subjects';
-        const method = id ? 'PUT' : 'POST';
-
-        try {
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, subject_code: code }),
-                credentials: 'include'
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error);
-            
-            showAlert('success', `Subject ${id ? 'updated' : 'added'} successfully!`);
-            resetForm();
-            fetchSubjects();
-        } catch (error) {
-            showAlert('error', error.message);
-        }
-    }
-
-    async function handleDelete(id) {
-        if (!confirm('Are you sure you want to delete this subject? This action cannot be undone.')) return;
-        
-        try {
-            const response = await fetch(`/api/subjects/${id}`, { method: 'DELETE', credentials: 'include' });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error);
-
-            showAlert('success', result.message);
-            fetchSubjects();
-        } catch (error) {
-            showAlert('error', error.message);
-        }
-    }
-
-    async function loadPage() {
-        try {
-            const userResponse = await fetch('/api/users/me', { credentials: 'include' });
-            if (!userResponse.ok) window.location.href = '/login.html';
-            const user = await userResponse.json();
-            
-            if (!user.is_admin) {
-                document.getElementById('mainContent').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to manage subjects.</p>';
+            if (!subjectName || !subjectCode || !classLevelId) {
+                errorDiv.textContent = 'Subject name, code, and class level are required.';
+                errorDiv.classList.remove('hidden');
                 return;
             }
-            // Create nav links here if needed, or assume a global function
-            document.getElementById('loadingIndicator').classList.add('hidden');
-            document.querySelector('.management-container').classList.remove('hidden');
-            
-            await fetchSubjects();
-            form.addEventListener('submit', handleFormSubmit);
 
-        } catch (error) {
-            document.getElementById('loadingIndicator').classList.add('hidden');
-            showAlert('error', 'Failed to load page. You may not be authorized.');
+            try {
+                const isEditing = e.target.dataset.editingId;
+                const url = isEditing ? `/api/subjects/${isEditing}` : '/api/subjects';
+                const method = isEditing ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ name: subjectName, subject_code: subjectCode, class_level_id: classLevelId })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error);
+
+                loadSubjects(); // Refresh the list
+                e.target.reset(); // Clear the form
+                document.getElementById('subjectForm').dataset.editingId = '';
+                document.getElementById('subjectForm').querySelector('button[type="submit"]').textContent = 'Add Subject';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        function editSubject(subjectId, name, subjectCode, classLevelId) {
+            document.getElementById('subjectName').value = name;
+            document.getElementById('subjectCode').value = subjectCode;
+            document.getElementById('classLevel').value = classLevelId;
+            document.getElementById('subjectForm').dataset.editingId = subjectId;
+            document.getElementById('subjectForm').querySelector('button[type="submit"]').textContent = 'Update Subject';
+            document.getElementById('managementError').classList.add('hidden');
         }
-    }
 
-    window.addEventListener('DOMContentLoaded', loadPage);
-</script>
+        async function deleteSubject(subjectId) {
+            if (!confirm('Are you sure you want to delete this subject? This can only be done if it is not assigned to any exams.')) return;
+            const errorDiv = document.getElementById('managementError');
+            errorDiv.classList.add('hidden');
+            try {
+                const response = await fetch(`/api/subjects/${subjectId}`, { method: 'DELETE', credentials: 'include' });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error);
+
+                loadSubjects(); // Refresh the list
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadClassLevelsForDropdown();
+            await loadSubjects();
+        });
+    </script>
     <script src="/js/xxx.js"></script>
 </body>
 </html>

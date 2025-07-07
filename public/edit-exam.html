@@ -6,422 +6,899 @@
   <title>Edit Exam | CBT System</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    main { max-width: 900px; }
-    .form-grid-col-3 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
+    /* General Styles */
+    body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; }
+    main { max-width: 900px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+    h1, h2, h3 { color: var(--primary-blue); margin-bottom: 1.5rem; }
+    hr { border: none; border-top: 1px solid #e0e0e0; margin: 2rem 0; }
+    
+    /* Form Specifics */
+    .app-form { display: flex; flex-direction: column; gap: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px; /* Slightly more rounded */
+      font-size: 1rem;
+      box-sizing: border-box; /* Include padding in width */
     }
+    .form-group input[type="checkbox"] { width: auto; margin-right: 10px; }
+
+    .form-grid-col-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .primary-btn { background-color: var(--primary-blue); color: white; }
+    .primary-btn:hover { background-color: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .danger-btn { background-color: var(--danger-red); color: white; }
+    .danger-btn:hover { background-color: #cc0000; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .add-question-btn, .add-section-btn { background-color: #28a745; color: white; margin-top: 15px; } /* Green for add buttons */
+    .add-question-btn:hover, .add-section-btn:hover { background-color: #218838; }
+
+    /* Section and Question Cards */
+    .section-card {
+      background: #eef4ff; /* Lighter blue background */
+      border: 1px solid #c9d9ff;
+      border-radius: 12px; /* Consistent rounding */
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #b3caff; }
+    .section-header h2 { margin: 0; color: var(--primary-blue); }
+    .section-actions { display: flex; gap: 10px; }
+    .section-instructions, .exam-instructions { min-height: 80px; resize: vertical; }
+
     .question-card {
       background: #f8f9ff;
       border: 1px solid #e0e5ff;
-      border-radius: 8px;
+      border-radius: 10px; /* Consistent rounding */
       padding: 20px;
       margin-bottom: 20px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    .question-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #d1d9ff;
-    }
+    .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #d1d9ff; }
     .question-header h3 { margin: 0; color: var(--primary-blue); }
-    .delete-question-btn {
-        background-color: var(--danger-red);
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: var(--border-radius-sm);
-        cursor: pointer;
-        font-size: 0.9em;
-    }
-    .delete-question-btn:hover { background-color: #c82333; }
-    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .add-question-btn-container { margin: 20px 0; }
-    .form-actions { margin-top: 30px; display: flex; justify-content: space-between; align-items: center;}
-    #totalMarksInfo {
-        margin-top: 10px;
-        font-style: italic;
-        color: var(--text-medium);
-    }
-    #loadingIndicator { text-align: center; padding: 20px; font-style: italic; font-size: 1.1em; }
-    .lock-exam-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background-color: #fff8e1;
+    .delete-question-btn { background-color: var(--danger-red); color: white; padding: 6px 12px; font-size: 0.9em; }
+
+    /* Messages */
+    .error-message, .info-message, .success-message {
         padding: 10px 15px;
         border-radius: 8px;
-        border: 1px solid #ffecb3;
-        margin-bottom: 20px;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-weight: 500;
     }
-    .lock-exam-container label {
-        margin-bottom: 0;
-        font-weight: 600;
-        color: #6d4c41;
+    .error-message { background-color: #ffebeb; color: var(--danger-red); border: 1px solid var(--danger-red); }
+    .info-message { background-color: #e0f7fa; color: #007bb5; border: 1px solid #00acc1; }
+    .success-message { background-color: #e6ffed; color: var(--success-green); border: 1px solid var(--success-green); }
+    .hidden { display: none; }
+
+    /* Footer */
+    footer { text-align: center; padding: 20px; margin-top: 2rem; color: #777; font-size: 0.9em; }
+
+    /* Navbar Styles (copied for consistency) */
+    header { background-color: #1a237e; padding: 1rem 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); font-family: 'Inter', sans-serif; }
+    nav { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    nav .logo { color: #e8eaf6; font-size: 1.8rem; font-weight: 700; text-decoration: none; transition: color 0.3s ease; }
+    nav .logo:hover { color: #ffffff; }
+    .nav-links { list-style: none; margin: 0; padding: 0; display: flex; gap: 25px; }
+    .nav-links li { position: relative; }
+    .nav-links .nav-link {
+        color: #c5cae9; text-decoration: none; font-size: 1.05rem; font-weight: 500; padding: 8px 0;
+        transition: color 0.3s ease, transform 0.2s ease; position: relative; white-space: nowrap;
     }
-    .lock-exam-container input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
+    .nav-links .nav-link::after { content: ''; position: absolute; left: 0; bottom: 0; width: 0; height: 2px; background-color: #ffffff; transition: width 0.3s ease; }
+    .nav-links .nav-link:hover { color: #ffffff; transform: translateY(-2px); }
+    .nav-links .nav-link:hover::after, .nav-links .nav-link.active::after { width: 100%; }
+    .logout-btn { background-color: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; }
+    .logout-btn:hover { background-color: #d32f2f; }
+    @media (max-width: 768px) {
+        nav { flex-direction: column; align-items: flex-start; }
+        .nav-links { flex-direction: column; width: 100%; gap: 5px; margin-top: 15px; }
+        .nav-links .nav-link { padding: 10px 15px; width: calc(100% - 30px); border-radius: 6px; }
+        .nav-links .nav-link:hover::after, .nav-links .nav-link.active::after { width: 0; }
+        .nav-links .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); transform: none; }
+    }
+    /* Modals */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        display: flex; /* Use flexbox for centering */
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 0;
+        border: 1px solid #888;
+        width: 80%; /* Could be responsive */
+        max-width: 500px;
+        border-radius: 10px; /* Rounded corners */
+        box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        overflow: hidden; /* Ensures rounded corners on content */
+    }
+    .modal-header {
+        padding: 15px 20px;
+        background-color: var(--primary-blue);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 10px 10px 0 0;
+    }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    .modal-body {
+        padding: 20px;
+        text-align: center;
+    }
+    .modal-footer {
+        padding: 15px 20px;
+        background-color: #f1f1f1;
+        text-align: right;
+        border-top: 1px solid #e0e0e0;
+        border-radius: 0 0 10px 10px;
+    }
+    .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+    .close-button:hover,
+    .close-button:focus {
+        color: #ddd;
+        text-decoration: none;
+        cursor: pointer;
     }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <div class="nav-container">
-        <a href="dashboard.html" class="logo">CBT System</a>
-        <div class="nav-links" id="navLinks">
-          <a href="#" id="logoutLinkNav">Logout</a>
-        </div>
-      </div>
+      <a href="/dashboard.html" class="logo">SNA CBT System</a>
+      <ul class="nav-links" id="navLinksContainer">
+        </ul>
     </nav>
   </header>
 
   <main>
-    <h1>Edit Exam</h1>
-    <div id="loadingIndicator">Loading exam data...</div>
-    <div id="formError" class="error-message hidden"></div>
-    
-    <form id="examForm" class="hidden">
-      <div class="lock-exam-container">
-        <input type="checkbox" id="is_locked" name="is_locked">
-        <label for="is_locked">Lock this exam to prevent students from taking it.</label>
-      </div>
-      
-      <div class="form-group">
-        <label for="title">Exam Title *</label>
-        <input type="text" id="title" name="title" required>
-      </div>
+    <div class="container">
+      <h1>Edit Exam</h1>
+      <form id="editExamForm" class="app-form">
+        <div id="formMessage" class="hidden"></div> <!-- Unified message display -->
+        <div id="loadingMessage" class="info-message">Loading exam data...</div>
 
-      <div class="form-grid-col-3">
         <div class="form-group">
-          <label for="subject">Subject *</label>
-          <select id="subject" name="subject_id" required>
-            <option value="">Loading subjects...</option>
-          </select>
+          <label for="examTitle">Exam Title:</label>
+          <input type="text" id="examTitle" name="examTitle" required>
         </div>
+
+        <div class="form-grid-col-3">
+          <div class="form-group">
+            <label for="classLevel">Class Level:</label>
+            <select id="classLevel" name="classLevel" required>
+              <option value="">Select Class Level</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="subject">Subject:</label>
+            <select id="subject" name="subject" required disabled>
+              <option value="">Select Subject</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="duration">Duration (minutes):</label>
+            <input type="number" id="duration" name="duration" min="1" value="60" required>
+          </div>
+        </div>
+
+        <!-- NEW: Term and Session fields -->
+        <div class="form-grid-col-3">
+            <div class="form-group">
+                <label for="term">Term:</label>
+                <select id="term" name="term" required>
+                    <option value="">Select Term</option>
+                    <option value="FIRST">First Term</option>
+                    <option value="SECOND">Second Term</option>
+                    <option value="THIRD">Third Term</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="session">Academic Session:</label>
+                <!-- Changed session from select to text input with pattern -->
+                <input type="text" id="session" name="session" required pattern="\d{4}-\d{4}" placeholder="e.g., 2023-2024">
+            </div>
+        </div>
+
         <div class="form-group">
-          <label for="exam_type">Exam Type *</label>
-          <select id="exam_type" name="exam_type" required>
-            <option value="">Select type...</option>
+          <label for="passMark">Pass Mark:</label>
+          <input type="number" id="passMark" name="passMark" min="0" required>
+        </div>
+
+        <div class="form-grid-col-3">
+            <div class="form-group">
+                <label for="startTime">Start Time:</label>
+                <input type="datetime-local" id="startTime" name="startTime" required>
+            </div>
+            <div class="form-group">
+                <label for="endTime">End Time:</label>
+                <input type="datetime-local" id="endTime" name="endTime" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+          <label for="examType">Exam Type:</label>
+          <select id="examType" name="examType" required>
+            <option value="">Select Exam Type</option>
             <option value="CA1">Continuous Assessment 1 (CA1)</option>
             <option value="CA2">Continuous Assessment 2 (CA2)</option>
             <option value="CA3">Continuous Assessment 3 (CA3)</option>
             <option value="CA4">Continuous Assessment 4 (CA4)</option>
-            <option value="MID_TERM">Mid-Term Exam</option>
-            <option value="MAIN_EXAM">Main Exam (End of Term)</option>
-            <option value="OTHER_CA">Other CA</option>
+            <option value="MID_TERM">Mid Term Test</option>
+            <option value="MAIN_EXAM">General Exam</option>
+            <option value="OTHER">Other Assessment</option>
           </select>
         </div>
-         <div class="form-group">
-          <label for="max_score">Max Score for this Exam/CA *</label>
-          <input type="number" id="max_score" name="max_score" min="1" required>
-          <small id="totalMarksInfo">Sum of marks for all questions should ideally match this.</small>
-        </div>
-      </div>
 
-      <div class="form-grid-col-3">
         <div class="form-group">
-          <label for="term">Term *</label>
-          <select id="term" name="term" required>
-            <option value="">Select term...</option>
-            <option value="FIRST">First Term</option>
-            <option value="SECOND">Second Term</option>
-            <option value="THIRD">Third Term</option>
-          </select>
+          <input type="checkbox" id="isLocked" name="isLocked">
+          <label for="isLocked">Lock Exam (Students cannot take it until unlocked)</label>
         </div>
+
         <div class="form-group">
-          <label for="session">Session *</label>
-          <input type="text" id="session" name="session" placeholder="YYYY-YYYY" required pattern="\d{4}-\d{4}">
+            <label for="maxScore">Total Marks for Exam:</label>
+            <input type="number" id="maxScore" name="maxScore" required min="1">
+            <small>Sum of marks from all questions should ideally match this.</small>
         </div>
+        <div class="form-group" style="margin-top: 10px;">
+            <p>Calculated total marks from questions: <span id="calculatedMarksDisplay">0</span></p>
+            <p id="marksMismatchWarning" style="color: var(--danger-red); display: none;"></p>
+        </div>
+
         <div class="form-group">
-          <label for="duration">Duration (minutes) *</label>
-          <input type="number" id="duration" name="duration_minutes" min="1" required>
+            <label for="examInstructions">General Exam Instructions:</label>
+            <textarea id="examInstructions" name="examInstructions" rows="4" class="exam-instructions" placeholder="Enter general instructions for the exam..."></textarea>
         </div>
-      </div>
-      
-      <div class="form-group">
-        <label for="class_level">Target Class Level *</label>
-        <select id="class_level" name="class_level" required>
-            <option value="">Select class level...</option>
-            <option value="Primary 1">Primary 1</option><option value="Primary 2">Primary 2</option>
-            <option value="Primary 3">Primary 3</option><option value="Primary 4">Primary 4</option>
-            <option value="Primary 5">Primary 5</option><option value="Primary 6">Primary 6</option>
-            <option value="JSS 1">JSS 1</option><option value="JSS 2">JSS 2</option><option value="JSS 3">JSS 3</option>
-            <option value="SS 1">SS 1</option><option value="SS 2">SS 2</option><option value="SS 3">SS 3</option>
-            <option value="Any">Any (General)</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label for="description">Description (Optional)</label>
-        <textarea id="description" name="description"></textarea>
-      </div>
-      
-      <h2>Questions</h2>
-      <div id="questionsContainer">
-        </div>
-      
-      <div class="add-question-btn-container">
-        <button type="button" class="btn primary-btn" onclick="addQuestionField()">Add Question</button>
-      </div>
-      
-      <div class="form-actions">
-        <button type="button" id="deleteExamBtn" class="btn delete-btn">Delete Exam</button>
-        <div>
-            <button type="button" class="btn secondary-btn" onclick="window.location.href='dashboard.html'">Cancel</button>
-            <button type="submit" class="btn primary-btn">Save Changes</button>
-        </div>
-      </div>
-    </form>
+
+        <hr>
+        <h2>Exam Sections</h2>
+        <div id="sectionsContainer">
+          </div>
+
+        <button type="button" id="addSectionBtn" class="add-section-btn">Add Section</button>
+        <button type="submit" class="btn primary-btn" id="saveExamBtn">Save Changes</button>
+        <button type="button" class="btn danger-btn" id="deleteExamBtn">Delete Exam</button>
+      </form>
+    </div>
   </main>
 
   <footer>
-    <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+    <p>&copy; 2024 SNA CBT System. All rights reserved.</p>
   </footer>
 
-<script>
-    let questionFieldCounter = 0;
-    let currentUser = {};
-    const urlParams = new URLSearchParams(window.location.search);
-    const examId = urlParams.get('examId');
+  <script>
+    let currentUser = null;
+    let examId = null;
+    let questionCounter = 0; // Global counter for new questions
+    let sectionCounter = 0; // Global counter for new sections
+    let allSubjects = [];
+    let allClassLevels = [];
 
-    function displayFormError(message) {
-        const errorDiv = document.getElementById('formError');
-        errorDiv.textContent = message;
-        errorDiv.classList.remove('hidden');
-        errorDiv.scrollIntoView({ behavior: 'smooth' });
+    const classLevelSelect = document.getElementById('classLevel');
+    const subjectSelect = document.getElementById('subject');
+    const termSelect = document.getElementById('term');
+    const sessionInput = document.getElementById('session');
+    const examTypeSelect = document.getElementById('examType');
+    const isLockedCheckbox = document.getElementById('isLocked');
+    const sectionsContainer = document.getElementById('sectionsContainer');
+    const addSectionBtn = document.getElementById('addSectionBtn');
+    const examForm = document.getElementById('editExamForm');
+    const maxScoreInput = document.getElementById('maxScore'); // Changed from totalMarks
+    const formMessageDiv = document.getElementById('formMessage');
+
+
+    // Displays a message to the user (success, error, info).
+    function showMessage(message, type = 'error') {
+        formMessageDiv.textContent = message;
+        formMessageDiv.classList.remove('hidden', 'error-message', 'success-message', 'info-message');
+        if (type === 'error') {
+            formMessageDiv.classList.add('error-message');
+        } else if (type === 'success') {
+            formMessageDiv.classList.add('success-message');
+        } else {
+            formMessageDiv.classList.add('info-message');
+        }
+        setTimeout(() => {
+            formMessageDiv.classList.add('hidden');
+        }, 5000); // Message disappears after 5 seconds
     }
-    function clearFormError() {
-        document.getElementById('formError').classList.add('hidden');
-        document.getElementById('formError').textContent = '';
-    }
+
     function showLoading(show) {
-        document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
-        document.getElementById('examForm').classList.toggle('hidden', show);
+        document.getElementById('loadingMessage').classList.toggle('hidden', !show);
+        document.getElementById('editExamForm').classList.toggle('hidden', show);
     }
 
-    async function fetchSubjects(selectedSubjectId = null) {
+    async function fetchClassLevels() {
         try {
-            const response = await fetch('/api/exams/config/subjects', { credentials: 'include' });
-            if (!response.ok) throw new Error('Failed to load subjects');
-            const subjects = await response.json();
-            const subjectSelect = document.getElementById('subject');
-            subjectSelect.innerHTML = '<option value="">Select subject...</option>';
-            subjects.forEach(sub => {
+            const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error('Failed to fetch class levels.');
+            }
+            const classLevels = await response.json();
+            classLevelSelect.innerHTML = '<option value="">Select Class Level</option>';
+            classLevels.forEach(level => {
                 const option = document.createElement('option');
-                option.value = sub.subject_id;
-                option.textContent = `${sub.name} (${sub.subject_code || 'N/A'})`;
-                if (selectedSubjectId && parseInt(sub.subject_id) === parseInt(selectedSubjectId)) {
+                option.value = level.level_id;
+                option.textContent = level.level_name;
+                classLevelSelect.appendChild(option);
+            });
+            allClassLevels = classLevels;
+        } catch (error) {
+            console.error("Error fetching class levels:", error);
+            showMessage("Failed to load class levels: " + error.message, 'error');
+        }
+    }
+
+    // Modified fetchSubjects: Now depends on selected class level
+    async function fetchSubjects(classLevelId = null, selectedSubjectId = null) {
+        subjectSelect.innerHTML = '<option value="">Select Subject</option>'; // Reset subjects
+        subjectSelect.disabled = true;
+
+        if (!classLevelId) return;
+
+        try {
+            const response = await fetch(`/api/exams/config/subjects?class_level_id=${classLevelId}`, { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error('Failed to fetch subjects for this class level.');
+            }
+            const subjects = await response.json();
+            allSubjects = subjects;
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.subject_id;
+                option.textContent = subject.name;
+                if (selectedSubjectId && subject.subject_id === selectedSubjectId) {
                     option.selected = true;
                 }
                 subjectSelect.appendChild(option);
             });
+            subjectSelect.disabled = false;
         } catch (error) {
-            console.error('Error fetching subjects:', error);
-            document.getElementById('subject').innerHTML = '<option value="">Error loading subjects</option>';
-            displayFormError(error.message);
+            console.error("Error fetching subjects:", error);
+            showMessage("Failed to load subjects: " + error.message, 'error');
         }
     }
 
-    function addQuestionField(questionData = null) {
-      questionFieldCounter++;
-      const questionsContainer = document.getElementById('questionsContainer');
-      const questionDiv = document.createElement('div');
-      questionDiv.className = 'question-card';
-      questionDiv.dataset.questionFieldId = questionFieldCounter;
+    // Event listener for class level change
+    classLevelSelect.addEventListener('change', (event) => {
+        const selectedClassLevelId = event.target.value;
+        fetchSubjects(selectedClassLevelId);
+    });
 
-      const qText = questionData ? questionData.question_text : '';
-      const optA = questionData ? questionData.option_a : '';
-      const optB = questionData ? questionData.option_b : '';
-      const optC = questionData ? questionData.option_c : '';
-      const optD = questionData ? questionData.option_d : '';
-      const correctOpt = questionData ? questionData.correct_answer : 'A';
-      const qMarks = questionData ? questionData.marks : 1;
-      const qExplanation = questionData ? questionData.explanation : '';
-
-      questionDiv.innerHTML = `
+    function addQuestionField(sectionContainerId, questionData = {}) {
+      questionCounter++;
+      const sectionQuestionsContainer = document.getElementById(`sectionQuestions-${sectionContainerId}`);
+      const questionCard = document.createElement('div');
+      questionCard.classList.add('question-card');
+      questionCard.dataset.questionId = questionData.question_id || `new-q-${sectionContainerId}-${questionCounter}`;
+      questionCard.innerHTML = `
         <div class="question-header">
-          <h3 class="question-title-text">Question ${questionsContainer.children.length + 1}</h3>
-          <button type="button" class="delete-question-btn" onclick="deleteQuestionField(${questionFieldCounter})">Delete</button>
+          <h3>Question ${questionCounter}</h3>
+          <button type="button" class="delete-question-btn" onclick="deleteQuestion(this)">Delete Question</button>
         </div>
-        <input type="hidden" name="q_db_id" value="${questionData ? (questionData.question_id || 'new') : 'new'}">
         <div class="form-group">
-          <label for="q_text_${questionFieldCounter}">Question Text *</label>
-          <textarea id="q_text_${questionFieldCounter}" class="question-text-input" rows="3" required>${qText}</textarea>
-        </div>
-        <div class="options-grid">
-          <div class="form-group"><label for="q_optA_${questionFieldCounter}">Option A *</label><input type="text" id="q_optA_${questionFieldCounter}" class="option-input" required value="${optA}"></div>
-          <div class="form-group"><label for="q_optB_${questionFieldCounter}">Option B *</label><input type="text" id="q_optB_${questionFieldCounter}" class="option-input" required value="${optB}"></div>
-          <div class="form-group"><label for="q_optC_${questionFieldCounter}">Option C *</label><input type="text" id="q_optC_${questionFieldCounter}" class="option-input" required value="${optC}"></div>
-          <div class="form-group"><label for="q_optD_${questionFieldCounter}">Option D *</label><input type="text" id="q_optD_${questionFieldCounter}" class="option-input" required value="${optD}"></div>
+          <label for="questionText-${sectionContainerId}-${questionCard.dataset.questionId}">Question Text:</label>
+          <textarea id="questionText-${sectionContainerId}-${questionCard.dataset.questionId}" name="questionText" rows="3" required>${questionData.question_text || ''}</textarea>
         </div>
         <div class="form-grid-col-3">
-            <div class="form-group"><label for="q_correct_${questionFieldCounter}">Correct Answer *</label><select id="q_correct_${questionFieldCounter}" class="correct-answer-select" required><option value="A" ${correctOpt.toUpperCase() === 'A' ? 'selected' : ''}>A</option><option value="B" ${correctOpt.toUpperCase() === 'B' ? 'selected' : ''}>B</option><option value="C" ${correctOpt.toUpperCase() === 'C' ? 'selected' : ''}>C</option><option value="D" ${correctOpt.toUpperCase() === 'D' ? 'selected' : ''}>D</option></select></div>
-            <div class="form-group"><label for="q_marks_${questionFieldCounter}">Marks *</label><input type="number" id="q_marks_${questionFieldCounter}" class="marks-input" min="1" value="${qMarks}" required></div>
+          <div class="form-group">
+            <label for="optionA-${sectionContainerId}-${questionCard.dataset.questionId}">Option A:</label>
+            <input type="text" id="optionA-${sectionContainerId}-${questionCard.dataset.questionId}" name="optionA" value="${questionData.option_a || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="optionB-${sectionContainerId}-${questionCard.dataset.questionId}">Option B:</label>
+            <input type="text" id="optionB-${sectionContainerId}-${questionCard.dataset.questionId}" name="optionB" value="${questionData.option_b || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="optionC-${sectionContainerId}-${questionCard.dataset.questionId}">Option C:</label>
+            <input type="text" id="optionC-${sectionContainerId}-${questionCard.dataset.questionId}" name="optionC" value="${questionData.option_c || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="optionD-${sectionContainerId}-${questionCard.dataset.questionId}">Option D:</label>
+            <input type="text" id="optionD-${sectionContainerId}-${questionCard.dataset.questionId}" name="optionD" value="${questionData.option_d || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="correctAnswer-${sectionContainerId}-${questionCard.dataset.questionId}">Correct Answer:</label>
+            <select id="correctAnswer-${sectionContainerId}-${questionCard.dataset.questionId}" name="correctAnswer" required>
+              <option value="">Select Correct Option</option>
+              <option value="A" ${questionData.correct_answer === 'A' ? 'selected' : ''}>A</option>
+              <option value="B" ${questionData.correct_answer === 'B' ? 'selected' : ''}>B</option>
+              <option value="C" ${questionData.correct_answer === 'C' ? 'selected' : ''}>C</option>
+              <option value="D" ${questionData.correct_answer === 'D' ? 'selected' : ''}>D</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="marks-${sectionContainerId}-${questionCard.dataset.questionId}">Marks:</label>
+            <input type="number" id="marks-${sectionContainerId}-${questionCard.dataset.questionId}" name="marks" min="1" value="${questionData.marks || 1}" required>
+          </div>
         </div>
-        <div class="form-group"><label for="q_explanation_${questionFieldCounter}">Explanation (Optional)</label><textarea id="q_explanation_${questionFieldCounter}" class="explanation-input" rows="2">${qExplanation || ''}</textarea></div>
+        <div class="form-group">
+          <label for="explanation-${sectionContainerId}-${questionCard.dataset.questionId}">Explanation (Optional):</label>
+          <textarea id="explanation-${sectionContainerId}-${questionCard.dataset.questionId}" name="explanation" rows="2">${questionData.explanation || ''}</textarea>
+        </div>
       `;
-      questionsContainer.appendChild(questionDiv);
-      updateQuestionNumbers();
-    }
-    
-    function deleteQuestionField(fieldId) {
-        const questionDiv = document.querySelector(`.question-card[data-question-field-id="${fieldId}"]`);
-        if (questionDiv) {
-            questionDiv.remove();
-            updateQuestionNumbers();
-        }
+      sectionQuestionsContainer.appendChild(questionCard);
+
+      // Add event listener for marks input to trigger recalculation
+      questionCard.querySelector(`[id^="marks-${sectionContainerId}-"]`).addEventListener('input', updateCalculatedMarks);
+
+      updateQuestionNumbers(sectionContainerId);
+      updateCalculatedMarks();
     }
 
-    function updateQuestionNumbers() {
-        document.querySelectorAll('#questionsContainer .question-card').forEach((card, index) => {
-            card.querySelector('.question-title-text').textContent = `Question ${index + 1}`;
+    function deleteQuestion(button) {
+        const questionCard = button.closest('.question-card');
+        const sectionContainerId = questionCard.closest('.section-card').dataset.sectionId;
+        questionCard.remove();
+        updateQuestionNumbers(sectionContainerId);
+        updateCalculatedMarks();
+    }
+
+    function updateQuestionNumbers(sectionContainerId) {
+        const sectionQuestionsContainer = document.getElementById(`sectionQuestions-${sectionContainerId}`);
+        if (!sectionQuestionsContainer) return;
+        const questionCards = sectionQuestionsContainer.querySelectorAll('.question-card');
+        questionCards.forEach((card, index) => {
+            card.querySelector('.question-header h3').textContent = `Question ${index + 1}`;
+            card.querySelectorAll('[id]').forEach(el => {
+                const parts = el.id.split('-');
+                if (parts.length >= 3 && parts[1].startsWith('new-s-')) {
+                    parts[1] = sectionContainerId;
+                }
+                el.id = parts.join('-');
+            });
         });
     }
 
-    async function loadExamData() {
+    function addSectionField(sectionData = {}) {
+        sectionCounter++;
+        const sectionsContainer = document.getElementById('sectionsContainer');
+        const sectionCard = document.createElement('div');
+        sectionCard.classList.add('section-card');
+        const currentSectionId = sectionData.section_id || `new-s-${Date.now()}-${sectionCounter}`;
+        sectionCard.dataset.sectionId = currentSectionId;
+        sectionCard.dataset.sectionIndex = sectionCounter;
+        sectionCard.innerHTML = `
+            <div class="section-header">
+                <h2>Section ${sectionCounter}: <input type="text" class="section-name-input" name="sectionName" placeholder="e.g., Comprehension" value="${sectionData.section_name || ''}" required></h2>
+                <div class="section-actions">
+                    <button type="button" class="btn danger-btn" onclick="deleteSection(this)">Delete Section</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="sectionInstructions-${currentSectionId}">Section Instructions:</label>
+                <textarea id="sectionInstructions-${currentSectionId}" name="sectionInstructions" rows="3" class="section-instructions" placeholder="Enter specific instructions for this section...">${sectionData.section_instructions || ''}</textarea>
+            </div>
+            <div class="section-questions" id="sectionQuestions-${currentSectionId}">
+            </div>
+            <button type="button" class="add-question-btn" onclick="addQuestionField('${currentSectionId}')">Add Question to Section</button>
+        `;
+        sectionsContainer.appendChild(sectionCard);
+
+        if (sectionData.questions && sectionData.questions.length > 0) {
+            questionCounter = 0;
+            sectionData.questions.forEach(q => addQuestionField(currentSectionId, q));
+        } else {
+            addQuestionField(currentSectionId);
+        }
+        updateSectionNumbers();
+    }
+
+    function deleteSection(button) {
+        showConfirmation('Are you sure you want to delete this section and all its questions?').then(confirmed => {
+            if (confirmed) {
+                const sectionCard = button.closest('.section-card');
+                sectionCard.remove();
+                updateSectionNumbers();
+                updateCalculatedMarks();
+            }
+        });
+    }
+
+    function updateSectionNumbers() {
+        const sectionsContainer = document.getElementById('sectionsContainer');
+        const sectionCards = sectionsContainer.querySelectorAll('.section-card');
+        sectionCards.forEach((card, index) => {
+            card.dataset.sectionIndex = index + 1;
+            const sectionNameInput = card.querySelector('.section-name-input');
+            let currentSectionName = sectionNameInput.value;
+
+            const prefixRegex = /^Section \d+:\s*/;
+            if (prefixRegex.test(currentSectionName)) {
+                currentSectionName = currentSectionName.replace(prefixRegex, '');
+            }
+            sectionNameInput.value = `Section ${index + 1}: ${currentSectionName.trim()}`;
+
+
+            const currentSectionId = card.dataset.sectionId;
+            const addQuestionBtn = card.querySelector('.add-question-btn');
+            addQuestionBtn.setAttribute('onclick', `addQuestionField('${currentSectionId}')`);
+
+            card.querySelector(`[id^="sectionInstructions-"]`).id = `sectionInstructions-${currentSectionId}`;
+            card.querySelector(`[id^="sectionQuestions-"]`).id = `sectionQuestions-${currentSectionId}`;
+
+            card.querySelectorAll('.question-card').forEach((qCard) => {
+                qCard.querySelectorAll('[id]').forEach(el => {
+                    const parts = el.id.split('-');
+                    if (parts.length >= 3 && parts[1].startsWith('new-s-')) {
+                        parts[1] = currentSectionId;
+                    }
+                    el.id = parts.join('-');
+                });
+            });
+            updateQuestionNumbers(currentSectionId);
+        });
+    }
+
+
+    function updateCalculatedMarks() {
+        let total = 0;
+        document.querySelectorAll('.question-card input[name="marks"]').forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        document.getElementById('calculatedMarksDisplay').textContent = total;
+
+        const maxScoreInputVal = parseInt(maxScoreInput.value) || 0; // Changed from totalMarksInput
+        const marksMismatchWarning = document.getElementById('marksMismatchWarning');
+        if (total !== maxScoreInputVal) { // Changed from totalMarksInputVal
+            marksMismatchWarning.textContent = `Warning: Total marks from questions (${total}) do not match Exam Total Marks (${maxScoreInputVal}).`; // Changed totalMarksInputVal
+            marksMismatchWarning.style.display = 'block';
+        } else {
+            marksMismatchWarning.style.display = 'none';
+        }
+    }
+
+    // Function to load exam data for editing
+    async function loadExamForEdit() {
+        showLoading(true);
+        const urlParams = new URLSearchParams(window.location.search);
+        examId = urlParams.get('examId');
+
         if (!examId) {
-            displayFormError("No Exam ID provided.");
+            showMessage('No exam ID provided in URL. Cannot edit exam.', 'error');
             showLoading(false);
             return;
         }
-        showLoading(true);
+
         try {
             const response = await fetch(`/api/exams/${examId}`, { credentials: 'include' });
-            if (!response.ok) throw new Error(`Failed to load exam data (Status: ${response.status})`);
-            const exam = await response.json();
-            
-            // Populate form fields
-            document.getElementById('is_locked').checked = exam.is_locked; // Set checkbox state
-            document.getElementById('title').value = exam.title || '';
-            document.getElementById('description').value = exam.description || '';
-            document.getElementById('duration').value = exam.duration_minutes || '';
-            document.getElementById('class_level').value = exam.class_level || '';
-            document.getElementById('exam_type').value = exam.exam_type || '';
-            document.getElementById('max_score').value = exam.max_score || '';
-            document.getElementById('term').value = exam.term || '';
-            document.getElementById('session').value = exam.session || '';
-
-            await fetchSubjects(exam.subject_id);
-
-            const questionsContainer = document.getElementById('questionsContainer');
-            questionsContainer.innerHTML = '';
-            questionFieldCounter = 0;
-            if (exam.questions && exam.questions.length > 0) {
-                exam.questions.forEach(addQuestionField);
+            if (!response.ok) {
+                throw new Error('Failed to fetch exam data for editing.');
             }
-            showLoading(false);
+            const examData = await response.json();
+            
+            // Populate main exam fields
+            document.getElementById('examTitle').value = examData.title;
+            document.getElementById('duration').value = examData.duration_minutes;
+            document.getElementById('passMark').value = examData.pass_mark;
+            document.getElementById('maxScore').value = examData.max_score; // Changed from total_marks
+            document.getElementById('examInstructions').value = examData.exam_instructions || '';
+            document.getElementById('isLocked').checked = examData.is_locked;
+            document.getElementById('term').value = examData.term;
+            document.getElementById('session').value = examData.session;
+
+            // Set start and end times (format for datetime-local input)
+            document.getElementById('startTime').value = new Date(examData.start_time).toISOString().slice(0, 16);
+            document.getElementById('endTime').value = new Date(examData.end_time).toISOString().slice(0, 16);
+            
+            // Set exam type
+            examTypeSelect.value = examData.exam_type;
+
+            // Populate Class Level and then Subjects
+            await fetchClassLevels();
+            classLevelSelect.value = examData.class_level_id;
+            await fetchSubjects(examData.class_level_id, examData.subject_id);
+
+            // Populate sections and questions
+            sectionsContainer.innerHTML = '';
+            questionCounter = 0;
+            sectionCounter = 0;
+            examData.sections.forEach(section => {
+                addSectionField(section);
+            });
+            updateCalculatedMarks();
+
         } catch (error) {
-            console.error("Error loading exam:", error);
-            displayFormError(error.message);
+            console.error("Error loading exam for edit:", error);
+            showMessage("Failed to load exam for editing: " + error.message, 'error');
+        } finally {
             showLoading(false);
         }
     }
-    
-    document.getElementById('examForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        clearFormError();
-        const submitButton = e.target.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Saving...';
 
-        const examData = {
-            is_locked: document.getElementById('is_locked').checked, // Get lock status
-            title: document.getElementById('title').value.trim(),
-            description: document.getElementById('description').value.trim(),
+    // Handle form submission for updating exam
+    examForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        const saveExamBtn = document.getElementById('saveExamBtn');
+        saveExamBtn.disabled = true;
+        saveExamBtn.textContent = 'Saving...';
+
+        const formData = {
+            title: document.getElementById('examTitle').value,
             duration_minutes: parseInt(document.getElementById('duration').value),
-            class_level: document.getElementById('class_level').value.trim(),
-            subject_id: document.getElementById('subject').value,
-            exam_type: document.getElementById('exam_type').value.trim().toUpperCase(),
-            max_score: parseInt(document.getElementById('max_score').value),
-            term: document.getElementById('term').value.trim().toUpperCase(),
-            session: document.getElementById('session').value.trim(),
-            questions: []
+            subject_id: parseInt(document.getElementById('subject').value),
+            class_level_id: parseInt(document.getElementById('classLevel').value),
+            max_score: parseInt(document.getElementById('maxScore').value), // Changed from total_marks
+            pass_mark: parseInt(document.getElementById('passMark').value),
+            start_time: document.getElementById('startTime').value,
+            end_time: document.getElementById('endTime').value,
+            exam_type: document.getElementById('examType').value,
+            is_locked: document.getElementById('isLocked').checked,
+            exam_instructions: document.getElementById('examInstructions').value,
+            term: document.getElementById('term').value,
+            session: document.getElementById('session').value,
+            sections: [],
         };
 
-        const questionCards = document.querySelectorAll('.question-card');
-        questionCards.forEach(card => {
-            examData.questions.push({
-                question_id: card.querySelector('input[name="q_db_id"]').value,
-                question_text: card.querySelector('.question-text-input').value.trim(),
-                option_a: card.querySelector('#q_optA_' + card.dataset.questionFieldId).value.trim(),
-                option_b: card.querySelector('#q_optB_' + card.dataset.questionFieldId).value.trim(),
-                option_c: card.querySelector('#q_optC_' + card.dataset.questionFieldId).value.trim(),
-                option_d: card.querySelector('#q_optD_' + card.dataset.questionFieldId).value.trim(),
-                correct_answer: card.querySelector('.correct-answer-select').value.toUpperCase(),
-                marks: parseInt(card.querySelector('.marks-input').value),
-                explanation: card.querySelector('.explanation-input').value.trim()
+        // Gather sections and questions data
+        document.querySelectorAll('.section-card').forEach(sectionCard => {
+            const sectionId = sectionCard.dataset.sectionId;
+            const sectionName = sectionCard.querySelector('.section-name-input').value;
+            const sectionInstructions = sectionCard.querySelector(`[id^="sectionInstructions-"]`).value;
+            
+            const questions = [];
+            sectionCard.querySelectorAll('.question-card').forEach(questionCard => {
+                const questionId = questionCard.dataset.questionId;
+                questions.push({
+                    question_id: questionId.startsWith('new-q-') ? null : parseInt(questionId),
+                    question_text: questionCard.querySelector('[name="questionText"]').value,
+                    option_a: questionCard.querySelector('[name="optionA"]').value,
+                    option_b: questionCard.querySelector('[name="optionB"]').value,
+                    option_c: questionCard.querySelector('[name="optionC"]').value,
+                    option_d: questionCard.querySelector('[name="optionD"]').value,
+                    correct_answer: questionCard.querySelector('[name="correctAnswer"]').value,
+                    explanation: questionCard.querySelector('[name="explanation"]').value,
+                    marks: parseInt(questionCard.querySelector('[name="marks"]').value),
+                });
+            });
+            formData.sections.push({
+                section_id: sectionId.startsWith('new-s-') ? null : parseInt(sectionId),
+                section_name: sectionName,
+                section_instructions: sectionInstructions,
+                questions: questions,
             });
         });
+
+        console.log("Submitting form data:", formData);
 
         try {
             const response = await fetch(`/api/exams/${examId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(examData),
-                credentials: 'include'
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+                credentials: 'include',
             });
-            
-            const responseData = await response.json();
+
+            const result = await response.json();
+
             if (response.ok) {
-                alert('Exam updated successfully!');
-                window.location.href = 'dashboard.html';
+                showMessage(result.message, 'success');
             } else {
-                displayFormError(responseData.error || 'Failed to update exam.');
+                throw new Error(result.error || 'Unknown error occurred.');
             }
         } catch (error) {
-            console.error('Exam update error:', error);
-            displayFormError('An unexpected error occurred: ' + error.message);
+            console.error("Error updating exam:", error);
+            showMessage(`Failed to update exam: ${error.message}`, 'error');
         } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Save Changes';
+            saveExamBtn.disabled = false;
+            saveExamBtn.textContent = 'Save Changes';
         }
     });
 
+    // Handle exam deletion
     document.getElementById('deleteExamBtn').addEventListener('click', async () => {
-        if (!examId) return;
-        if (confirm('Are you sure you want to delete this exam? This will remove all associated results and cannot be undone.')) {
+        const confirmed = await showConfirmation('Are you sure you want to delete this exam? This action cannot be undone.');
+        if (confirmed) {
             try {
-                const response = await fetch(`/api/exams/${examId}`, { method: 'DELETE', credentials: 'include' });
+                const response = await fetch(`/api/exams/${examId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                });
+                const result = await response.json();
                 if (response.ok) {
-                    alert('Exam deleted successfully.');
-                    window.location.href = 'dashboard.html';
+                    showMessage(result.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
                 } else {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error || 'Failed to delete exam.');
+                    throw new Error(result.error || 'Unknown error occurred during deletion.');
                 }
             } catch (error) {
-                displayFormError(error.message);
+                console.error("Error deleting exam:", error);
+                showMessage(`Failed to delete exam: ${error.message}`, 'error');
             }
         }
     });
-    
-    async function initPage() {
-        try {
-            const userResponse = await fetch('/api/users/me', { credentials: 'include' });
-            if (!userResponse.ok) window.location.href = '/login.html';
-            currentUser = await userResponse.json();
-            // You can add navigation link generation here if needed
-            if (currentUser.role !== 'teacher' && !currentUser.is_admin) {
-                document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to edit exams.</p>';
-                showLoading(false);
-                return;
-            }
-            await loadExamData();
-        } catch (error) {
-            console.error("Initialization error:", error);
-            displayFormError("Failed to initialize page.");
-            showLoading(false);
+
+    // User authentication and page initialization
+    let currentConfirmationCallback = null;
+
+    function showConfirmation(message) {
+        return new Promise(resolve => {
+            document.getElementById('confirmationMessage').textContent = message;
+            document.getElementById('confirmationModal').style.display = 'flex';
+            currentConfirmationCallback = resolve;
+        });
+    }
+
+    function confirmAction(result) {
+        if (currentConfirmationCallback) {
+            currentConfirmationCallback(result);
+            currentConfirmationCallback = null;
         }
+        closeModal('confirmationModal');
+    }
+
+    function showAlert(message, title = "Alert") {
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertMessage').textContent = message;
+        document.getElementById('alertDialog').style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    async function loadUserData() {
+        try {
+            const response = await fetch('/api/users/me', { credentials: 'include' });
+            if (!response.ok) {
+                window.location.href = '/login.html';
+                return null;
+            }
+            currentUser = await response.json();
+            if (!currentUser.is_admin && currentUser.role !== 'teacher') {
+                document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to edit exams.</p>';
+                return null;
+            }
+            return currentUser;
+        } catch (error) {
+            console.error("Error loading user data:", error);
+            document.querySelector('main').innerHTML = '<h1>Error</h1><p>Failed to load user data. Please try again.</p>';
+            return null;
+        }
+    }
+
+    function createNavigationLinks(user) {
+        const navLinksContainer = document.getElementById('navLinksContainer');
+        navLinksContainer.innerHTML = '';
+
+        const dashboardLinkItem = document.createElement('li');
+        const dashboardLink = document.createElement('a');
+        dashboardLink.href = 'dashboard.html';
+        dashboardLink.className = 'nav-link';
+        dashboardLink.textContent = 'Dashboard';
+        dashboardLinkItem.appendChild(dashboardLink);
+        navLinksContainer.appendChild(dashboardLinkItem);
+
+        if (user.is_admin || user.role === 'teacher') {
+            const createExamLinkItem = document.createElement('li');
+            const createExamLink = document.createElement('a');
+            createExamLink.href = 'create-exam.html';
+            createExamLink.className = 'nav-link';
+            createExamLink.textContent = 'Create Exam';
+            createExamLinkItem.appendChild(createExamLink);
+            navLinksContainer.appendChild(createExamLinkItem);
+
+            const manageUsersLinkItem = document.createElement('li');
+            const manageUsersLink = document.createElement('a');
+            manageUsersLink.href = 'manage-users.html';
+            manageUsersLink.className = 'nav-link';
+            manageUsersLink.textContent = 'Manage Users';
+            manageUsersLinkItem.appendChild(manageUsersLink);
+            navLinksContainer.appendChild(manageUsersLinkItem);
+        }
+
+        const logoutLinkItem = document.createElement('li');
+        const logoutLink = document.createElement('button');
+        logoutLink.className = 'btn logout-btn';
+        logoutLink.textContent = 'Logout';
+        logoutLink.onclick = async () => {
+            try {
+                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+                    showAlert('Logout failed due to a network error.', 'Logout Error');
+                }
+            } catch(err) {
+                console.error("Logout failed:", err);
+                showAlert('Logout failed due to a network error.', 'Logout Error');
+            } finally {
+                window.location.href = '/login.html';
+            }
+        };
+        logoutLinkItem.appendChild(logoutLink);
+        navLinksContainer.appendChild(logoutLinkItem);
     }
     
     window.addEventListener('DOMContentLoaded', initPage);
-</script>
-    <script src="/js/xxx.js"></script>
+
+    async function initPage() {
+        const user = await loadUserData();
+        if (user) {
+            createNavigationLinks(user);
+            await fetchClassLevels();
+            await loadExamForEdit();
+        } else {
+            document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to create exams.</p>';
+        }
+    }
+  </script>
+  <!-- Modals HTML (add these to the end of your body tag) -->
+<div id="confirmationModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Action</h2>
+            <h2>Confirm Action</h2>
+            <span class="close-button" onclick="closeModal('confirmationModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="confirmationMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmAction(true)">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="alertDialog" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="alertTitle">Alert</h2>
+            <span class="close-button" onclick="closeModal('alertDialog')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="alertMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

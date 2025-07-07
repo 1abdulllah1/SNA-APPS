@@ -13,219 +13,159 @@
         .class-list { list-style: none; padding: 0; }
         .class-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
         .class-list li:last-child { border-bottom: none; }
+        .hidden { display: none; }
+        .error-message {
+            color: var(--danger-red);
+            background-color: #ffebeb;
+            border: 1px solid var(--danger-red);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
     <header>
         <nav>
             <a href="/dashboard.html" class="logo">SNA CBT System</a>
-            <ul class="nav-links" id="navLinksContainer"></ul>
+            <ul class="nav-links" id="navLinksContainer">
+                </ul>
         </nav>
     </header>
+
     <main>
-        <h1>Manage School Classes</h1>
-        <p>Add new classes or remove unused ones.</p>
+        <h1>Manage Classes</h1>
         <div id="managementError" class="error-message hidden"></div>
+
         <div class="management-container">
             <div class="form-container">
-                <h3>Add New Class</h3>
-                <form id="addClassForm">
+                <h2>Add/Edit Class</h2>
+                <form id="classForm">
                     <div class="form-group">
-                        <label for="className">Class Name (e.g., JSS 1)</label>
+                        <label for="className">Class Name:</label>
                         <input type="text" id="className" required>
                     </div>
                     <div class="form-group">
-                        <label for="classCode">Class Code (e.g., JSS1)</label>
+                        <label for="classCode">Class Code:</label>
                         <input type="text" id="classCode" required>
                     </div>
-                    <button type="submit" class="btn primary-btn">Add Class</button>
+                    <div class="form-group">
+                        <label for="classLevel">Class Level:</label>
+                        <select id="classLevel" required>
+                            </select>
+                    </div>
+                    <button type="submit" class="btn">Add Class</button>
                 </form>
             </div>
+
             <div class="list-container">
-                <h3>Existing Classes</h3>
+                <h2>Existing Classes</h2>
                 <ul id="classList" class="class-list">
-                    <li>Loading...</li>
+                    <li>Loading classes...</li>
                 </ul>
             </div>
         </div>
     </main>
-    <footer><p>&copy; 2025 SNA CBT System</p></footer>
+
+    <footer>
+        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+    </footer>
+
     <script>
-        let currentUser = null; // Store current user data
+        let currentUser; // Global variable to store current user info
 
-        // Function to dynamically build navigation links
-        function buildNavigation(user) {
-            const navLinksContainer = document.getElementById('navLinksContainer');
-            if (navLinksContainer) {
-                navLinksContainer.innerHTML = ''; 
-                
-                const dashboardLink = document.createElement('li');
-                dashboardLink.innerHTML = '<a href="/dashboard.html" class="nav-link">Dashboard</a>';
-                navLinksContainer.appendChild(dashboardLink);
-
-                if (user.is_admin || user.role === 'teacher') {
-                    const createExamLink = document.createElement('li');
-                    createExamLink.innerHTML = '<a href="create-exam.html" class="nav-link">Create Exam</a>';
-                    navLinksContainer.appendChild(createExamLink);
-                }
-
-                if (user.is_admin) {
-                    const manageUsersLink = document.createElement('li');
-                    manageUsersLink.innerHTML = '<a href="manage-users.html" class="nav-link">Manage Users</a>';
-                    navLinksContainer.appendChild(manageUsersLink);
-
-                    const registerLink = document.createElement('li');
-                    registerLink.innerHTML = '<a href="registration.html" class="nav-link">Register User</a>';
-                    navLinksContainer.appendChild(registerLink);
-
-                    const reportsLink = document.createElement('li');
-                    reportsLink.innerHTML = '<a href="admin-reports.html" class="nav-link">Student Reports</a>';
-                    navLinksContainer.appendChild(reportsLink);
-
-                    const manageSubjectsLink = document.createElement('li');
-                    manageSubjectsLink.innerHTML = '<a href="manage-subjects.html" class="nav-link">Manage Subjects</a>';
-                    navLinksContainer.appendChild(manageSubjectsLink);
-
-                    const manageClassesLink = document.createElement('li');
-                    manageClassesLink.innerHTML = '<a href="manage-classes.html" class="nav-link">Manage Classes</a>';
-                    navLinksContainer.appendChild(manageClassesLink);
-                }
-
-                const logoutLinkItem = document.createElement('li');
-                logoutLinkItem.innerHTML = '<a href="#" id="logoutLink" class="nav-link">Logout</a>';
-                navLinksContainer.appendChild(logoutLinkItem);
-
-                const logoutButton = document.getElementById('logoutLink');
-                if (logoutButton) {
-                    logoutButton.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        handleLogout();
-                    });
-                }
+        // Function to display messages (replaces simple alert for better UX)
+        function showMessage(message, type = 'info') {
+            const errorDiv = document.getElementById('managementError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            if (type === 'error') {
+                errorDiv.style.backgroundColor = '#ffebeb';
+                errorDiv.style.color = 'var(--danger-red)';
+            } else {
+                errorDiv.style.backgroundColor = '#e6ffe6';
+                errorDiv.style.color = 'var(--success-green)';
             }
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000); // Hide after 5 seconds
         }
 
-        // Handles user logout by calling the logout API endpoint
-        async function handleLogout() {
+        async function loadClassLevelsForDropdown() {
+            const classLevelSelect = document.getElementById('classLevel');
+            classLevelSelect.innerHTML = '<option value="">Loading Class Levels...</option>';
             try {
-                const response = await fetch('/api/users/logout', { 
-                    method: 'POST', 
-                    credentials: 'include' 
-                });
+                const response = await fetch('/api/class-levels', { credentials: 'include' });
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+                    throw new Error('Failed to fetch class levels.');
                 }
+                const classLevels = await response.json();
+                classLevelSelect.innerHTML = '<option value="">-- Select Class Level --</option>';
+                classLevels.forEach(level => {
+                    const option = document.createElement('option');
+                    option.value = level.level_id;
+                    option.textContent = level.level_name;
+                    classLevelSelect.appendChild(option);
+                });
             } catch (error) {
-                console.error('Logout network error:', error);
-            } finally {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/login.html';
-            }
-        }
-
-
-        document.addEventListener('DOMContentLoaded', initializePage);
-
-        async function initializePage() {
-            try {
-                // First, fetch the current user's data to check permissions.
-                const response = await fetch('/api/users/me', {credentials: 'include'});
-                if (!response.ok) { 
-                    window.location.href = '/login.html'; 
-                    return; 
-                }
-                currentUser = await response.json();
-                
-                // Build the navigation bar for the authenticated user.
-                buildNavigation(currentUser);
-
-                // Security check: If the user is not an admin, block access.
-                if (!currentUser.is_admin) {
-                     document.querySelector('main').innerHTML = `
-                         <h1>Access Denied</h1>
-                         <p>You do not have permission to view this page. <a href="/dashboard.html">Return to Dashboard</a></p>
-                     `;
-                     return;
-                }
-                
-                // If admin, load classes
-                loadClasses();
-
-            } catch (e) {
-                console.error("Page Initialization Error:", e);
-                window.location.href = '/login.html';
+                console.error("Error loading class levels for dropdown:", error);
+                showMessage("Error loading class levels for dropdown: " + error.message, 'error');
+                classLevelSelect.innerHTML = '<option value="">Error loading</option>';
             }
         }
 
         async function loadClasses() {
             const classList = document.getElementById('classList');
-            classList.innerHTML = '<li>Loading classes...</li>'; // Show loading state
-            const errorDiv = document.getElementById('managementError');
-            errorDiv.classList.add('hidden'); // Hide any previous error
-
+            classList.innerHTML = '<li>Loading classes...</li>';
             try {
-                // Now, /api/classes is authenticated but not restricted to admin
-                const response = await fetch('/api/classes', {credentials: 'include'});
+                const response = await fetch('/api/classes', { credentials: 'include' });
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to load classes: ${errorText || response.statusText}`);
+                    if (response.status === 401) { // Unauthorized, redirect to login
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                    if (response.status === 403) { // Forbidden, show access denied
+                        classList.innerHTML = '<li>Access denied. You do not have permission to view classes.</li>';
+                        return;
+                    }
+                    throw new Error('Failed to fetch classes.');
                 }
                 const classes = await response.json();
-                
-                classList.innerHTML = ''; // Clear loading message
-
+                classList.innerHTML = '';
                 if (classes.length === 0) {
                     classList.innerHTML = '<li>No classes found.</li>';
-                    return;
+                } else {
+                    classes.forEach(cls => {
+                        const li = document.createElement('li');
+                        // Display class name, code, and associated level name
+                        li.innerHTML = `
+                            <span>${cls.name} (${cls.class_code}) - Level: ${cls.level_name || 'N/A'}</span>
+                            <div>
+                                <button class="btn btn-secondary" onclick="editClass('${cls.class_id}', '${cls.name}', '${cls.class_code}', '${cls.class_level_id}')">Edit</button>
+                                <button class="btn btn-danger" onclick="deleteClass('${cls.class_id}')">Delete</button>
+                            </div>
+                        `;
+                        classList.appendChild(li);
+                    });
                 }
-
-                classes.forEach(cls => {
-                    const li = document.createElement('li');
-                    // Changed cls.class_name to cls.name to match database schema and API response
-                    li.innerHTML = `
-                        <span>${cls.name} (${cls.class_code})</span>
-                        <button class="btn btn-sm btn-danger" onclick="deleteClass(${cls.class_id})">Delete</button>
-                    `;
-                    classList.appendChild(li);
-                });
             } catch (error) {
-                console.error('Error loading classes:', error);
-                classList.innerHTML = `<li>Failed to load classes: ${error.message}</li>`;
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('hidden');
+                console.error("Error fetching classes:", error);
+                showMessage("Error fetching classes: " + error.message, 'error');
+                classList.innerHTML = '<li>Failed to load classes.</li>';
             }
         }
 
-        document.getElementById('addClassForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('className').value;
-            const class_code = document.getElementById('classCode').value;
-            const errorDiv = document.getElementById('managementError');
-            errorDiv.classList.add('hidden');
-
-            try {
-                const response = await fetch('/api/classes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    // Changed class_name to name to match the backend API's expected body property
-                    body: JSON.stringify({ name, class_code }) 
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error);
-                
-                loadClasses(); // Refresh the list
-                e.target.reset(); // Clear the form
-            } catch (error) {
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('hidden');
-            }
-        });
+        function editClass(classId, name, classCode, classLevelId) {
+            document.getElementById('className').value = name;
+            document.getElementById('classCode').value = classCode;
+            document.getElementById('classLevel').value = classLevelId; // Set the dropdown value
+            document.getElementById('classForm').dataset.editingId = classId;
+            document.getElementById('classForm').querySelector('button[type="submit"]').textContent = 'Update Class';
+            document.getElementById('managementError').classList.add('hidden'); // Clear any previous errors
+        }
 
         async function deleteClass(classId) {
-            if (!confirm('Are you sure you want to delete this class? This can only be done if no students are assigned to it.')) return;
+            if (!confirm('Are you sure you want to delete this class? This action cannot be undone if it has dependencies.')) return;
             const errorDiv = document.getElementById('managementError');
             errorDiv.classList.add('hidden');
             try {
@@ -233,12 +173,79 @@
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error);
                 
+                showMessage("Class deleted successfully!", 'success');
                 loadClasses(); // Refresh the list
             } catch (error) {
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('hidden');
+                console.error("Error deleting class:", error);
+                showMessage("Error deleting class: " + error.message, 'error');
             }
         }
+
+        document.getElementById('classForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('className').value.trim();
+            const class_code = document.getElementById('classCode').value.trim();
+            const level_id = document.getElementById('classLevel').value; // Get selected level_id
+            const editingId = document.getElementById('classForm').dataset.editingId;
+            const errorDiv = document.getElementById('managementError');
+            errorDiv.classList.add('hidden');
+
+            if (!name || !class_code || !level_id) {
+                showMessage("All fields are required.", 'error');
+                return;
+            }
+
+            const method = editingId ? 'PUT' : 'POST';
+            const url = editingId ? `/api/classes/${editingId}` : '/api/classes';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, class_code, level_id }), // Send level_id
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    if (response.status === 401) { window.location.href = '/login.html'; return; }
+                    throw new Error(result.error);
+                }
+                
+                showMessage(`Class ${editingId ? 'updated' : 'added'} successfully!`, 'success');
+                loadClasses(); // Refresh the list
+                e.target.reset(); // Clear the form
+                document.getElementById('classForm').dataset.editingId = ''; // Clear editing state
+                document.getElementById('classForm').querySelector('button[type="submit"]').textContent = 'Add Class';
+            } catch (error) {
+                console.error("Form submission error:", error);
+                showMessage("Error: " + error.message, 'error');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load user data and build navigation (from /js/xxx.js or a shared script)
+            try {
+                const userResponse = await fetch('/api/users/me', { credentials: 'include' });
+                if (!userResponse.ok) {
+                    window.location.href = '/login.html'; // Redirect if not authenticated
+                    return;
+                }
+                currentUser = await userResponse.json();
+                if (!currentUser.is_admin) {
+                    document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have administrative privileges to manage classes.</p>';
+                    return;
+                }
+                // Assuming buildNavigation is available from a common script
+                if (typeof buildNavigation === 'function') {
+                    buildNavigation(currentUser);
+                }
+                await loadClassLevelsForDropdown(); // Load dropdown options first
+                await loadClasses(); // Then load classes
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showMessage("Failed to initialize page: " + error.message, 'error');
+            }
+        });
     </script>
     <script src="/js/xxx.js"></script>
 </body>

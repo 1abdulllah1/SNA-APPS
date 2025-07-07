@@ -127,6 +127,17 @@
       color: white;
       border-color: var(--primary-blue);
     }
+    /* Style for answered questions */
+    .question-nav-btn.answered {
+        background-color: #d4edda; /* Light green */
+        border-color: #28a745; /* Green border */
+        color: #28a745;
+    }
+    .question-nav-btn.answered.active {
+        background-color: #28a745; /* Darker green when active and answered */
+        color: white;
+    }
+
 
     .question-card {
       background-color: #f8f9fa;
@@ -247,6 +258,16 @@
         color: #d32f2f;
         border: 1px solid #d32f2f;
     }
+    /* Section instructions styling */
+    .section-instructions-display {
+        background-color: #f0f8ff;
+        border-left: 5px solid #007bff;
+        padding: 15px;
+        margin-bottom: 1.5rem;
+        border-radius: 5px;
+        font-style: italic;
+        color: #333;
+    }
 
     footer {
       margin-top: auto; /* Pushes footer to the bottom */
@@ -255,6 +276,71 @@
       color: white;
       text-align: center;
       width: 100%;
+    }
+
+    /* Modals for alerts and confirmations */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        display: flex; /* Use flexbox for centering */
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 0;
+        border: 1px solid #888;
+        width: 80%; /* Could be responsive */
+        max-width: 500px;
+        border-radius: 10px; /* Rounded corners */
+        box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        overflow: hidden; /* Ensures rounded corners on content */
+    }
+    .modal-header {
+        padding: 15px 20px;
+        background-color: var(--primary-blue);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 10px 10px 0 0;
+    }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    .modal-body {
+        padding: 20px;
+        text-align: center;
+    }
+    .modal-footer {
+        padding: 15px 20px;
+        background-color: #f1f1f1;
+        text-align: right;
+        border-top: 1px solid #e0e0e0;
+        border-radius: 0 0 10px 10px;
+    }
+    .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+    .close-button:hover,
+    .close-button:focus {
+        color: #ddd;
+        text-decoration: none;
+        cursor: pointer;
     }
   </style>
 </head>
@@ -280,6 +366,7 @@
                 <p>Subject: <span id="examSubject"></span></p>
                 <p>Total Questions: <span id="totalQuestions"></span></p>
                 <p>Duration: <span id="examDuration"></span> minutes</p>
+                <p id="examInstructions"></p>
             </div>
 
             <div id="timerDisplay" class="timer-display"></div>
@@ -287,8 +374,9 @@
             <div id="questionNavigation" class="question-navigation">
                 </div>
 
-            <div id="questionsContainer">
-                </div>
+            <div id="sectionsContainer">
+                <!-- Sections and questions will be rendered here -->
+            </div>
 
             <div class="exam-actions-bottom">
                 <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
@@ -305,21 +393,54 @@
 
   <script>
     let currentExam = null;
-    let userAnswers = {};
+    let userAnswers = {}; // Stores answers: { questionId: selectedOptionId }
+    let allQuestions = []; // Flattened list of all questions for easy indexing
     let currentQuestionIndex = 0;
     let timerInterval;
     let timeRemaining; // in seconds
+    let examStartTime; // To track when the exam actually started for timeTakenSeconds calculation
+
+    // Modals for alerts and confirmations
+    let currentConfirmationCallback = null; 
+
+    function showConfirmation(message) {
+        return new Promise(resolve => {
+            document.getElementById('confirmationMessage').textContent = message;
+            document.getElementById('confirmationModal').style.display = 'flex'; 
+            currentConfirmationCallback = resolve;
+        });
+    }
+
+    function confirmAction(result) {
+        if (currentConfirmationCallback) {
+            currentConfirmationCallback(result);
+            currentConfirmationCallback = null; 
+        }
+        closeModal('confirmationModal');
+    }
+
+    function showAlert(message, title = "Alert") {
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertMessage').textContent = message;
+        document.getElementById('alertDialog').style.display = 'flex'; 
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    // End Modals
 
     const examMessageElement = document.getElementById('examMessage');
     const loadingIndicator = document.getElementById('loadingIndicator');
     const examContent = document.getElementById('examContent');
     const examTitle = document.getElementById('examTitle');
     const examSubject = document.getElementById('examSubject');
-    const totalQuestions = document.getElementById('totalQuestions');
-    const examDuration = document.getElementById('examDuration');
+    const totalQuestionsDisplay = document.getElementById('totalQuestions'); // Renamed to avoid conflict
+    const examDurationDisplay = document.getElementById('examDuration');     // Renamed to avoid conflict
+    const examInstructionsDisplay = document.getElementById('examInstructions'); // New element for instructions
     const timerDisplay = document.getElementById('timerDisplay');
     const questionNavigation = document.getElementById('questionNavigation');
-    const questionsContainer = document.getElementById('questionsContainer');
+    const sectionsContainer = document.getElementById('sectionsContainer'); // Main container for sections
     const prevQuestionBtn = document.getElementById('prevQuestionBtn');
     const nextQuestionBtn = document.getElementById('nextQuestionBtn');
     const submitExamBtn = document.getElementById('submitExamBtn');
@@ -328,22 +449,27 @@
         examMessageElement.textContent = message;
         examMessageElement.className = `exam-message ${type}`;
         examMessageElement.classList.remove('hidden');
+        setTimeout(() => {
+            examMessageElement.classList.add('hidden');
+        }, 5000);
     }
 
     async function loadUserData() {
         try {
             const response = await fetch('/api/users/me', { credentials: 'include' });
             if (!response.ok) {
+                // If not authenticated, redirect to login
                 window.location.href = '/login.html';
                 return null;
             }
             const user = await response.json();
             // Assuming you have a navUsername element in your layout
-            document.getElementById('navUsername').textContent = user.username;
-            createNavigationLinks(user); // If you have this function for dynamic nav
+            // document.getElementById('navUsername').textContent = user.username; // This element might not exist
+            // createNavigationLinks(user); // If you have this function for dynamic nav
             return user;
         } catch (error) {
             console.error("Error loading user data:", error);
+            // If there's a network error or other issue, also redirect
             window.location.href = '/login.html';
             return null;
         }
@@ -365,32 +491,83 @@
         }
 
         try {
-            const response = await fetch(`/api/exams/${examId}`, { credentials: 'include' });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to fetch exam data.');
+            // Start exam session first to get exam details and potentially resume data
+            const startSessionResponse = await fetch(`/api/exam-sessions/${examId}/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!startSessionResponse.ok) {
+                // Attempt to read as JSON first, but if that fails, read as text.
+                let errorData;
+                let errorMessage = 'Failed to start exam session.';
+                try {
+                    errorData = await startSessionResponse.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (jsonError) {
+                    // If response is not JSON (e.g., HTML error page), read as text
+                    const textResponse = await startSessionResponse.text();
+                    errorMessage = `Server responded with non-JSON: ${textResponse.substring(0, 100)}... (Status: ${startSessionResponse.status})`;
+                }
+                throw new Error(errorMessage);
             }
-            currentExam = await response.json();
+            const sessionData = await startSessionResponse.json();
+            
+            currentExam = sessionData.exam;
+            // Flatten all questions from sections for easier indexing
+            allQuestions = [];
+            sessionData.sections.forEach(section => {
+                section.questions.forEach(q => {
+                    allQuestions.push({ ...q, section_id: section.section_id, section_name: section.section_name, section_instructions: section.section_instructions });
+                });
+            });
+
+            // Initialize user answers from session progress if available
+            if (sessionData.session && sessionData.session.progress) {
+                // Safely parse the progress string back into an object if it's a string
+                // If it's already an object (due to database driver parsing JSONB), use it directly
+                if (typeof sessionData.session.progress === 'string') {
+                    try {
+                        userAnswers = JSON.parse(sessionData.session.progress);
+                    } catch (e) {
+                        console.error("Error parsing saved progress JSON:", e);
+                        userAnswers = {}; // Reset if parsing fails
+                    }
+                } else if (typeof sessionData.session.progress === 'object' && sessionData.session.progress !== null) {
+                    userAnswers = sessionData.session.progress;
+                } else {
+                    userAnswers = {}; // Default to empty object if progress is null or unexpected type
+                }
+            } else {
+                allQuestions.forEach(q => {
+                    userAnswers[q.question_id] = null; // Initialize with null if no progress
+                });
+            }
 
             examTitle.textContent = currentExam.title;
             examSubject.textContent = currentExam.subject_name;
-            totalQuestions.textContent = currentExam.questions.length;
-            examDuration.textContent = currentExam.duration_minutes;
-
-            // Initialize user answers
-            currentExam.questions.forEach(q => {
-                userAnswers[q.id] = null;
-            });
+            totalQuestionsDisplay.textContent = allQuestions.length;
+            examDurationDisplay.textContent = currentExam.duration_minutes;
+            examInstructionsDisplay.textContent = currentExam.exam_instructions || 'No general instructions provided.';
 
             renderQuestionNavigation();
-            showQuestion(0);
-            startTimer(currentExam.duration_minutes * 60); // Convert minutes to seconds
+            showQuestion(0); // Show the first question
+            
+            // Resume timer from saved time or start new
+            timeRemaining = sessionData.session.timeRemaining || (currentExam.duration_minutes * 60);
+            // Ensure examStartTime is calculated correctly for resuming sessions
+            examStartTime = Date.now() - (currentExam.duration_minutes * 60 - timeRemaining) * 1000; 
+            startTimer(timeRemaining);
+
+            // Set up auto-save every 30 seconds
+            setInterval(saveProgress, 30000); // Save every 30 seconds
 
             loadingIndicator.classList.add('hidden');
             examContent.classList.remove('hidden');
 
         } catch (error) {
-            displayMessage('error', `Error loading exam: ${error.message}`);
+            displayMessage('error', `Error loading exam: ${error.message}. Please try again or contact support.`);
             loadingIndicator.classList.add('hidden');
             console.error("Load exam error:", error);
         }
@@ -398,48 +575,64 @@
 
     function renderQuestionNavigation() {
         questionNavigation.innerHTML = '';
-        currentExam.questions.forEach((q, index) => {
+        allQuestions.forEach((q, index) => {
             const button = document.createElement('button');
             button.classList.add('question-nav-btn');
             button.textContent = index + 1;
+            button.dataset.questionId = q.question_id; // Store question ID
             button.addEventListener('click', () => showQuestion(index));
+            
+            // Mark as answered if an answer exists
+            if (userAnswers[q.question_id] !== null && userAnswers[q.question_id] !== undefined) {
+                button.classList.add('answered');
+            }
             questionNavigation.appendChild(button);
         });
     }
 
     function showQuestion(index) {
-        if (!currentExam || !currentExam.questions || index < 0 || index >= currentExam.questions.length) {
+        if (!currentExam || !allQuestions || index < 0 || index >= allQuestions.length) {
             return;
         }
 
         currentQuestionIndex = index;
-        const question = currentExam.questions[currentQuestionIndex];
-        questionsContainer.innerHTML = ''; // Clear previous question
+        const question = allQuestions[currentQuestionIndex];
+        sectionsContainer.innerHTML = ''; // Clear previous content
+
+        // Display section title and instructions if applicable
+        const sectionCard = document.createElement('div');
+        sectionCard.classList.add('section-card-display'); // You might need to define this style
+        sectionCard.innerHTML = `
+            <h2>${question.section_name}</h2>
+            ${question.section_instructions ? `<p class="section-instructions-display">${question.section_instructions}</p>` : ''}
+        `;
+        sectionsContainer.appendChild(sectionCard);
+
 
         const questionCard = document.createElement('div');
         questionCard.classList.add('question-card');
         questionCard.innerHTML = `
-            <h3>Question ${currentQuestionIndex + 1} of ${currentExam.questions.length}:</h3>
+            <h3>Question ${currentQuestionIndex + 1} of ${allQuestions.length}:</h3>
             <p>${question.question_text}</p>
-            <ul class="options-list" id="optionsList-${question.id}">
+            <ul class="options-list" id="optionsList-${question.question_id}">
                 ${question.options.map(option => `
                     <li>
                         <label>
-                            <input type="radio" name="question-${question.id}" value="${option.id}"
-                                ${userAnswers[question.id] === option.id ? 'checked' : ''}>
-                            ${option.option_text}
+                            <input type="radio" name="question-${question.question_id}" value="${option.id}"
+                                ${userAnswers[question.question_id] === option.id ? 'checked' : ''}>
+                            ${option.text}
                         </label>
                     </li>
                 `).join('')}
             </ul>
         `;
-        questionsContainer.appendChild(questionCard);
+        sectionsContainer.appendChild(questionCard);
 
         // Add event listener for option changes
-        const optionsList = document.getElementById(`optionsList-${question.id}`);
+        const optionsList = document.getElementById(`optionsList-${question.question_id}`);
         optionsList.addEventListener('change', (event) => {
             if (event.target.type === 'radio') {
-                userAnswers[question.id] = parseInt(event.target.value);
+                userAnswers[question.question_id] = event.target.value; // Store the selected option ID (A, B, C, D)
                 updateQuestionNavButton(currentQuestionIndex, true); // Mark as answered
             }
         });
@@ -454,12 +647,14 @@
 
         // Update Prev/Next/Submit buttons
         prevQuestionBtn.disabled = currentQuestionIndex === 0;
-        nextQuestionBtn.disabled = currentQuestionIndex === currentExam.questions.length - 1;
+        nextQuestionBtn.disabled = currentQuestionIndex === allQuestions.length - 1;
 
-        if (currentQuestionIndex === currentExam.questions.length - 1) {
+        if (currentQuestionIndex === allQuestions.length - 1) {
             submitExamBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden'); // Hide next button on last question
         } else {
             submitExamBtn.classList.add('hidden');
+            nextQuestionBtn.classList.remove('hidden');
         }
     }
 
@@ -468,7 +663,6 @@
         if (button) {
             if (answered) {
                 button.classList.add('answered'); // Add a class for answered questions
-                // You might want to style 'answered' differently in your CSS
             } else {
                 button.classList.remove('answered');
             }
@@ -482,19 +676,22 @@
     });
 
     nextQuestionBtn.addEventListener('click', () => {
-        if (currentQuestionIndex < currentExam.questions.length - 1) {
+        if (currentQuestionIndex < allQuestions.length - 1) {
             showQuestion(currentQuestionIndex + 1);
         }
     });
 
     submitExamBtn.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to submit the exam? You cannot change answers after submission.')) {
+        const confirmed = await showConfirmation('Are you sure you want to submit the exam? You cannot change answers after submission.');
+        if (confirmed) {
             await submitExam();
         }
     });
 
     function startTimer(durationInSeconds) {
         timeRemaining = durationInSeconds;
+        updateTimerDisplay(); // Initial display
+
         timerInterval = setInterval(() => {
             timeRemaining--;
             updateTimerDisplay();
@@ -506,7 +703,7 @@
             if (timeRemaining <= 0) {
                 clearInterval(timerInterval);
                 displayMessage('info', 'Time is up! Submitting your exam automatically.');
-                submitExam();
+                submitExam(); // Auto-submit when time runs out
             }
         }, 1000);
     }
@@ -517,49 +714,80 @@
         timerDisplay.textContent = `Time Left: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
+    async function saveProgress() {
+        if (!currentExam || Object.keys(userAnswers).length === 0) {
+            return; // Don't save if exam not loaded or no answers
+        }
+        try {
+            const response = await fetch(`/api/exam-sessions/${currentExam.exam_id}/progress`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    answers: userAnswers,
+                    timeRemaining: timeRemaining
+                }),
+            });
+            if (!response.ok) {
+                console.warn('Failed to auto-save progress:', await response.json());
+            } else {
+                console.log('Progress auto-saved.');
+            }
+        } catch (error) {
+            console.error('Error during auto-save:', error);
+        }
+    }
+
     async function submitExam() {
         clearInterval(timerInterval); // Stop the timer
         submitExamBtn.disabled = true;
         submitExamBtn.textContent = 'Submitting...';
 
-        const submissionData = {
-            exam_id: currentExam.id,
-            answers: Object.entries(userAnswers).map(([questionId, optionId]) => ({
-                question_id: parseInt(questionId),
-                selected_option_id: optionId
-            }))
-        };
+        const timeTakenSeconds = Math.floor((Date.now() - examStartTime) / 1000);
+
+        // Ensure userAnswers is an object with questionId as keys and selectedOptionId as values
+        // The backend expects answers as { "questionId": "selectedOptionId" }
+        const submissionAnswers = {};
+        allQuestions.forEach(q => {
+            if (userAnswers[q.question_id]) {
+                submissionAnswers[q.question_id] = userAnswers[q.question_id];
+            }
+        });
+
 
         try {
-            const response = await fetch('/api/exam-sessions/submit', {
+            const response = await fetch(`/api/exam-sessions/${currentExam.exam_id}/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(submissionData),
+                body: JSON.stringify({
+                    answers: submissionAnswers,
+                    timeTakenSeconds: timeTakenSeconds
+                }),
                 credentials: 'include'
             });
 
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || 'Unknown error occurred during submission.');
+                throw new Error(result.error || 'Unknown error occurred.');
             }
 
-            // **FIX**: Based on previous snippets, handle redirect based on result.
-            if (result.message === 'Exam submitted successfully but no score calculated for non-graded exam.') {
+            if (result.examType === 'MAIN_EXAM') { // Assuming MAIN_EXAM means no immediate score display
                 displayMessage('info', `Exam submitted successfully! You will be redirected to the dashboard shortly.`);
                 setTimeout(() => window.location.href = 'dashboard.html', 3000);
             } else {
-                displayMessage('info', `Test submitted successfully! Your score is ${result.score.toFixed(1)}%. Redirecting to results...`);
-                // **FIX**: Redirect to the specific result page.
+                displayMessage('success', `Test submitted successfully! Your score is ${result.score.toFixed(1)}%. Redirecting to results...`);
                 setTimeout(() => window.location.href = `results.html?resultId=${result.resultId}`, 3000);
             }
 
         } catch (error) {
             if(submitExamBtn) { // Re-enable button on failure to allow retry
                submitExamBtn.disabled = false;
-               submitExamBtn.textContent = 'Yes, Submit';
+               submitExamBtn.textContent = 'Submit Exam';
             }
             displayMessage('error', `Could not submit exam: ${error.message}. Please check your connection and try again.`);
         }
@@ -577,12 +805,42 @@
     });
 
     window.addEventListener('DOMContentLoaded', async () => {
-        const user = await loadUserData();
+        const user = await loadUserData(); // This will redirect if not authenticated
         if (user) {
             loadExam();
         }
     });
   </script>
-      <script src="/js/xxx.js"></script>
+  <!-- Modals HTML (add these to the end of your body tag) -->
+<div id="confirmationModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Action</h2>
+            <span class="close-button" onclick="closeModal('confirmationModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="confirmationMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmAction(true)">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="alertDialog" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="alertTitle">Alert</h2>
+            <span class="close-button" onclick="closeModal('alertDialog')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="alertMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

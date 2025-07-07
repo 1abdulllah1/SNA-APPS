@@ -6,6 +6,8 @@
   <title>Login | CBT System</title>
   <link rel="stylesheet" href="styles.css">
   <style>
+    /* Base styles are in styles.css */
+
     .auth-container {
       max-width: 450px;
       margin: 2rem auto;
@@ -24,11 +26,109 @@
       margin: 10px 0;
       display: block;
       text-align: center;
+      padding: 8px; /* Added padding */
+      border-radius: 4px; /* Added border-radius */
+      background-color: #ffebee; /* Light red background */
+      border: 1px solid #e74c3c; /* Border */
+    }
+
+    .success-message-inline { /* Added for general success messages */
+        color: var(--success-green);
+        background-color: #e8f5e9;
+        border: 1px solid var(--success-green);
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+        margin: 10px 0;
+        display: block;
     }
     
     .alternate-link {
       text-align: center;
       margin-top: 1.5rem;
+    }
+
+    .alternate-link a {
+        color: var(--primary-blue);
+        font-weight: 500;
+        text-decoration: none; /* Remove underline */
+    }
+
+    .alternate-link a:hover {
+        text-decoration: underline; /* Add underline on hover */
+    }
+
+    .login-hints {
+        font-size: 0.85em;
+        color: #666;
+        margin-bottom: 1rem;
+        text-align: center; /* Center hints */
+    }
+
+    /* Modal Styling */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      color: var(--primary-blue);
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-content input[type="email"] {
+      width: calc(100% - 20px); /* Adjust width for padding */
+      padding: 12px 10px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .modal-content .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.1rem;
+      border-radius: 6px;
+    }
+
+    .modal-close-btn {
+      color: #aaa;
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .modal-close-btn:hover,
+    .modal-close-btn:focus {
+      color: #333;
+      text-decoration: none;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -49,6 +149,7 @@
         <div class="form-group"> <label for="password">Password</label> <input type="password" id="password" name="password" required autocomplete="current-password"> </div>
         <div class="form-group"> <label> <input type="checkbox" name="remember"> Remember me </label> </div>
         <span id="loginError" class="error-message hidden"></span>
+        <span id="loginSuccess" class="success-message-inline hidden"></span>
         <button type="submit" class="btn primary-btn" style="width: 100%;">Login</button>
         <div class="alternate-link"> <a href="#" id="forgotPassword">Forgot Password?</a> </div>
       </form>
@@ -56,15 +157,55 @@
   </main>
   <footer> <p>&copy; 2025 SNA CBT System. All rights reserved.</p> </footer>
 
-    <script>
+  <!-- Forgot Password Modal -->
+  <div id="forgotPasswordModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close-btn">&times;</span>
+      <h2>Forgot Password</h2>
+      <p>Enter your email address and we'll send you a link to reset your password.</p>
+      <form id="forgotPasswordForm">
+        <div class="form-group">
+          <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
+        </div>
+        <span id="forgotPasswordError" class="error-message hidden"></span>
+        <span id="forgotPasswordSuccess" class="success-message-inline hidden"></span>
+        <button type="submit" class="btn primary-btn">Send Reset Link</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('loginForm');
-      const errorElement = document.getElementById('loginError');
-      form.addEventListener('submit', async (e) => {
+      const loginForm = document.getElementById('loginForm');
+      const loginErrorElement = document.getElementById('loginError');
+      const loginSuccessElement = document.getElementById('loginSuccess');
+      const forgotPasswordLink = document.getElementById('forgotPassword');
+      const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+      const modalCloseBtn = forgotPasswordModal.querySelector('.modal-close-btn');
+      const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+      const forgotEmailInput = document.getElementById('forgotEmail');
+      const forgotPasswordError = document.getElementById('forgotPasswordError');
+      const forgotPasswordSuccess = document.getElementById('forgotPasswordSuccess');
+
+      // Helper to clear and hide messages
+      function hideAllMessages() {
+          loginErrorElement.textContent = '';
+          loginErrorElement.classList.add('hidden');
+          loginSuccessElement.textContent = '';
+          loginSuccessElement.classList.add('hidden');
+          forgotPasswordError.textContent = '';
+          forgotPasswordError.classList.add('hidden');
+          forgotPasswordSuccess.textContent = '';
+          forgotPasswordSuccess.classList.add('hidden');
+      }
+
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        hideAllMessages(); // Clear all messages before new attempt
+
         const identifier = document.getElementById('identifier').value;
         const password = document.getElementById('password').value;
-        errorElement.textContent = ''; errorElement.classList.add('hidden');
+        
         try {
           const response = await fetch(`/api/users/login`, {
             method: 'POST',
@@ -72,19 +213,154 @@
             body: JSON.stringify({ identifier, password }),
             credentials: 'include'
           });
+
+          const responseData = await response.json().catch(() => ({ error: "An unknown error occurred."}));
+
           if (response.ok) {
-            window.location.href = '/dashboard.html';
+            loginSuccessElement.textContent = responseData.message || "Login successful! Redirecting...";
+            loginSuccessElement.classList.remove('hidden');
+            // Give a brief moment for user to see success message before redirect
+            setTimeout(() => {
+                window.location.href = '/dashboard.html';
+            }, 500); 
           } else {
-            const errorData = await response.json().catch(() => ({ error: "An unknown error occurred."}));
-            errorElement.textContent = errorData.error || "Invalid credentials or server error.";
-            errorElement.classList.remove('hidden');
+            loginErrorElement.textContent = responseData.error || "Invalid credentials or server error.";
+            loginErrorElement.classList.remove('hidden');
           }
         } catch (error) {
           console.error('Login error:', error);
-          errorElement.textContent = "Connection error or server unavailable.";
-          errorElement.classList.remove('hidden');
+          loginErrorElement.textContent = "Connection error or server unavailable.";
+          loginErrorElement.classList.remove('hidden');
         }
       });
+
+      // Forgot Password Modal Logic
+      forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        forgotPasswordModal.style.display = 'flex'; // Show modal
+        hideAllMessages(); // Clear messages in both forms
+        forgotEmailInput.value = ''; // Clear previous email
+      });
+
+      modalCloseBtn.addEventListener('click', () => {
+        forgotPasswordModal.style.display = 'none'; // Hide modal
+      });
+
+      // Close modal if clicking outside the modal content
+      window.addEventListener('click', (e) => {
+        if (e.target === forgotPasswordModal) {
+          forgotPasswordModal.style.display = 'none';
+        }
+      });
+
+      forgotPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        forgotPasswordError.classList.add('hidden');
+        forgotPasswordSuccess.classList.add('hidden');
+        forgotPasswordError.textContent = '';
+        forgotPasswordSuccess.textContent = '';
+
+        const email = forgotEmailInput.value;
+        const submitButton = forgotPasswordForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+
+        try {
+          const response = await fetch('/api/users/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const responseData = await response.json();
+
+          if (response.ok) {
+            forgotPasswordSuccess.textContent = responseData.message || "Password reset link sent to your email!";
+            forgotPasswordSuccess.classList.remove('hidden');
+            // Optionally, close modal after a delay or upon user confirmation
+            // setTimeout(() => { forgotPasswordModal.style.display = 'none'; }, 3000);
+          } else {
+            forgotPasswordError.textContent = responseData.error || "Failed to send reset link.";
+            forgotPasswordError.classList.remove('hidden');
+          }
+        } catch (error) {
+          console.error('Forgot password fetch error:', error);
+          forgotPasswordError.textContent = "Network error. Please try again.";
+          forgotPasswordError.classList.remove('hidden');
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Send Reset Link';
+        }
+      });
+
+      // New Reset Password Page (You'll need a separate reset-password.html file)
+      // This is conceptual for a new page, not part of login.html itself
+      // If you are creating a reset-password.html:
+      /*
+      // In reset-password.html script:
+      document.addEventListener('DOMContentLoaded', () => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const token = urlParams.get('token');
+          if (!token) {
+              // Redirect or show error if no token
+              document.getElementById('resetError').textContent = 'No reset token found. Please request a new link.';
+              return;
+          }
+
+          const resetPasswordForm = document.getElementById('resetPasswordForm');
+          const newPasswordInput = document.getElementById('newPassword');
+          const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+          const resetError = document.getElementById('resetError');
+          const resetSuccess = document.getElementById('resetSuccess');
+
+          resetPasswordForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              resetError.classList.add('hidden');
+              resetSuccess.classList.add('hidden');
+
+              if (newPasswordInput.value !== confirmNewPasswordInput.value) {
+                  resetError.textContent = 'Passwords do not match.';
+                  resetError.classList.remove('hidden');
+                  return;
+              }
+
+              // Basic password strength (optional, improve as needed)
+              if (newPasswordInput.value.length < 8) {
+                  resetError.textContent = 'New password must be at least 8 characters long.';
+                  resetError.classList.remove('hidden');
+                  return;
+              }
+
+              const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
+              submitButton.disabled = true;
+              submitButton.textContent = 'Resetting...';
+
+              try {
+                  const response = await fetch('/api/users/reset-password', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ token, newPassword: newPasswordInput.value })
+                  });
+                  const responseData = await response.json();
+
+                  if (response.ok) {
+                      resetSuccess.textContent = responseData.message || 'Password reset successfully! You can now log in.';
+                      resetSuccess.classList.remove('hidden');
+                      setTimeout(() => { window.location.href = '/login.html'; }, 2000);
+                  } else {
+                      resetError.textContent = responseData.error || 'Failed to reset password.';
+                      resetError.classList.remove('hidden');
+                  }
+              } catch (error) {
+                  console.error('Reset password fetch error:', error);
+                  resetError.textContent = 'Network error. Please try again.';
+                  resetError.classList.remove('hidden');
+              } finally {
+                  submitButton.disabled = false;
+                  submitButton.textContent = 'Reset Password';
+              }
+          });
+      });
+      */
     });
   </script>
 </body>

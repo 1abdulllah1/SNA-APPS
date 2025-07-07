@@ -6,64 +6,243 @@
     <title>Admin Reports | CBT System</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        main { max-width: 1100px; }
+        /* General Styles */
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; }
+        main { max-width: 1100px; margin: 30px auto; padding: 20px; }
         .report-container { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         .report-container h1 { color: var(--primary-blue); text-align: center; margin-bottom: 2rem; }
-        .student-table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+        
+        /* Student Table */
+        .student-table { width: 100%; border-collapse: collapse; margin-top: 2rem; border-radius: 8px; overflow: hidden; }
         .student-table th, .student-table td { border: 1px solid #e0e0e0; padding: 12px 15px; text-align: left; vertical-align: middle; }
         .student-table th { background-color: var(--primary-blue); color: white; }
         .profile-pic-thumbnail { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        
+        /* Utility */
         .hidden { display: none; }
         .error-message {
             color: var(--danger-red);
             background-color: #ffebeb;
             border: 1px solid var(--danger-red);
             padding: 10px;
-            border-radius: var(--border-radius-sm);
+            border-radius: 5px;
             margin-bottom: 1rem;
             text-align: center;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filters input, .filters select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px; /* Consistent rounding */
+            flex-grow: 1;
+            max-width: 250px; /* Adjusted max-width for more filters */
+            font-size: 0.95rem;
+        }
+        .filters button {
+            padding: 8px 15px;
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px; /* Consistent rounding */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+        }
+        .filters button:hover { background-color: var(--primary-dark); }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-primary { background-color: var(--primary-blue); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+
+        /* Professional Navbar Styles (Unified) */
+        header {
+            background-color: #2c3e50; /* Dark blue/grey */
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            color: #ecf0f1; /* Light grey text */
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .logo:hover {
+            color: #3498db; /* Primary blue on hover */
+        }
+
+        .nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 1.5rem; /* Space between nav items */
+        }
+
+        .nav-links li a, .nav-links li button {
+            color: #ecf0f1; /* Light grey text */
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0.8rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .nav-links li a:hover, .nav-links li button:hover {
+            background-color: #34495e; /* Slightly darker background on hover */
+            color: #ffffff;
+        }
+
+        .nav-links li button.btn {
+            background-color: #e74c3c; /* Red for logout */
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-links li button.btn:hover {
+            background-color: #c0392b; /* Darker red on hover */
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+                margin-top: 1rem;
+            }
+            .nav-links li {
+                width: 100%;
+            }
+            .nav-links li a, .nav-links li button {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 0.8rem 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <header>
         <nav>
-            <div class="logo">SNA CBT System</div>
-            <ul class="nav-links" id="navLinksContainer"></ul>
+            <a href="/dashboard.html" class="logo">SNA CBT System</a>
+            <ul class="nav-links" id="navLinksContainer">
+                </ul>
         </nav>
     </header>
 
     <main>
-        <div class="report-container">
-            <h1>Admin Student Reports</h1>
-            <div id="errorMessage" class="error-message hidden"></div>
-            
-            <div class="filter-controls">
-                <input type="text" id="studentFilter" placeholder="Search by name or admission number">
-                <select id="classFilter"><option value="">All Classes</option></select>
+        <div class="container report-container">
+            <h1>Student Reports</h1>
+            <div id="reportError" class="error-message hidden"></div>
+
+            <div class="filters">
+                <input type="text" id="studentFilter" placeholder="Search by name or admission no.">
+                <select id="classLevelFilter">
+                    <option value="">All Class Levels</option>
+                </select>
+                <!-- NEW: Term Filter -->
+                <select id="termFilter">
+                    <option value="">All Terms</option>
+                    <option value="FIRST">First Term</option>
+                    <option value="SECOND">Second Term</option>
+                    <option value="THIRD">Third Term</option>
+                </select>
+                <!-- NEW: Session Filter - Changed to text input -->
+                <input type="text" id="sessionFilter" placeholder="Academic Session (e.g., 2023-2024)" pattern="\d{4}-\d{4}">
+                <button id="applyFilterBtn">Apply Filter</button>
             </div>
 
-            <div id="loadingIndicator">Loading students...</div>
-            <table class="student-table hidden">
+            <table class="student-table">
                 <thead>
                     <tr>
-                        <th>Picture</th>
-                        <th>Full Name</th>
-                        <th>Admission No.</th>
-                        <th>Class</th>
+                        <th>Profile Picture</th>
+                        <th>Student Name</th>
+                        <th>Admission Number</th>
+                        <th>Class Level</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="studentTableBody"></tbody>
+                <tbody id="studentTableBody">
+                    <tr><td colspan="5">Loading students...</td></tr>
+                </tbody>
             </table>
         </div>
     </main>
-    <footer><p>&copy; 2025 SNA CBT System</p></footer>
-    
+
+    <footer>
+        <p>&copy; 2024 SNA CBT System. All rights reserved.</p>
+    </footer>
+
     <script>
-        // Global variable to store current user data accessible client-side
-        let currentUser = null;
-        let allStudentsData = [];
+        let allStudents = []; // Store all students for local filtering
+        let currentUser = null; // Store current user data
+
+        // Displays a message (error/info)
+        function showMessage(message, type = 'error') {
+            const errorDiv = document.getElementById('reportError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            if (type === 'error') {
+                errorDiv.style.backgroundColor = '#ffebeb';
+                errorDiv.style.color = 'var(--danger-red)';
+                errorDiv.style.borderColor = 'var(--danger-red)';
+            } else {
+                errorDiv.style.backgroundColor = '#e0f7fa';
+                errorDiv.style.color = '#007bb5';
+                errorDiv.style.borderColor = '#00acc1';
+            }
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Function to load user data (copied for self-containment)
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/users/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.href = '/login.html';
+                    return null;
+                }
+                currentUser = await response.json();
+                return currentUser;
+            } catch (error) {
+                console.error("Error loading user data:", error);
+                window.location.href = '/login.html';
+                return null;
+            }
+        }
 
         /**
          * Dynamically creates navigation links based on user roles for the client-side UI.
@@ -72,251 +251,174 @@
          */
         function createNavigationLinks(user) {
             const navLinksContainer = document.getElementById('navLinksContainer');
-            if (navLinksContainer) { // Ensure the container exists before manipulating
-                navLinksContainer.innerHTML = ''; 
-                
-                const dashboardLink = document.createElement('li');
-                dashboardLink.innerHTML = '<a href="/dashboard.html" class="nav-link">Dashboard</a>';
-                navLinksContainer.appendChild(dashboardLink);
+            if (navLinksContainer) {
+                // Ensure the container exists before manipulating
+                navLinksContainer.innerHTML = '';
 
-                if (user.is_admin || user.role === 'teacher') {
-                    const createExamLink = document.createElement('li');
-                    createExamLink.innerHTML = '<a href="create-exam.html" class="nav-link">Create Exam</a>';
-                    navLinksContainer.appendChild(createExamLink);
-                }
+                const navLinks = [
+                    { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'] },
+                    { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'] },
+                    { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'] },
+                    { text: 'Register User', href: '/registration.html', roles: ['admin'] },
+                    { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'] },
+                    { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'] },
+                    { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'] },
+                    { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin', 'teacher'] }
+                ];
 
-                if (user.is_admin) {
-                    const manageUsersLink = document.createElement('li');
-                    manageUsersLink.innerHTML = '<a href="manage-users.html" class="nav-link">Manage Users</a>';
-                    navLinksContainer.appendChild(manageUsersLink);
-
-                    const registerLink = document.createElement('li');
-                    registerLink.innerHTML = '<a href="registration.html" class="nav-link">Register User</a>';
-                    navLinksContainer.appendChild(registerLink);
-
-                    const reportsLink = document.createElement('li');
-                    reportsLink.innerHTML = '<a href="admin-reports.html" class="nav-link">Student Reports</a>';
-                    navLinksContainer.appendChild(reportsLink);
-
-                    // New links for navigation bar
-                    const manageSubjectsLink = document.createElement('li');
-                    manageSubjectsLink.innerHTML = '<a href="manage-subjects.html" class="nav-link">Manage Subjects</a>';
-                    navLinksContainer.appendChild(manageSubjectsLink);
-
-                    const manageClassesLink = document.createElement('li');
-                    manageClassesLink.innerHTML = '<a href="manage-classes.html" class="nav-link">Manage Classes</a>';
-                    navLinksContainer.appendChild(manageClassesLink);
-                }
-
-                const logoutLinkItem = document.createElement('li');
-                logoutLinkItem.innerHTML = '<a href="#" id="logoutLink" class="nav-link">Logout</a>';
-                navLinksContainer.appendChild(logoutLinkItem);
-
-                const logoutButton = document.getElementById('logoutLink');
-                if (logoutButton) {
-                    logoutButton.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        handleLogout();
+                navLinks.forEach(link => {
+                    const shouldDisplay = link.roles.some(role => {
+                        if (role === 'admin') return user.is_admin;
+                        return user.role === role;
                     });
-                }
-            }
-        }
 
-        /**
-         * Handles user logout by calling the logout API endpoint,
-         * clearing all client-side storage, and redirecting to the login page.
-         */
-        async function handleLogout() {
-            try {
-                const response = await fetch('/api/users/logout', { 
-                    method: 'POST', 
-                    credentials: 'include' 
+                    if (shouldDisplay) {
+                        const navLi = document.createElement('li');
+                        const navA = document.createElement('a');
+                        navA.href = link.href;
+                        navA.textContent = link.text;
+                        navA.classList.add('nav-link');
+                        if (window.location.pathname === link.href) {
+                            navA.classList.add('active');
+                        }
+                        navLi.appendChild(navA);
+                        navLinksContainer.appendChild(navLi);
+                    }
                 });
+
+                const logoutLi = document.createElement('li');
+                const logoutBtn = document.createElement('button');
+                logoutBtn.textContent = 'Logout';
+                logoutBtn.classList.add('btn', 'logout-btn');
+                logoutBtn.onclick = async () => {
+                    try {
+                        const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+                        }
+                    } catch (error) {
+                        console.error('Network error during logout:', error);
+                    } finally {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        window.location.href = '/login.html';
+                    }
+                };
+                logoutLi.appendChild(logoutBtn);
+                navLinksContainer.appendChild(logoutLi);
+            }
+        }
+
+
+        // Fetch class levels for the filter dropdown
+        async function fetchClassLevels() {
+            try {
+                const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+                    throw new Error('Failed to fetch class levels.');
                 }
-            } catch (error) {
-                console.error('Logout network error:', error);
-            } finally {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/login.html';
-            }
-        }
-
-        /**
-         * Loads current user data from the backend (/api/users/me) and checks for admin privileges.
-         * This function handles redirection if the user is not authenticated or not authorized as an admin.
-         * @returns {Promise<object|null>} The user object if authenticated and authorized, otherwise null.
-         */
-        async function loadUserDataAndCheckAdmin() {
-            try {
-                const response = await fetch('/api/users/me', { credentials: 'include' });
-                
-                if (!response.ok) {
-                    console.warn("Not authenticated or session expired, redirecting to login.");
-                    window.location.href = '/login.html';
-                    return null;
-                }
-
-                const user = await response.json();
-                currentUser = user; 
-
-                if (!user.is_admin) {
-                    console.warn(`User ${user.username} (ID: ${user.id}, Role: ${user.role}) is not an admin, redirecting to dashboard.`);
-                    document.querySelector('main').innerHTML = `
-                        <div class="report-container">
-                            <h1>Access Denied</h1>
-                            <p>You do not have permission to view this page. <a href="dashboard.html">Return to Dashboard</a></p>
-                        </div>`;
-                    // Redirect after a short delay to allow message to be seen
-                    setTimeout(() => { window.location.href = '/dashboard.html'; }, 3000);
-                    return null;
-                }
-
-                createNavigationLinks(user);
-                return user; 
-            } catch (error) {
-                console.error("Error loading user data for navigation or admin check:", error);
-                alert('Failed to load user data or check admin status. Please try logging in again.');
-                window.location.href = '/login.html';
-                return null;
-            }
-        }
-
-        /**
-         * Main function to initialize the Admin Reports page.
-         * It ensures the user is an authenticated admin before loading student data.
-         */
-        async function initializePage() {
-            try {
-                await new Promise(resolve => setTimeout(resolve, 50)); 
-                const user = await loadUserDataAndCheckAdmin(); 
-                
-                if (user) { 
-                    await fetchStudentsAndClasses();
-                }
-
-            } catch (e) {
-                console.error("Admin Reports Initialization Error:", e);
-                window.location.href = '/login.html';
-            }
-        }
-
-        /**
-         * Fetches both the list of students (filtered by role) and the list of classes.
-         */
-        async function fetchStudentsAndClasses() {
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const errorMessage = document.getElementById('errorMessage');
-            const studentTable = document.querySelector('.student-table');
-
-            loadingIndicator.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            studentTable.classList.add('hidden');
-
-            try {
-                // Fetch ONLY students (by role) and all classes in parallel
-                const [usersResponse, classesResponse] = await Promise.all([
-                    fetch('/api/users?role=student', { credentials: 'include' }), // Explicitly request only students
-                    fetch('/api/classes', { credentials: 'include' })
-                ]);
-
-                if (!usersResponse.ok) {
-                    const errorText = await usersResponse.text(); // Get raw error response
-                    throw new Error(`Failed to fetch students: ${errorText || usersResponse.statusText}`);
-                }
-                if (!classesResponse.ok) {
-                    const errorText = await classesResponse.text();
-                    throw new Error(`Failed to fetch classes: ${errorText || classesResponse.statusText}`);
-                }
-
-                allStudentsData = await usersResponse.json();
-                const classes = await classesResponse.json();
-                
-                populateClassFilter(classes);
-                applyFilters();
-                studentTable.classList.remove('hidden');
-
-            } catch (error) {
-                errorMessage.textContent = error.message;
-                errorMessage.classList.remove('hidden');
-            } finally {
-                loadingIndicator.classList.add('hidden');
-            }
-        }
-
-        function populateClassFilter(classes) {
-            const classFilterSelect = document.getElementById('classFilter');
-            classFilterSelect.innerHTML = '<option value="">All Classes</option>'; 
-            if (classes && classes.length > 0) {
-                classes.forEach(cls => {
+                const classLevels = await response.json();
+                const classLevelFilter = document.getElementById('classLevelFilter');
+                classLevelFilter.innerHTML = '<option value="">All Class Levels</option>'; // Default option
+                classLevels.forEach(level => {
                     const option = document.createElement('option');
-                    option.value = cls.class_id;
-                    option.textContent = cls.name;
-                    classFilterSelect.appendChild(option);
+                    option.value = level.level_id;
+                    option.textContent = level.level_name;
+                    classLevelFilter.appendChild(option);
                 });
-            } else {
-                console.log("No classes found to populate filter.");
+            } catch (error) {
+                console.error("Error fetching class levels:", error);
+                showMessage("Failed to load class levels for filter: " + error.message);
             }
         }
 
-        function applyFilters() {
-            const studentFilterText = document.getElementById('studentFilter').value.toLowerCase();
-            const classFilterValue = document.getElementById('classFilter').value;
+        // Fetch students based on filters
+        async function fetchStudents() {
+            const studentTableBody = document.getElementById('studentTableBody');
+            studentTableBody.innerHTML = '<tr><td colspan="5">Loading students...</td></tr>'; // Loading indicator
 
-            const filteredStudents = allStudentsData.filter(student => {
-                // Ensure student is actually a student (redundant if backend filters, but good client-side safety)
-                if (student.role !== 'student') return false; 
+            try {
+                const studentFilter = document.getElementById('studentFilter').value;
+                const classLevelId = document.getElementById('classLevelFilter').value;
+                // Always fetch users with role 'student' for this report page
+                let url = `/api/users?role=student`;
+                if (classLevelId) {
+                    url += `&class_level_id=${classLevelId}`;
+                }
+                if (studentFilter) {
+                    url += `&search=${encodeURIComponent(studentFilter)}`;
+                }
 
-                const matchesName = !studentFilterText ||
-                                    (student.full_name && student.full_name.toLowerCase().includes(studentFilterText)) ||
-                                    (student.username && student.username.toLowerCase().includes(studentFilterText)) || 
-                                    (student.admission_number && student.admission_number.toLowerCase().includes(studentFilterText));
-                const matchesClass = !classFilterValue || student.class_id == classFilterValue;
-                return matchesName && matchesClass;
-            });
-            displayStudents(filteredStudents);
+                const response = await fetch(url, { credentials: 'include' });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch students.');
+                }
+                allStudents = await response.json(); // Store all students for local filtering if needed
+                renderStudents(allStudents);
+            } catch (error) {
+                console.error("Error fetching students:", error);
+                showMessage("Failed to load students: " + error.message);
+                studentTableBody.innerHTML = '<tr><td colspan="5">Error loading students.</td></tr>';
+            }
         }
 
-        function displayStudents(students) {
-            const tbody = document.getElementById('studentTableBody');
-            tbody.innerHTML = '';
+        // Render students into the table
+        function renderStudents(students) {
+            const studentTableBody = document.getElementById('studentTableBody');
+            studentTableBody.innerHTML = ''; // Clear existing rows
+
             if (students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No students found.</td></tr>';
+                studentTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No students found matching the criteria.</td></tr>';
                 return;
             }
 
             students.forEach(student => {
-                const profilePicSrc = student.profile_picture_url || '/images/default_avatar.jpeg';
-                const row = `
-                    <tr>
-                        <td><img src="${profilePicSrc}" alt="Profile" class="profile-pic-thumbnail" onerror="this.onerror=null; this.src='/images/default_avatar.jpeg';"></td>
-                        <td>${student.full_name || 'N/A'}</td>
-                        <td>${student.admission_number || 'N/A'}</td>
-                        <td>${student.class_name || 'N/A'}</td>
-                        <td><button class="btn" onclick="viewStudentReports(${student.id}, '${student.full_name}')">View Reports</button></td>
-                    </tr>
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><img src="${student.profile_picture_url || 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg'}" alt="Profile" class="profile-pic-thumbnail"></td>
+                    <td>${student.username}</td>
+                    <td>${student.admission_number || 'N/A'}</td>
+                    <td>${student.class_level_name || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="viewStudentReport(${student.id})">View Report</button>
+                    </td>
                 `;
-                tbody.innerHTML += row;
+                studentTableBody.appendChild(row);
             });
         }
-        
-        function viewStudentReports(studentId, studentName) {
-            sessionStorage.setItem('selectedStudentId', studentId);
-            sessionStorage.setItem('selectedStudentName', studentName);
-            // Pass term and session (academic year) as query parameters
-            // For simplicity, hardcoding a dummy term/session. You might want a UI for this.
-            const currentTerm = 'FIRST'; // Example: dynamically get from a form/user input
-            const currentSession = '2023/2024'; // Example: dynamically get from a form/user input
-            window.location.href = `view-report.html?studentId=${studentId}&term=${currentTerm}&academicYear=${currentSession}`;
+
+        // View student report (redirect to view-report.html)
+        function viewStudentReport(studentId) {
+            const term = document.getElementById('termFilter').value;
+            const session = document.getElementById('sessionFilter').value; // Get session from text input
+
+            let url = `/view-report.html?studentId=${studentId}`;
+            if (term) {
+                url += `&term=${term}`;
+            }
+            if (session) {
+                url += `&academicYear=${encodeURIComponent(session)}`; // Use academicYear for session param
+            }
+            window.location.href = url;
         }
-        
-        document.getElementById('studentFilter').addEventListener('input', applyFilters);
-        document.getElementById('classFilter').addEventListener('change', applyFilters);
-        
-        document.addEventListener('DOMContentLoaded', initializePage);
+
+        // Event Listeners for filters
+        document.getElementById('applyFilterBtn').addEventListener('click', fetchStudents);
+        document.getElementById('classLevelFilter').addEventListener('change', fetchStudents);
+        document.getElementById('termFilter').addEventListener('change', fetchStudents);
+        // No change listener for sessionFilter as it's a text input, relies on applyFilterBtn
+
+        // Initial page load logic
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData();
+            if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) { // Only teachers and admins should access this page
+                await fetchClassLevels(); // Populate class level filter
+                await fetchStudents(); // Initial fetch of students
+            } else {
+                document.querySelector('main .container').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to view student reports.</p>';
+            }
+        });
 
     </script>
 </body>

@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Base styles from styles.css are assumed */
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; }
+        main { max-width: 1000px; margin: 30px auto; padding: 20px; }
+
 
         /* Professional Navbar Styling */
         header {
@@ -126,6 +129,7 @@
             border-bottom: 5px solid #283593; /* Darker, richer blue border */
             padding-bottom: 15px;
             margin-bottom: 25px;
+            text-align: center;
         }
 
         .school-logo {
@@ -152,6 +156,7 @@
             margin-bottom: 15px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            text-align: center;
         }
 
         .section-title {
@@ -160,6 +165,7 @@
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 8px;
             margin-bottom: 20px;
+            margin-top: 2rem;
         }
 
         .info-item strong {
@@ -169,41 +175,61 @@
             font-size: 1.05rem;
             margin: 7px 0;
         }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
 
         /* Table Styling */
         .scores-table, .summary-table {
+            width: 100%;
+            border-collapse: collapse;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             overflow: hidden; /* Ensures rounded corners on tables */
+            font-size: 0.9rem;
         }
 
         .scores-table th {
             background-color: #e8eaf6; /* Light blue header */
             color: #283593;
             padding: 12px 15px;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            text-align: left;
         }
 
         .scores-table td {
             padding: 10px 15px;
-            font-size: 0.92rem;
             color: #455a64;
+            text-align: left;
         }
 
         .scores-table tr:nth-child(even) {
             background-color: #f8f9fa;
         }
+        
+        .summary-table td {
+             padding: 12px 15px;
+             font-weight: 500;
+        }
+        .summary-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
 
         /* Comments section */
         .comments-section textarea {
+            width: 100%;
             border: 1px solid #c5cae9; /* Light blue border */
             border-radius: 6px;
             padding: 12px;
             font-size: 1rem;
             color: #34495e;
             background-color: #fcfdff; /* Slightly off-white background */
+            resize: vertical;
         }
         .comments-section textarea:disabled {
             background-color: #eceff1; /* Disabled background */
@@ -212,9 +238,18 @@
 
         /* Signature Section */
         .signature-section {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
             border-top: 1px dashed #90a4ae; /* Muted dashed line */
             padding-top: 30px;
             margin-top: 50px;
+        }
+
+        .signature-item {
+            flex: 1 1 45%; /* Allow items to grow/shrink, minimum 45% width */
+            text-align: center;
         }
 
         .signature-line {
@@ -224,40 +259,149 @@
             color: #546e7a;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            padding-bottom: 5px; /* Space for the line itself */
         }
 
         /* Action bar buttons */
+        .actions-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e8eaf6;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
         .actions-bar button {
             transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
         }
         .actions-bar button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
-        .btn-edit { background-color: #ffa000; } /* Darker yellow */
+        .btn-edit { background-color: #ffa000; color: white; } /* Darker yellow */
         .btn-edit:hover { background-color: #ffb300; }
-        .btn-save { background-color: #388e3c; } /* Darker green */
+        .btn-save { background-color: #388e3c; color: white; } /* Darker green */
         .btn-save:hover { background-color: #43a047; }
-        .btn-print { background-color: #1976d2; } /* Darker blue */
+        .btn-print { background-color: #1976d2; color: white; } /* Darker blue */
         .btn-print:hover { background-color: #2196f3; }
 
         /* General Modal Styling (ensure consistency) */
+        .modal {
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            display: flex; /* Use flexbox for centering */
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+        }
         .modal-content {
-            border-radius: 10px;
+            background-color: #fefefe;
+            margin: auto;
+            padding: 0;
+            border: 1px solid #888;
+            width: 80%; /* Could be responsive */
+            max-width: 500px;
+            border-radius: 10px; /* Rounded corners */
             box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            overflow: hidden; /* Ensures rounded corners on content */
         }
         .modal-header {
+            padding: 15px 20px;
             background-color: #1a237e; /* Match header color */
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-radius: 10px 10px 0 0;
         }
-        .btn-primary { background-color: #283593; }
-        .btn-primary:hover { background-color: #3949ab; }
-        .btn-danger { background-color: #d32f2f; }
-        .btn-danger:hover { background-color: #e53935; }
-        .btn-secondary { background-color: #757575; }
-        .btn-secondary:hover { background-color: #8d8d8d; }
-        .profile-picture-display{height: 120px; width: 78px;}
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .modal-body {
+            padding: 20px;
+            text-align: center;
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            background-color: #f1f1f1;
+            text-align: right;
+            border-top: 1px solid #e0e0e0;
+            border-radius: 0 0 10px 10px;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #ddd;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .profile-picture-display{
+            height: 120px;
+            width: 120px; /* Make it square */
+            border-radius: 50%; /* Make it circular */
+            object-fit: cover;
+            margin: 0 auto 20px; /* Center and add margin below */
+            display: block; /* Ensures margin auto works */
+            border: 3px solid #1a237e; /* Border matching school theme */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .loading-message, .error-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .loading-message { background-color: #e0f7fa; color: #007bb5; border: 1px solid #00acc1; }
+        .error-message { background-color: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; }
+        .hidden { display: none; }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 600px) {
+            .report-card-container {
+                padding: 20px;
+            }
+            .school-name {
+                font-size: 1.8rem;
+            }
+            .report-title {
+                font-size: 1.5rem;
+            }
+            .section-title {
+                font-size: 1.2rem;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .actions-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .actions-bar button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -282,22 +426,16 @@
         <div id="errorMessage" class="error-message hidden"></div>
         <div id="reportContent" class="hidden">
             <div class="report-header">
-                <!-- School Logo: IMPORTANT - Replace this URL with your actual school logo's Cloudinary URL -->
-                <!-- Upload your school logo to Cloudinary, copy its "Secure URL", and paste it below. -->
-                <!-- Example: https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/vXXXXXXXXXX/your_school_logo.png -->
                 <img src="https://res.cloudinary.com/dyphku0jr/image/upload/v1751046319/new_t7avzn.jpg" alt="School Logo" class="school-logo" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dyphku0jr/image/upload/v1751055034/vector-education-logo_779267-2080_i9yfuv.jpg';">
                 <h1 class="school-name">Sealed Nectar Academy</h1>
                 <p class="school-address">15, Nasirudeen street, 10/10 Bus-stop, Ota, Ogun state<br>Email| sealednec@gmail.com   Tell| 08065257209</p>
             </div>
 
-            <div class="student-profile-pic-container">
-                <!-- Student Profile Picture: This will be dynamically loaded from fetched data -->
-                <!-- Its fallback URL explicitly uses the Cloudinary default avatar defined in your users.js -->
+            <div class="student-profile-pic-container" style="text-align: center; margin-top: 25px;">
                 <img id="studentProfilePicture" class="profile-picture-display" src="https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg" alt="Student Profile Picture" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';">
             </div>
 
-            <h2 class="report-title">Student Progress Report</h2>
-            <h3 class="report-title" id="reportTerm"></h3>
+            <h2 class="report-title" id="reportTermSession"></h2>
             
             <div class="student-info">
                 <h3 class="section-title">Student Information</h3>
@@ -305,7 +443,6 @@
                     <div class="info-item"><p><strong>Name:</strong> <span id="studentFullName"></span></p></div>
                     <div class="info-item"><p><strong>Admission No:</strong> <span id="studentAdmissionNo"></span></p></div>
                     <div class="info-item"><p><strong>Class:</strong> <span id="studentClass"></span></p></div>
-                    <div class="info-item"><p><strong>Academic Year:</strong> <span id="academicYear"></span></p></div>
                     <div class="info-item"><p><strong>Date Generated:</strong> <span id="dateGenerated"></span></p></div>
                 </div>
             </div>
@@ -319,10 +456,6 @@
                             <th>CA (40%)</th>
                             <th>Exam (60%)</th>
                             <th>Final Score</th>
-                            <th>1st Term</th>
-                            <th>2nd Term</th>
-                            <th>3rd Term</th>
-                            <th>Cumulative Avg.</th>
                             <th>Grade</th>
                             <th>Remarks</th>
                         </tr>
@@ -383,8 +516,7 @@
     <p>&copy; 2025 Sealed Nectar Academy. All rights reserved.</p>
   </footer>
 
-<!-- Modals for alerts and confirmations (copied for self-containment) -->
-<div id="confirmationModal" class="modal">
+<div id="confirmationModal" class="modal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Confirm Action</h2>
@@ -400,7 +532,7 @@
     </div>
 </div>
 
-<div id="alertDialog" class="modal">
+<div id="alertDialog" class="modal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="alertTitle">Alert</h2>
@@ -419,14 +551,19 @@
     let currentReportData = null; // Store fetched report data
     let currentUser = null; // Store current user data
 
-    // --- Modal Functions (Copied for self-containment from previous snippets) ---
+    // --- Modal Functions ---
     let currentConfirmationCallback = null; 
 
     function showConfirmation(message) {
         return new Promise(resolve => {
-            document.getElementById('confirmationMessage').textContent = message;
-            document.getElementById('confirmationModal').style.display = 'flex'; 
-            currentConfirmationCallback = resolve;
+            const modal = document.getElementById('confirmationModal');
+            if(modal) {
+                modal.querySelector('#confirmationMessage').textContent = message;
+                modal.style.display = 'flex'; 
+                currentConfirmationCallback = resolve;
+            } else {
+                resolve(confirm(message));
+            }
         });
     }
 
@@ -439,49 +576,45 @@
     }
 
     function showAlert(message, title = "Alert") {
-        document.getElementById('alertTitle').textContent = title;
-        document.getElementById('alertMessage').textContent = message;
-        document.getElementById('alertDialog').style.display = 'flex'; 
+        const modal = document.getElementById('alertDialog');
+        if(modal) {
+            modal.querySelector('#alertTitle').textContent = title;
+            modal.querySelector('#alertMessage').textContent = message;
+            modal.style.display = 'flex'; 
+        } else {
+            alert(`${title}: ${message}`);
+        }
     }
 
     function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+        const modal = document.getElementById(modalId);
+        if(modal) modal.style.display = 'none';
     }
     // --- End Modal Functions ---
 
-    /**
-     * Fetches current user data to determine authentication status and permissions.
-     * Redirects to login if not authenticated.
-     */
     async function loadUserData() {
         try {
             const response = await fetch('/api/users/me', { credentials: 'include' });
             if (!response.ok) {
-                // If not authenticated, redirect to login page
                 window.location.href = '/login.html';
-                return null; // Ensure null is returned to stop further processing
+                return null;
             }
             currentUser = await response.json();
-            createNavigationLinks(currentUser); // Dynamically build navigation based on user role
+            createNavigationLinks(currentUser);
             return currentUser;
         } catch (error) {
-            console.error("Error loading user data for navigation:", error);
-            // On any error during user data fetch, assume not logged in and redirect
+            console.error("Error loading user data:", error);
             window.location.href = '/login.html';
             return null;
         }
     }
 
-    /**
-     * Loads the student's report based on URL parameters.
-     * Displays loading, error, or report content accordingly.
-     */
     async function loadReport() {
         document.getElementById('loadingMessage').classList.remove('hidden');
         document.getElementById('errorMessage').classList.add('hidden');
         document.getElementById('reportContent').classList.add('hidden');
-        document.getElementById('editBtn').classList.add('hidden'); // Hide edit button by default
-        document.getElementById('saveBtn').classList.add('hidden'); // Hide save button by default
+        document.getElementById('editBtn').classList.add('hidden');
+        document.getElementById('saveBtn').classList.add('hidden');
 
         const urlParams = new URLSearchParams(window.location.search);
         const studentId = urlParams.get('studentId');
@@ -489,38 +622,33 @@
         const academicYear = urlParams.get('academicYear');
 
         if (!studentId || !term || !academicYear) {
-            displayError('Missing student ID, term, or academic year parameters in URL. Please go back to the student reports page to select a report.');
+            showAlert('Missing student ID, term, or academic year in URL.', 'Missing Parameters');
+            document.getElementById('loadingMessage').classList.add('hidden');
             return;
         }
 
         try {
-            // Fetch the compiled report data from the backend
-            const response = await fetch(`/api/exam-results/report/compile?studentId=${studentId}&term=${term}&session=${academicYear}`, { credentials: 'include' });
+            const response = await fetch(`/api/exam-results/report-card/${studentId}?term=${term}&academicYear=${academicYear}`, { credentials: 'include' });
             
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({})); // Attempt to parse error message
-                // Check for specific authorization errors
+                const errorData = await response.json().catch(() => ({}));
                 if (response.status === 401 || response.status === 403) {
-                    throw new Error('You are not authorized to view this report. Please log in with appropriate permissions.');
+                    throw new Error('You are not authorized to view this report.');
                 }
-                throw new Error(errorData.error || `Failed to fetch report card data. Server responded with status: ${response.status}`);
+                throw new Error(errorData.error || `Failed to fetch report card data. Status: ${response.status}`);
             }
 
             currentReportData = await response.json();
-            displayReport(currentReportData);
+            displayReport(currentReportData, term, academicYear);
 
-            // Show edit/save buttons only for authorized users (admin or teacher)
             if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) {
                 document.getElementById('editBtn').classList.remove('hidden');
             }
 
         } catch (error) {
-            displayError(`Error loading report: ${error.message}`);
             console.error("Load report error:", error);
-            // Redirect to login if authorization error occurred
-            if (error.message.includes('authorized') || error.message.includes('log in with appropriate permissions')) {
-                 setTimeout(() => { window.location.href = '/login.html'; }, 2000); // Redirect after a short delay
-            }
+            document.getElementById('errorMessage').textContent = `Error loading report: ${error.message}`;
+            document.getElementById('errorMessage').classList.remove('hidden');
         } finally {
             document.getElementById('loadingMessage').classList.add('hidden');
         }
@@ -529,70 +657,121 @@
     /**
      * Populates the report card HTML elements with fetched data.
      * @param {Object} data - The report data object from the backend.
+     * @param {string} term - The academic term from URL params.
+     * @param {string} academicYear - The academic year from URL params.
      */
-    function displayReport(data) {
+    function displayReport(data, term, academicYear) {
+        if (!data || !data.student || !data.reportCardData) {
+            displayError("Incomplete report data received from server.");
+            return;
+        }
         document.getElementById('reportContent').classList.remove('hidden');
 
-        // Student Information Section
-        document.getElementById('studentFullName').textContent = data.student.full_name || 'N/A';
-        document.getElementById('studentAdmissionNo').textContent = data.student.admission_number || 'N/A';
-        // Crucial fix: Ensure classLevel is fetched and displayed. It should come from the backend's compiled report data.
-        document.getElementById('studentClass').textContent = data.classLevel || 'Unknown Class'; 
-        document.getElementById('academicYear').textContent = data.session || 'N/A';
-        document.getElementById('reportTerm').textContent = `${data.term || 'N/A'} Term Report`;
-        document.getElementById('dateGenerated').textContent = new Date().toLocaleDateString(); // Current date
+        document.getElementById('reportTermSession').textContent = `${term || 'N/A'} Term Report (${academicYear || 'N/A'})`;
+        document.getElementById('dateGenerated').textContent = new Date().toLocaleDateString();
 
-        // Student Profile Picture
+        // Student Information Section
+        document.getElementById('studentFullName').textContent = data.student.username || 'N/A';
+        document.getElementById('studentAdmissionNo').textContent = data.student.admission_number || 'N/A';
+        document.getElementById('studentClass').textContent = data.student.class_level_name || 'Unknown Class';
+        
         const profilePicElement = document.getElementById('studentProfilePicture');
-        // Use the profile_picture_url from the fetched student data, with Cloudinary default as fallback
-        const defaultCloudinaryAvatar = 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';
-        profilePicElement.src = data.student.profile_picture_url || defaultCloudinaryAvatar;
-        // Ensure the onerror fallback is also to a valid Cloudinary URL
-        profilePicElement.onerror = function() {
-            this.onerror = null; // Prevent infinite loop
-            this.src = defaultCloudinaryAvatar;
-        };
+        const defaultAvatar = 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';
+        profilePicElement.src = data.student.profile_picture_url || defaultAvatar;
+        profilePicElement.onerror = () => { this.src = defaultAvatar; };
 
         // Subject Scores Table
         const subjectScoresBody = document.getElementById('subjectScoresBody');
         subjectScoresBody.innerHTML = '';
-        if (data.subjects && data.subjects.length > 0) {
-            data.subjects.forEach(subject => {
+        
+        const subjectsMap = new Map();
+        const currentSessionTermKey = `${academicYear || 'N/A'}-${term || 'N/A'}`;
+        const currentTermResults = data.reportCardData.find(group => `${group.session || 'N/A'}-${group.term || 'N/A'}` === currentSessionTermKey);
+
+        if (currentTermResults && currentTermResults.exams) {
+            currentTermResults.exams.forEach(examResult => {
+                const subjectName = examResult.subjectName || 'Uncategorized';
+                if (!subjectsMap.has(subjectName)) {
+                    subjectsMap.set(subjectName, {
+                        subjectName: subjectName,
+                        ca_scaled: 'N/A',
+                        exam_scaled: 'N/A',
+                        finalScore: 'N/A',
+                        grade: 'N/A',
+                        remark: 'N/A'
+                    });
+                }
+                const subjectEntry = subjectsMap.get(subjectName);
+
+                // *** FIX: Make examType check case-insensitive and safe for null/undefined values
+                const examType = (examResult.examType || '').toUpperCase();
+                if (examType.startsWith('CA')) {
+                    subjectEntry.ca_scaled = examResult.score !== null ? parseFloat(examResult.score).toFixed(1) : 'N/A';
+                } else if (examType === 'MAIN_EXAM') {
+                    subjectEntry.exam_scaled = examResult.score !== null ? parseFloat(examResult.score).toFixed(1) : 'N/A';
+                }
+            });
+
+            // Robust final score calculation
+            subjectsMap.forEach(subjectEntry => {
+                const caScore = subjectEntry.ca_scaled !== 'N/A' ? parseFloat(subjectEntry.ca_scaled) : 0;
+                const examScore = subjectEntry.exam_scaled !== 'N/A' ? parseFloat(subjectEntry.exam_scaled) : 0;
+
+                // Only calculate a final score if at least one of the components exists
+                if (subjectEntry.ca_scaled !== 'N/A' || subjectEntry.exam_scaled !== 'N/A') {
+                    // Weighted score: CA is 40%, Exam is 60%
+                    const finalScore = (caScore * 0.4) + (examScore * 0.6);
+                    subjectEntry.finalScore = finalScore.toFixed(1);
+                    const { grade, remark } = getGradeAndRemark(finalScore);
+                    subjectEntry.grade = grade;
+                    subjectEntry.remark = remark;
+                }
+            });
+        }
+
+        if (subjectsMap.size > 0) {
+            Array.from(subjectsMap.values()).forEach(subject => {
                 const row = `
                     <tr>
-                        <td>${subject.subjectName || 'N/A'}</td>
-                        <td>${subject.ca_scaled !== undefined ? subject.ca_scaled : 'N/A'}</td>
-                        <td>${subject.exam_scaled !== undefined ? subject.exam_scaled : 'N/A'}</td>
-                        <td>${subject.finalScore !== undefined ? subject.finalScore : 'N/A'}</td>
-                        <td>${subject.firstTerm !== undefined ? subject.firstTerm : 'N/A'}</td>
-                        <td>${subject.secondTerm !== undefined ? subject.secondTerm : 'N/A'}</td>
-                        <td>${subject.thirdTerm !== undefined ? subject.thirdTerm : 'N/A'}</td>
-                        <td>${subject.cumulativeAvg !== undefined ? subject.cumulativeAvg : 'N/A'}</td>
-                        <td>${subject.grade || 'N/A'}</td>
-                        <td>${subject.remark || 'N/A'}</td>
+                        <td>${subject.subjectName}</td>
+                        <td>${subject.ca_scaled}</td>
+                        <td>${subject.exam_scaled}</td>
+                        <td>${subject.finalScore}</td>
+                        <td>${subject.grade}</td>
+                        <td>${subject.remark}</td>
                     </tr>
                 `;
                 subjectScoresBody.innerHTML += row;
             });
         } else {
-            subjectScoresBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #546e7a;">No subject results found for this student for this term.</td></tr>`;
+            subjectScoresBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No subject results found for this term.</td></tr>`;
         }
         
-        // Overall Summary
-        document.getElementById('grandTotalScore').textContent = data.summary?.totalScoreObtained !== undefined ? data.summary.totalScoreObtained : 'N/A';
-        document.getElementById('overallPercentage').textContent = data.summary?.overallPercentage !== undefined ? `${data.summary.overallPercentage}%` : 'N/A';
+        // Populate summary from the summary object provided by the backend
+        document.getElementById('grandTotalScore').textContent = data.summary?.totalScoreObtained ?? 'N/A';
+        document.getElementById('overallPercentage').textContent = data.summary?.overallPercentage ? `${data.summary.overallPercentage}%` : 'N/A';
         document.getElementById('classPosition').textContent = data.summary?.position || 'N/A';
 
         // Comments Section
-        document.getElementById('teacherComment').value = data.meta?.teacher_comment || '';
-        document.getElementById('principalComment').value = data.meta?.principal_comment || '';
-        document.getElementById('nextTermBegins').textContent = data.meta?.next_term_begins || 'TBA';
+        document.getElementById('teacherComment').value = data.metadata?.teacher_comment || '';
+        document.getElementById('principalComment').value = data.metadata?.principal_comment || '';
+        document.getElementById('nextTermBegins').textContent = data.metadata?.next_term_begins ? new Date(data.metadata.next_term_begins).toLocaleDateString() : 'TBA';
+    }
+    
+    function getGradeAndRemark(score) {
+        if (isNaN(score) || score === null) return { grade: 'N/A', remark: 'N/A' };
+        const p = Math.round(score);
+        if (p >= 90) return { grade: 'A*', remark: 'Distinction' };
+        if (p >= 80) return { grade: 'A', remark: 'Excellent' };
+        if (p >= 75) return { grade: 'B2', remark: 'Very Good' };
+        if (p >= 70) return { grade: 'B3', remark: 'Good' };
+        if (p >= 65) return { grade: 'C4', remark: 'Credit' };
+        if (p >= 60) return { grade: 'C5', remark: 'Pass' };
+        if (p >= 50) return { grade: 'C6', remark: 'Pass' };
+        if (p >= 40) return { grade: 'D7', remark: 'Needs Improvement' };
+        return { grade: 'F', remark: 'Fail' };
     }
 
-    /**
-     * Toggles the edit mode for comments and button visibility.
-     * @param {boolean} isEditing - True to enable edit mode, false to disable.
-     */
     function toggleEdit(isEditing) {
         document.getElementById('teacherComment').disabled = !isEditing;
         document.getElementById('principalComment').disabled = !isEditing;
@@ -600,35 +779,22 @@
         document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
     }
 
-    /**
-     * Saves the edited report comments and meta-data to the backend.
-     */
     async function saveReportData() {
         if (!currentReportData || !currentUser || !(currentUser.is_admin || currentUser.role === 'teacher')) {
             showAlert('You do not have permission to save this report.', 'Permission Denied');
             return;
         }
 
-        const studentId = currentReportData.student.id;
-        const term = currentReportData.term;
-        const session = currentReportData.session;
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('studentId');
+        const term = urlParams.get('term');
+        const session = urlParams.get('academicYear');
         const teacherComment = document.getElementById('teacherComment').value;
         const principalComment = document.getElementById('principalComment').value;
-        const classLevel = currentReportData.classLevel; // Ensure classLevel is included
-
-        // Prepare cumulative data (assuming it's part of the structure expected by backend)
-        const cumulativeData = currentReportData.subjects.map(s => ({
-            subjectName: s.subjectName,
-            finalScore: parseFloat(s.finalScore),
-            firstTerm: s.firstTerm !== '-' ? parseFloat(s.firstTerm) : null,
-            secondTerm: s.secondTerm !== '-' ? parseFloat(s.secondTerm) : null,
-            thirdTerm: s.thirdTerm !== '-' ? parseFloat(s.thirdTerm) : null,
-            cumulativeAvg: parseFloat(s.cumulativeAvg)
-        }));
-
+        
         try {
-            const response = await fetch(`/api/report-card-meta`, {
-                method: 'POST', // Assuming your backend uses POST for UPSERT
+            const response = await fetch(`/api/exam-results/report-card-meta`, {
+                method: 'PUT', // Changed to PUT as it's an update operation
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -636,32 +802,25 @@
                     studentId,
                     term,
                     session,
-                    classLevel, // Pass classLevel to backend
-                    teacherComment,
-                    principalComment,
-                    nextTermBegins: document.getElementById('nextTermBegins').textContent === 'TBA' ? null : document.getElementById('nextTermBegins').textContent,
-                    cumulativeData
+                    teacher_comment: teacherComment,
+                    principal_comment: principalComment,
+                    // next_term_begins could be added here if it's editable
                 }),
                 credentials: 'include'
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || 'Failed to save report comments.');
             }
             showAlert('Report comments saved successfully!', 'Success');
-            toggleEdit(false); // Switch back to view mode
-            await loadReport(); // Reload to ensure UI reflects any backend updates
+            toggleEdit(false);
         } catch (error) {
             showAlert('Error saving report: ' + error.message, 'Save Error');
             console.error('Save report error:', error);
         }
     }
 
-    /**
-     * Displays an error message on the page.
-     * @param {string} message - The error message to display.
-     */
     function displayError(message) {
         document.getElementById('loadingMessage').classList.add('hidden');
         const errorDiv = document.getElementById('errorMessage');
@@ -669,19 +828,15 @@
         errorDiv.classList.remove('hidden');
     }
 
-    // --- Navigation Functions (Assumed to be in a shared file like xxx.js, but duplicated for self-containment) ---
     function createNavigationLinks(user) {
         const navLinksContainer = document.getElementById('navLinks');
-        navLinksContainer.innerHTML = ''; // Clear all existing links
+        navLinksContainer.innerHTML = '';
 
         const links = [
             { href: "/dashboard.html", text: "Dashboard" },
             { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
             { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
-            { href: "/registration.html", text: "Register User", roles: ['admin'] },
-            { href: "/admin-reports.html", text: "Student Reports", roles: ['admin'] },
-            { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
-            { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
+            { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
         ];
 
         links.forEach(linkInfo => {
@@ -696,66 +851,52 @@
                 link.href = linkInfo.href;
                 link.textContent = linkInfo.text;
                 link.classList.add('nav-link');
-                
-                // Add 'active' class if the current page matches the link's href
                 if (window.location.pathname === linkInfo.href) {
                     link.classList.add('active');
                 }
-
                 listItem.appendChild(link);
                 navLinksContainer.appendChild(listItem);
             }
         });
 
-        // Always add logout link at the end
         const logoutLinkItem = document.createElement('li');
-        const logoutLink = document.createElement('a');
-        logoutLink.href = "#";
-        logoutLink.id = "logoutLink";
-        logoutLink.textContent = "Logout";
-        logoutLink.classList.add('nav-link');
-        logoutLinkItem.appendChild(logoutLink);
+        const logoutBtn = document.createElement('button');
+        logoutBtn.textContent = "Logout";
+        logoutBtn.className = 'btn logout-btn';
+        logoutBtn.style.background = '#f44336';
+        logoutBtn.style.color = 'white';
+        logoutBtn.style.border = 'none';
+        logoutBtn.style.padding = '8px 15px';
+        logoutBtn.style.borderRadius = '5px';
+        logoutBtn.style.cursor = 'pointer';
+        logoutLinkItem.appendChild(logoutBtn);
         navLinksContainer.appendChild(logoutLinkItem);
 
-        logoutLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            handleLogout();
-        });
+        logoutBtn.addEventListener('click', handleLogout);
     }
 
     async function handleLogout() {
         try {
-            const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
-            }
+            await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
         } catch (error) {
-            console.error('Network error during logout:', error);
+            console.error('Logout error:', error);
         } finally {
             localStorage.clear();
             sessionStorage.clear();
             window.location.href = '/login.html';
         }
     }
-    // --- End Navigation Functions ---
 
-    // Initial page load logic
     window.addEventListener('DOMContentLoaded', async () => {
-        // Load user data first for permission checks and navbar rendering
         await loadUserData();
-        // Only proceed to load the report if currentUser is successfully fetched (i.e., user is authenticated)
         if (currentUser) {
             loadReport();
         }
     });
 
-    // Event Listeners for report actions
     document.getElementById('editBtn').addEventListener('click', () => toggleEdit(true));
     document.getElementById('saveBtn').addEventListener('click', saveReportData);
 
 </script>
-<!-- Assuming xxx.js contains additional global utilities or is no longer needed if functions are self-contained -->
-<!-- <script src="/js/xxx.js"></script> -->
 </body>
 </html>

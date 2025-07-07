@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { startExamSession, submitExam } = require("../services/examServices");
+const { startExamSession, submitExam, saveExamProgress } = require("../services/examServices"); // Ensure saveExamProgress is imported
 const auth = require("../middlewares/auth");
 
 
@@ -14,6 +14,7 @@ router.post("/:examId/start", auth, async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error in POST /:examId/start route:", error);
+    // Ensure consistent JSON error response
     res.status(500).json({ error: error.message || "Failed to start exam session." });
   }
 });
@@ -23,9 +24,19 @@ router.post("/:examId/progress", auth, async (req, res) => {
     try {
         const { examId } = req.params;
         const { answers, timeRemaining } = req.body;
+        // Validate incoming data
+        if (isNaN(parseInt(examId))) {
+            return res.status(400).json({ error: "Invalid Exam ID format." });
+        }
+        if (answers === undefined || timeRemaining === undefined) {
+            return res.status(400).json({ error: "Missing answers or timeRemaining for progress save." });
+        }
+
         const result = await saveExamProgress(req.user.id, parseInt(examId), answers, timeRemaining);
         res.json(result);
     } catch (error) {
+        console.error("Error in POST /:examId/progress route:", error);
+        // Ensure consistent JSON error response
         res.status(500).json({ error: error.message || "Failed to save progress." });
     }
 });
@@ -56,8 +67,5 @@ router.post("/:examId/submit", auth, async (req, res) => {
   }
 });
 
-
-// Note: The /save and /session GET routes from previous versions can remain if needed for auto-saving progress.
-// For simplicity in this step, they are omitted but can be added back from the previous file version if desired.
 
 module.exports = router;

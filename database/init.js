@@ -73,11 +73,28 @@ const initializeTables = async () => {
         `);
         console.log("'exams' table checked/created.");
 
+        // NEW: Create 'exam_sections' table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS exam_sections (
+                section_id SERIAL PRIMARY KEY,
+                exam_id INT NOT NULL REFERENCES exams(exam_id) ON DELETE CASCADE,
+                section_title VARCHAR(255) NOT NULL, -- Renamed from section_name to section_title
+                section_instructions TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("'exam_sections' table checked/created.");
+
+
         // Create 'questions' table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS questions (
                 question_id SERIAL PRIMARY KEY,
-                exam_id INT NOT NULL REFERENCES exams(exam_id) ON DELETE CASCADE,
+                -- Changed exam_id to be nullable here if sections are the primary link
+                -- but better to keep it NOT NULL and ensure it's always provided
+                exam_id INT NOT NULL REFERENCES exams(exam_id) ON DELETE CASCADE, 
+                section_id INT NOT NULL REFERENCES exam_sections(section_id) ON DELETE CASCADE,
                 question_text TEXT NOT NULL,
                 question_type VARCHAR(50) NOT NULL DEFAULT 'multiple_choice', -- e.g., 'multiple_choice', 'true_false', 'short_answer'
                 options JSONB, -- For multiple choice: {a: "...", b: "...", c: "..."}

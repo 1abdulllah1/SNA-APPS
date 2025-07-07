@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Class Levels | CBT System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Main container styling for the management pages */
+        main {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: var(--white-background);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Grid layout for form and list sections */
+        .management-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr; /* Form takes 1 part, list takes 2 parts */
+            gap: 2rem; /* Space between grid items */
+            margin-top: 1.5rem;
+        }
+
+        /* Styling for the form and list containers */
+        .form-container, .list-container {
+            background: var(--light-bg-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* List specific styling */
+        .class-level-list {
+            list-style: none; /* Remove default list bullets */
+            padding: 0;
+            margin: 0;
+        }
+
+        .class-level-list li {
+            display: flex;
+            justify-content: space-between; /* Space out content and buttons */
+            align-items: center; /* Vertically align items */
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color-light); /* Separator for list items */
+            font-size: 1.1em;
+            color: var(--text-color-dark);
+        }
+
+        .class-level-list li:last-child {
+            border-bottom: none; /* No border for the last item */
+        }
+
+        /* Styling for hidden elements (e.g., error messages) */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for error messages */
+        .error-message {
+            color: var(--danger-red);
+            background-color: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .management-container {
+                grid-template-columns: 1fr; /* Stack columns vertically on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/dashboard.html" class="logo">SNA CBT System</a>
+            <ul class="nav-links" id="navLinksContainer">
+                <!-- Navigation links will be dynamically inserted here by JS -->
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Manage Class Levels</h1>
+        <div id="managementError" class="error-message hidden"></div>
+
+        <div class="management-container">
+            <div class="form-container">
+                <h2>Add/Edit Class Level</h2>
+                <form id="classLevelForm">
+                    <div class="form-group">
+                        <label for="levelName">Level Name:</label>
+                        <input type="text" id="levelName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="levelCode">Level Code:</label>
+                        <input type="text" id="levelCode" required>
+                    </div>
+                    <button type="submit" class="btn">Add Class Level</button>
+                </form>
+            </div>
+
+            <div class="list-container">
+                <h2>Existing Class Levels</h2>
+                <ul id="classLevelList" class="class-level-list">
+                    <li>Loading class levels...</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let currentUser; // Global variable to store current user info
+
+        /**
+         * Displays a message to the user, either success or error.
+         * @param {string} message - The message to display.
+         * @param {string} [type='info'] - The type of message ('info', 'success', 'error').
+         */
+        function showMessage(message, type = 'info') {
+            const errorDiv = document.getElementById('managementError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            if (type === 'error') {
+                errorDiv.style.backgroundColor = 'var(--danger-bg)';
+                errorDiv.style.color = 'var(--danger-red)';
+            } else if (type === 'success') {
+                errorDiv.style.backgroundColor = 'var(--success-bg)';
+                errorDiv.style.color = 'var(--success-green)';
+            } else {
+                errorDiv.style.backgroundColor = 'var(--info-bg)';
+                errorDiv.style.color = 'var(--info-color)';
+            }
+            // Hide the message after a few seconds
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Fetches and displays all class levels from the backend.
+         */
+        async function loadClassLevels() {
+            const classLevelList = document.getElementById('classLevelList');
+            classLevelList.innerHTML = '<li>Loading class levels...</li>'; // Show loading state
+            try {
+                const response = await fetch('/api/class-levels', { credentials: 'include' });
+                if (!response.ok) {
+                    if (response.status === 401) { // Unauthorized
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                    if (response.status === 403) { // Forbidden
+                        classLevelList.innerHTML = '<li>Access denied. You do not have permission to view class levels.</li>';
+                        return;
+                    }
+                    throw new Error('Failed to fetch class levels.');
+                }
+                const classLevels = await response.json();
+                classLevelList.innerHTML = ''; // Clear loading state
+
+                if (classLevels.length === 0) {
+                    classLevelList.innerHTML = '<li>No class levels found.</li>';
+                } else {
+                    classLevels.forEach(level => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <span>${level.level_name} (${level.level_code})</span>
+                            <div>
+                                <button class="btn btn-secondary" onclick="editClassLevel('${level.level_id}', '${level.level_name}', '${level.level_code}')">Edit</button>
+                                <button class="btn btn-danger" onclick="deleteClassLevel('${level.level_id}')">Delete</button>
+                            </div>
+                        `;
+                        classLevelList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching class levels:", error);
+                showMessage("Error fetching class levels: " + error.message, 'error');
+                classLevelList.innerHTML = '<li>Failed to load class levels.</li>';
+            }
+        }
+
+        /**
+         * Populates the form fields for editing a class level.
+         * @param {string} levelId - The ID of the class level to edit.
+         * @param {string} levelName - The name of the class level.
+         * @param {string} levelCode - The code of the class level.
+         */
+        function editClassLevel(levelId, levelName, levelCode) {
+            document.getElementById('levelName').value = levelName;
+            document.getElementById('levelCode').value = levelCode;
+            document.getElementById('classLevelForm').dataset.editingId = levelId; // Store ID for update
+            document.getElementById('classLevelForm').querySelector('button[type="submit"]').textContent = 'Update Class Level';
+            document.getElementById('managementError').classList.add('hidden'); // Clear any previous errors
+        }
+
+        /**
+         * Deletes a class level after confirmation.
+         * @param {string} levelId - The ID of the class level to delete.
+         */
+        async function deleteClassLevel(levelId) {
+            // Using a simple confirm, ideally replace with a custom modal for better UX
+            if (!confirm('Are you sure you want to delete this class level? This can only be done if no students, subjects, or exams are assigned to it.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/class-levels/${levelId}`, { method: 'DELETE', credentials: 'include' });
+                const result = await response.json(); // Parse response for error message
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to delete class level.');
+                }
+                
+                showMessage("Class level deleted successfully!", 'success');
+                loadClassLevels(); // Refresh the list after deletion
+            } catch (error) {
+                console.error("Error deleting class level:", error);
+                showMessage("Error deleting class level: " + error.message, 'error');
+            }
+        }
+
+        /**
+         * Handles form submission for adding or updating a class level.
+         */
+        document.getElementById('classLevelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const levelName = document.getElementById('levelName').value.trim();
+            const levelCode = document.getElementById('levelCode').value.trim();
+            const editingId = document.getElementById('classLevelForm').dataset.editingId; // Get stored ID for update
+
+            // Basic client-side validation
+            if (!levelName || !levelCode) {
+                showMessage("Both level name and code are required.", 'error');
+                return;
+            }
+
+            const method = editingId ? 'PUT' : 'POST';
+            const url = editingId ? `/api/class-levels/${editingId}` : '/api/class-levels';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ level_name: levelName, level_code: levelCode }),
+                    credentials: 'include' // Send cookies for authentication
+                });
+                const result = await response.json(); // Parse response for messages/errors
+
+                if (!response.ok) {
+                    if (response.status === 401) { // Unauthorized, session expired
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                    throw new Error(result.error || `Failed to ${editingId ? 'update' : 'add'} class level.`);
+                }
+                
+                showMessage(`Class level ${editingId ? 'updated' : 'added'} successfully!`, 'success');
+                e.target.reset(); // Clear the form
+                document.getElementById('classLevelForm').dataset.editingId = ''; // Clear editing state
+                document.getElementById('classLevelForm').querySelector('button[type="submit"]').textContent = 'Add Class Level'; // Reset button text
+                loadClassLevels(); // Refresh the list
+            } catch (error) {
+                console.error("Form submission error:", error);
+                showMessage("Error: " + error.message, 'error');
+            }
+        });
+
+        /**
+         * Initializes the page on DOMContentLoaded.
+         * Checks user authentication and admin status, then loads data.
+         */
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Fetch current user data for navigation and access control
+                const userResponse = await fetch('/api/users/me', { credentials: 'include' });
+                if (!userResponse.ok) {
+                    window.location.href = '/login.html'; // Redirect if not authenticated
+                    return;
+                }
+                currentUser = await userResponse.json();
+
+                // Check if the user is an admin; if not, deny access
+                if (!currentUser.is_admin) {
+                    document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have administrative privileges to manage class levels.</p>';
+                    return;
+                }
+                
+                // Build navigation links (assuming buildNavigation is defined in /js/xxx.js or similar)
+                if (typeof buildNavigation === 'function') {
+                    buildNavigation(currentUser);
+                }
+
+                // Load class levels for display
+                await loadClassLevels();
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showMessage("Failed to initialize page: " + error.message, 'error');
+            }
+        });
+    </script>
+    <!-- Assuming /js/xxx.js contains common utility functions like buildNavigation -->
+    <script src="/js/xxx.js"></script>
+</body>
+</html>

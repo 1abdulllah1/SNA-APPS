@@ -250,6 +250,11 @@
                 manageSubjectsLink.innerHTML = '<a href="/manage-subjects.html" class="nav-link">Manage Subjects</a>'; // Corrected path
                 navLinksContainer.appendChild(manageSubjectsLink);
 
+                const manageClassLevelsLink = document.createElement('li');
+                manageClassLevelsLink.innerHTML = '<a href="/manage-class-levels.html" class="nav-link">Manage Class Levels</a>'; // Added this line
+                navLinksContainer.appendChild(manageClassLevelsLink);
+
+
                 const manageClassesLink = document.createElement('li');
                 manageClassesLink.innerHTML = '<a href="/manage-classes.html" class="nav-link">Manage Classes</a>'; // Corrected path
                 navLinksContainer.appendChild(manageClassesLink);
@@ -406,7 +411,7 @@
             <td>${user.email}</td>
             <td>${user.role}</td>
             <td>${user.admission_number || 'N/A'}</td>
-            <td>${user.class_name || 'N/A'}</td>
+            <td>${user.class_level_name || 'N/A'}</td>
             <td class="user-actions">
               <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})">Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">Delete</button>
@@ -416,9 +421,8 @@
         userTableBody.innerHTML += row;
     });
 }
-
     // --- Action and Navigation Functions ---
-    function editUser(userId) { window.location.href = `edit-user.html?userId=${userId}`; }
+    function editUser(userId) { window.location.href = `/edit-user.html?userId=${userId}`; } // Corrected path
     
     // Implemented deleteUser function
     async function deleteUser(userId) {
@@ -455,6 +459,5 @@
         setTimeout(initializePage, 100); 
     });
 </script>
- <script src="/js/xxx.js"></script>
 </body>
 </html>

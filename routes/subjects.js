@@ -14,7 +14,8 @@ const isAdmin = (req, res, next) => {
 // GET /api/subjects - Fetch all subjects
 router.get('/', auth, async (req, res) => {
   try {
-    const subjects = await pool.query("SELECT * FROM subjects ORDER BY name ASC");
+    // Include class_level_id in the select statement
+    const subjects = await pool.query("SELECT subject_id, name, subject_code, class_level_id FROM subjects ORDER BY name ASC");
     res.json(subjects.rows);
   } catch (error) {
     console.error("Error fetching subjects:", error);
@@ -24,36 +25,36 @@ router.get('/', auth, async (req, res) => {
 
 // POST /api/subjects - Create a new subject
 router.post('/', auth, isAdmin, async (req, res) => {
-  const { name, subject_code } = req.body;
-  if (!name || !subject_code) {
-    return res.status(400).json({ error: "Subject name and code are required." });
+  const { name, subject_code, class_level_id } = req.body; // Added class_level_id
+  if (!name || !subject_code || !class_level_id) { // class_level_id is now required
+    return res.status(400).json({ error: "Subject name, code, and class level are required." });
   }
   try {
     const newSubject = await pool.query(
-      "INSERT INTO subjects (name, subject_code) VALUES ($1, $2) RETURNING *",
-      [name, subject_code.toUpperCase()]
+      "INSERT INTO subjects (name, subject_code, class_level_id) VALUES ($1, $2, $3) RETURNING *", // Insert class_level_id
+      [name, subject_code.toUpperCase(), class_level_id]
     );
     res.status(201).json(newSubject.rows[0]);
   } catch (error) {
-    if (error.code === '23505') { // Unique constraint violation
-      return res.status(409).json({ error: `A subject with this name or code already exists.` });
+    if (error.code === '23505') {
+        return res.status(409).json({ error: `A subject with this name or code already exists.` });
     }
     console.error("Error creating subject:", error);
     res.status(500).json({ error: "Failed to create subject." });
   }
 });
 
-// PUT /api/subjects/:id - Update an existing subject
+// PUT /api/subjects/:id - Update a subject
 router.put('/:id', auth, isAdmin, async (req, res) => {
   const { id } = req.params;
-  const { name, subject_code } = req.body;
-  if (!name || !subject_code) {
-    return res.status(400).json({ error: "Subject name and code are required." });
+  const { name, subject_code, class_level_id } = req.body; // Added class_level_id
+  if (!name || !subject_code || !class_level_id) { // class_level_id is now required
+    return res.status(400).json({ error: "Subject name, code, and class level are required." });
   }
   try {
     const updatedSubject = await pool.query(
-      "UPDATE subjects SET name = $1, subject_code = $2 WHERE subject_id = $3 RETURNING *",
-      [name, subject_code.toUpperCase(), id]
+      "UPDATE subjects SET name = $1, subject_code = $2, class_level_id = $3 WHERE subject_id = $4 RETURNING *", // Update class_level_id
+      [name, subject_code.toUpperCase(), class_level_id, id]
     );
     if (updatedSubject.rows.length === 0) {
       return res.status(404).json({ error: "Subject not found." });
@@ -88,6 +89,5 @@ router.delete('/:id', auth, isAdmin, async (req, res) => {
     res.status(500).json({ error: "Failed to delete subject." });
   }
 });
-
 
 module.exports = router;
