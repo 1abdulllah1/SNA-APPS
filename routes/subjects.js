@@ -37,7 +37,8 @@ router.post('/', auth, isAdmin, async (req, res) => {
     res.status(201).json(newSubject.rows[0]);
   } catch (error) {
     if (error.code === '23505') {
-        return res.status(409).json({ error: `A subject with this name or code already exists.` });
+        // Updated error message to reflect the new unique constraint (subject_code, class_level_id)
+        return res.status(409).json({ error: `A subject with code '${subject_code}' already exists for this class level.` });
     }
     console.error("Error creating subject:", error);
     res.status(500).json({ error: "Failed to create subject." });
@@ -62,7 +63,8 @@ router.put('/:id', auth, isAdmin, async (req, res) => {
     res.json(updatedSubject.rows[0]);
   } catch (error) {
     if (error.code === '23505') {
-        return res.status(409).json({ error: `A subject with this name or code already exists.` });
+        // Updated error message to reflect the new unique constraint (subject_code, class_level_id)
+        return res.status(409).json({ error: `A subject with code '${subject_code}' already exists for this class level.` });
     }
     console.error(`Error updating subject ${id}:`, error);
     res.status(500).json({ error: "Failed to update subject." });
