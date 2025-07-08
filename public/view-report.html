@@ -733,21 +733,19 @@
         const subjectScoresBody = document.getElementById('subjectScoresBody');
         subjectScoresBody.innerHTML = '';
         
-        // FIX: Directly use data.reportCardData as it's already the specific term's data
         const currentTermResults = data.reportCardData;
-        const subjectsMap = new Map(); // Initialize subjectsMap here
+        const subjectsMap = new Map();
 
         if (currentTermResults && currentTermResults.subjects) {
             currentTermResults.subjects.forEach(subjectData => {
-                // Initialize with default N/A values, but use provided data if available
                 const subjectEntry = {
                     subjectName: subjectData.subjectName || 'Uncategorized',
+                    // Ensure these are parsed as numbers and then formatted
                     ca_scaled: subjectData.ca_scaled !== null ? parseFloat(subjectData.ca_scaled).toFixed(1) : 'N/A',
                     exam_scaled: subjectData.exam_scaled !== null ? parseFloat(subjectData.exam_scaled).toFixed(1) : 'N/A',
                     finalScore: subjectData.finalScore !== null ? parseFloat(subjectData.finalScore).toFixed(1) : 'N/A',
                     grade: subjectData.grade || 'N/A',
                     remark: subjectData.remark || 'N/A',
-                    // These will be populated from cumulative_data below
                     firstTerm: 'N/A',
                     secondTerm: 'N/A',
                     thirdTerm: 'N/A',
@@ -794,8 +792,9 @@
         }
         
         // Populate summary from the summary object provided by the backend
-        document.getElementById('grandTotalScore').textContent = data.summary?.totalScoreObtained ?? 'N/A';
-        document.getElementById('overallPercentage').textContent = data.summary?.overallPercentage ? `${data.summary.overallPercentage}%` : 'N/A';
+        // Ensure these are parsed as numbers and then formatted
+        document.getElementById('grandTotalScore').textContent = data.summary?.totalScoreObtained !== null && data.summary?.totalScoreObtained !== undefined ? parseFloat(data.summary.totalScoreObtained).toFixed(1) : 'N/A';
+        document.getElementById('overallPercentage').textContent = data.summary?.overallPercentage !== null && data.summary?.overallPercentage !== undefined ? `${parseFloat(data.summary.overallPercentage).toFixed(1)}%` : 'N/A';
         document.getElementById('classPosition').textContent = data.summary?.position || 'N/A';
 
         // Comments Section
