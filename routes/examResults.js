@@ -76,7 +76,16 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
 
         // --- Data Fetching for the entire class for ranking ---
         const studentClassLevelId = student.class_level_id;
-        let classReportData = {}; // Initialize as an object to hold the current student's processed data
+        let classReportData = { // Initialize with default values
+            student_id: student.id,
+            total_final_score: 'N/A',
+            overall_grade: 'N/A',
+            overall_remark: 'N/A',
+            subjects: [],
+            position: 'N/A',
+            class_size: 0
+        };
+
         if (studentClassLevelId) {
             const classmatesResult = await client.query('SELECT id FROM users WHERE class_level_id = $1 AND role = \'student\'', [studentClassLevelId]);
             const classmateIds = classmatesResult.rows.map(u => u.id);
@@ -145,7 +154,10 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
                         exam_score: scores.EXAM ? scores.EXAM.score.toFixed(2) : 'N/A', // Keep raw exam score
                         total_score: finalScore.toFixed(2), // Total is CA (40) + Exam (60)
                         grade,
-                        remark
+                        remark,
+                        // Initialize cumulative data for display
+                        cumulative_data: { 'FIRST': 'N/A', 'SECOND': 'N/A', 'THIRD': 'N/A' },
+                        cumulative_avg: 'N/A'
                     });
                 });
 
@@ -177,9 +189,12 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
             });
 
             // Find the current student's data and rank
-            classReportData = allStudentsProcessedData.find(d => d.student_id === studentId);
-            if (classReportData) {
-                classReportData.class_size = classmateIds.length;
+            const foundStudentReportData = allStudentsProcessedData.find(d => d.student_id === studentId);
+            if (foundStudentReportData) {
+                classReportData = {
+                    ...foundStudentReportData,
+                    class_size: classmateIds.length
+                };
             }
         }
 
