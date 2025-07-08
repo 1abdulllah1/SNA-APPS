@@ -43,6 +43,13 @@ function getOrdinalSuffix(i) {
     return "th";
 }
 
+// Helper to define term order for cumulative calculations
+const termOrder = {
+    'FIRST': 1,
+    'SECOND': 2,
+    'THIRD': 3
+};
+
 
 // --- REBUILT & ENHANCED: The Report Card Engine ---
 // This version correctly aggregates all non-exam assessments into a single CA score
@@ -90,13 +97,14 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
             const classmatesResult = await client.query('SELECT id FROM users WHERE class_level_id = $1 AND role = \'student\'', [studentClassLevelId]);
             const classmateIds = classmatesResult.rows.map(u => u.id);
 
+            // Fetch all exam results for all classmates for the current academic year
             const allClassResultsQuery = await client.query(
-                `SELECT er.student_id, er.score, e.exam_type, s.name as subject_name, e.max_score
+                `SELECT er.student_id, er.score, e.exam_type, s.name as subject_name, e.max_score, e.term
                  FROM exam_results er
                  JOIN exams e ON er.exam_id = e.exam_id
                  LEFT JOIN subjects s ON e.subject_id = s.subject_id
-                 WHERE er.student_id = ANY($1::int[]) AND e.term = $2 AND e.session = $3`,
-                [classmateIds, term, academicYear]
+                 WHERE er.student_id = ANY($1::int[]) AND e.session = $2`,
+                [classmateIds, academicYear]
             );
 
             // --- Process data for ALL students in the class ---
@@ -107,61 +115,90 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
                 studentResults.forEach(res => {
                     if (!res.subject_name) return;
                     if (!subjectsMap.has(res.subject_name)) {
-                        subjectsMap.set(res.subject_name, { CAs: [], EXAM: null });
+                        subjectsMap.set(res.subject_name, { CAs: {}, EXAM: {}, terms: {} }); // Store CA and EXAM by term
                     }
                     const subjectData = subjectsMap.get(res.subject_name);
                     const score = parseFloat(res.score);
-                    // Ensure max_score is a number, default to 100 if null/undefined/invalid
                     const maxScore = parseFloat(res.max_score) || 100;
+                    const resultTerm = res.term.toUpperCase();
+
                     if (isNaN(score)) return;
 
                     const examType = (res.exam_type || '').toUpperCase();
+
+                    if (!subjectData.terms[resultTerm]) {
+                        subjectData.terms[resultTerm] = { CAs: [], EXAM: null };
+                    }
+
                     if (examType === 'MAIN_EXAM') {
-                        subjectData.EXAM = { score, maxScore };
-                    } else { // Everything else is a CA (CA1, CA2, CA3, CA4, MID_TERM, OTHER)
-                        subjectData.CAs.push({ score, maxScore });
+                        subjectData.terms[resultTerm].EXAM = { score, maxScore };
+                    } else {
+                        subjectData.terms[resultTerm].CAs.push({ score, maxScore });
                     }
                 });
 
-                let totalFinalScore = 0; // Sum of final scores for all subjects for this student
-                let subjectsWithScoresCount = 0; // Count of subjects with at least one score
+                let totalFinalScoreOverall = 0; // Sum of final scores for all subjects for this student across terms
+                let subjectsWithScoresCountOverall = 0;
                 const processedSubjects = [];
 
-                subjectsMap.forEach((scores, subjectName) => {
-                    // Calculate aggregated CA score (scaled to 40)
-                    let totalCAScore = 0;
-                    let totalCAMaxScore = 0;
-                    scores.CAs.forEach(ca => {
-                        totalCAScore += ca.score;
-                        totalCAMaxScore += ca.maxScore;
-                    });
-                    const aggregatedCAScore = totalCAMaxScore > 0 ? (totalCAScore / totalCAMaxScore) * 40 : 0;
+                // Iterate over all subjects found for this student across all terms in the academic year
+                const allSubjectsForStudent = new Set(studentResults.map(res => res.subject_name).filter(Boolean));
 
-                    // Get exam score (scaled to 60)
-                    const examScore = scores.EXAM ? (scores.EXAM.score / scores.EXAM.maxScore) * 60 : 0;
+                allSubjectsForStudent.forEach(subjectName => {
+                    const subjectScoresByTerm = subjectsMap.get(subjectName)?.terms || {};
+                    const cumulativeData = {};
+                    let currentTermFinalScore = 0;
+                    let cumulativeSum = 0;
+                    let cumulativeCount = 0;
 
-                    const finalScore = aggregatedCAScore + examScore;
-                    const { grade, remark } = getGradeAndRemark(finalScore);
+                    // Calculate scores for each term and cumulative average
+                    for (const t of ['FIRST', 'SECOND', 'THIRD']) {
+                        const termData = subjectScoresByTerm[t] || { CAs: [], EXAM: null };
 
-                    if (!isNaN(finalScore)) {
-                        totalFinalScore += finalScore;
-                        subjectsWithScoresCount++;
+                        let totalCAScore = 0;
+                        let totalCAMaxScore = 0;
+                        termData.CAs.forEach(ca => {
+                            totalCAScore += ca.score;
+                            totalCAMaxScore += ca.maxScore;
+                        });
+                        const aggregatedCAScore = totalCAMaxScore > 0 ? (totalCAScore / totalCAMaxScore) * 40 : 0;
+
+                        const examScore = termData.EXAM ? (termData.EXAM.score / termData.EXAM.maxScore) * 60 : 0;
+                        const finalScore = aggregatedCAScore + examScore;
+                        
+                        cumulativeData[t] = !isNaN(finalScore) ? finalScore : 'N/A';
+
+                        if (termOrder[t] <= termOrder[term.toUpperCase()] && !isNaN(finalScore)) {
+                            cumulativeSum += finalScore;
+                            cumulativeCount++;
+                        }
+
+                        if (t === term.toUpperCase()) {
+                            currentTermFinalScore = finalScore;
+                        }
+                    }
+
+                    const cumulativeAvg = cumulativeCount > 0 ? (cumulativeSum / cumulativeCount) : 'N/A';
+                    const { grade, remark } = getGradeAndRemark(currentTermFinalScore);
+
+                    if (!isNaN(currentTermFinalScore)) {
+                        totalFinalScoreOverall += currentTermFinalScore;
+                        subjectsWithScoresCountOverall++;
                     }
 
                     processedSubjects.push({
                         subject_name: subjectName,
-                        ca_score: aggregatedCAScore.toFixed(2), // CA is now scaled to 40
-                        exam_score: scores.EXAM ? scores.EXAM.score.toFixed(2) : 'N/A', // Keep raw exam score
-                        total_score: finalScore.toFixed(2), // Total is CA (40) + Exam (60)
+                        ca_score: !isNaN(subjectScoresByTerm[term.toUpperCase()]?.CAs[0]?.score) ? (subjectScoresByTerm[term.toUpperCase()].CAs.reduce((sum, ca) => sum + ca.score, 0) / subjectScoresByTerm[term.toUpperCase()].CAs.length).toFixed(2) : 'N/A', // Display average CA for current term
+                        exam_score: subjectScoresByTerm[term.toUpperCase()]?.EXAM?.score !== undefined ? subjectScoresByTerm[term.toUpperCase()].EXAM.score.toFixed(2) : 'N/A', // Raw exam score for current term
+                        total_score: !isNaN(currentTermFinalScore) ? currentTermFinalScore.toFixed(2) : 'N/A', // Final score for current term
                         grade,
                         remark,
-                        // Initialize cumulative data for display
-                        cumulative_data: { 'FIRST': 'N/A', 'SECOND': 'N/A', 'THIRD': 'N/A' },
-                        cumulative_avg: 'N/A'
+                        cumulative_data: cumulativeData, // All terms' final scores
+                        cumulative_avg: !isNaN(cumulativeAvg) ? cumulativeAvg.toFixed(2) : 'N/A'
                     });
                 });
 
-                const overallAverage = subjectsWithScoresCount > 0 ? (totalFinalScore / subjectsWithScoresCount).toFixed(2) : 'N/A';
+                const overallAverage = subjectsWithScoresCountOverall > 0 ? (totalFinalScoreOverall / subjectsWithScoresCountOverall).toFixed(2) : 'N/A';
                 const { grade: overallGrade, remark: overallRemark } = getGradeAndRemark(parseFloat(overallAverage));
 
                 return {

@@ -822,10 +822,10 @@
                             <td>${subject.ca_score !== undefined ? subject.ca_score : 'N/A'}</td>
                             <td>${subject.exam_score !== undefined ? subject.exam_score : 'N/A'}</td>
                             <td>${subject.total_score !== undefined ? subject.total_score : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['FIRST']) !== undefined ? subject.cumulative_data['FIRST'].toFixed(2) : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['SECOND']) !== undefined ? subject.cumulative_data['SECOND'].toFixed(2) : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['THIRD']) !== undefined ? subject.cumulative_data['THIRD'].toFixed(2) : 'N/A'}</td>
-                            <td>${subject.cumulative_avg !== undefined ? subject.cumulative_avg.toFixed(2) : 'N/A'}</td>
+                            <td>${(subject.cumulative_data && subject.cumulative_data['FIRST'] !== undefined && subject.cumulative_data['FIRST'] !== null) ? subject.cumulative_data['FIRST'].toFixed(2) : 'N/A'}</td>
+                            <td>${(subject.cumulative_data && subject.cumulative_data['SECOND'] !== undefined && subject.cumulative_data['SECOND'] !== null) ? subject.cumulative_data['SECOND'].toFixed(2) : 'N/A'}</td>
+                            <td>${(subject.cumulative_data && subject.cumulative_data['THIRD'] !== undefined && subject.cumulative_data['THIRD'] !== null) ? subject.cumulative_data['THIRD'].toFixed(2) : 'N/A'}</td>
+                            <td>${subject.cumulative_avg !== undefined ? subject.cumulative_avg : 'N/A'}</td>
                             <td>${subject.grade || 'N/A'}</td>
                             <td>${subject.remark || 'N/A'}</td>
                         </tr>
