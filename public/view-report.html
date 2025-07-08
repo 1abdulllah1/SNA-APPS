@@ -418,6 +418,33 @@
                 width: 100%;
             }
         }
+
+        /* Print-specific styles */
+        @media print {
+            header, .actions-bar, footer, .modal {
+                display: none !important; /* Hide header, action buttons, and footer when printing */
+            }
+            main {
+                margin: 0;
+                padding: 0;
+                max-width: 100% !important; /* Ensure report takes full width on print */
+            }
+            .report-card-container {
+                box-shadow: none !important; /* Remove shadow for cleaner print */
+                border: none !important; /* Remove border for cleaner print */
+                padding: 0 !important; /* Remove padding for full content on print */
+            }
+            body {
+                background-color: #fff !important; /* White background for print */
+            }
+            /* Ensure text colors are dark for readability on print */
+            .school-name, .report-title, .section-title, .info-item strong, .scores-table th {
+                color: #000 !important;
+            }
+            .scores-table td, .school-address, .comments-section textarea {
+                color: #333 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -700,26 +727,27 @@
         const profilePicElement = document.getElementById('studentProfilePicture');
         const defaultAvatar = 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';
         profilePicElement.src = data.student.profile_picture_url || defaultAvatar;
-        profilePicElement.onerror = () => { profilePicElement.src = defaultAvatar; }; // Corrected this line
+        profilePicElement.onerror = () => { profilePicElement.src = defaultAvatar; };
 
         // Subject Scores Table
         const subjectScoresBody = document.getElementById('subjectScoresBody');
         subjectScoresBody.innerHTML = '';
         
-        const subjectsMap = new Map();
-        const currentSessionTermKey = `${academicYear || 'N/A'}-${term || 'N/A'}`;
-        const currentTermResults = data.reportCardData.find(group => `${group.session || 'N/A'}-${group.term || 'N/A'}` === currentSessionTermKey);
+        // FIX: Directly use data.reportCardData as it's already the specific term's data
+        const currentTermResults = data.reportCardData;
+        const subjectsMap = new Map(); // Initialize subjectsMap here
 
-        if (currentTermResults && currentTermResults.subjects) { // Check for subjects array within currentTermResults
+        if (currentTermResults && currentTermResults.subjects) {
             currentTermResults.subjects.forEach(subjectData => {
-                // Initialize with default N/A values
+                // Initialize with default N/A values, but use provided data if available
                 const subjectEntry = {
                     subjectName: subjectData.subjectName || 'Uncategorized',
-                    ca_scaled: subjectData.ca_scaled || 'N/A',
-                    exam_scaled: subjectData.exam_scaled || 'N/A',
-                    finalScore: subjectData.finalScore || 'N/A',
+                    ca_scaled: subjectData.ca_scaled !== null ? parseFloat(subjectData.ca_scaled).toFixed(1) : 'N/A',
+                    exam_scaled: subjectData.exam_scaled !== null ? parseFloat(subjectData.exam_scaled).toFixed(1) : 'N/A',
+                    finalScore: subjectData.finalScore !== null ? parseFloat(subjectData.finalScore).toFixed(1) : 'N/A',
                     grade: subjectData.grade || 'N/A',
                     remark: subjectData.remark || 'N/A',
+                    // These will be populated from cumulative_data below
                     firstTerm: 'N/A',
                     secondTerm: 'N/A',
                     thirdTerm: 'N/A',
@@ -781,7 +809,7 @@
         if (data.metadata?.next_term_begins) {
             const date = new Date(data.metadata.next_term_begins);
             nextTermBeginsDisplay.textContent = date.toLocaleDateString();
-            nextTermBeginsInput.value = date.toISOString().split('T')[0]; // YYYY-MM-DD for input type="date"
+            nextTermBeginsInput.value = date.toISOString().split('T')[0]; // Format for input type="date"
         } else {
             nextTermBeginsDisplay.textContent = 'TBA';
             nextTermBeginsInput.value = '';
