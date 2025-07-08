@@ -208,14 +208,12 @@
               <option value="">Select Class Level</option>
             </select>
           </div>
-
           <div class="form-group">
             <label for="subject">Subject:</label>
             <select id="subject" name="subject" required disabled>
               <option value="">Select Subject</option>
             </select>
           </div>
-
           <div class="form-group">
             <label for="duration">Duration (minutes):</label>
             <input type="number" id="duration" name="duration" min="1" value="60" required>
@@ -224,20 +222,20 @@
 
         <!-- NEW: Term and Session fields -->
         <div class="form-grid-col-3">
-            <div class="form-group">
-                <label for="term">Term:</label>
-                <select id="term" name="term" required>
-                    <option value="">Select Term</option>
-                    <option value="FIRST">First Term</option>
-                    <option value="SECOND">Second Term</option>
-                    <option value="THIRD">Third Term</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="session">Academic Session:</label>
-                <!-- Changed session from select to text input with pattern -->
-                <input type="text" id="session" name="session" required pattern="\d{4}-\d{4}" placeholder="e.g., 2023-2024">
-            </div>
+          <div class="form-group">
+            <label for="term">Term:</label>
+            <select id="term" name="term" required>
+              <option value="">Select Term</option>
+              <option value="FIRST">First Term</option>
+              <option value="SECOND">Second Term</option>
+              <option value="THIRD">Third Term</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="session">Academic Session:</label>
+            <!-- Changed session from select to text input with pattern -->
+            <input type="text" id="session" name="session" required pattern="\d{4}-\d{4}" placeholder="e.g., 2023-2024">
+          </div>
         </div>
 
         <div class="form-group">
@@ -246,16 +244,16 @@
         </div>
 
         <div class="form-grid-col-3">
-            <div class="form-group">
-                <label for="startTime">Start Time:</label>
-                <input type="datetime-local" id="startTime" name="startTime" required>
-            </div>
-            <div class="form-group">
-                <label for="endTime">End Time:</label>
-                <input type="datetime-local" id="endTime" name="endTime" required>
-            </div>
+          <div class="form-group">
+            <label for="startTime">Start Time:</label>
+            <input type="datetime-local" id="startTime" name="startTime" required>
+          </div>
+          <div class="form-group">
+            <label for="endTime">End Time:</label>
+            <input type="datetime-local" id="endTime" name="endTime" required>
+          </div>
         </div>
-        
+
         <div class="form-group">
           <label for="examType">Exam Type:</label>
           <select id="examType" name="examType" required>
@@ -266,550 +264,136 @@
             <option value="CA4">Continuous Assessment 4 (CA4)</option>
             <option value="MID_TERM">Mid Term Test</option>
             <option value="MAIN_EXAM">General Exam</option>
-            <option value="OTHER">Other Assessment</option>
+            <!-- Removed 'OTHER' as it violates database constraint -->
           </select>
         </div>
 
         <div class="form-group">
+          <label for="isLocked">Lock Exam (Students cannot take it):</label>
           <input type="checkbox" id="isLocked" name="isLocked">
-          <label for="isLocked">Lock Exam (Students cannot take it until unlocked)</label>
-        </div>
-
-        <div class="form-group">
-            <label for="maxScore">Total Marks for Exam:</label>
-            <input type="number" id="maxScore" name="maxScore" required min="1">
-            <small>Sum of marks from all questions should ideally match this.</small>
-        </div>
-        <div class="form-group" style="margin-top: 10px;">
-            <p>Calculated total marks from questions: <span id="calculatedMarksDisplay">0</span></p>
-            <p id="marksMismatchWarning" style="color: var(--danger-red); display: none;"></p>
-        </div>
-
-        <div class="form-group">
-          <label for="examInstructions">General Exam Instructions:</label>
-          <textarea id="examInstructions" name="examInstructions" rows="4" class="exam-instructions" placeholder="Enter general instructions for the exam..."></textarea>
         </div>
 
         <hr>
-        <h2>Exam Sections</h2>
+        <h2>Exam Sections & Questions</h2>
         <div id="sectionsContainer">
-          </div>
+          <!-- Sections will be dynamically added here -->
+        </div>
 
-        <button type="button" id="addSectionBtn" class="add-section-btn">Add Section</button>
-        <button type="submit" class="btn primary-btn" id="submitExamBtn">Create Exam</button>
+        <button type="button" class="btn add-section-btn" id="addSectionBtn">Add New Section</button>
+        <button type="submit" class="btn primary-btn">Create Exam</button>
       </form>
     </div>
   </main>
 
   <footer>
-    <p>&copy; 2024 SNA CBT System. All rights reserved.</p>
+    <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
   </footer>
 
+  <!-- Modals HTML (add these to the end of your body tag) -->
+<div id="confirmationModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Action</h2>
+            <span class="close-button" onclick="closeModal('confirmationModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="confirmationMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmAction(true)">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="alertDialog" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="alertTitle">Alert</h2>
+            <span class="close-button" onclick="closeModal('alertDialog')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="alertMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
+        </div>
+    </div>
+</div>
+
   <script>
-    let currentUser = null;
-    let questionCounter = 0; // Global counter for unique question IDs
-    let sectionCounter = 0; // Global counter for unique section IDs
-    let allSubjects = []; // To store all subjects from the backend
-    let allClassLevels = []; // To store all class levels from the backend
+    let currentUser = null; // To store user data
 
-    const classLevelSelect = document.getElementById('classLevel');
-    const subjectSelect = document.getElementById('subject');
-    const termSelect = document.getElementById('term');
-    const sessionInput = document.getElementById('session');
-    const examTypeSelect = document.getElementById('examType');
-    const isLockedCheckbox = document.getElementById('isLocked');
-    const sectionsContainer = document.getElementById('sectionsContainer');
-    const addSectionBtn = document.getElementById('addSectionBtn');
-    const examForm = document.getElementById('createExamForm');
-    const maxScoreInput = document.getElementById('maxScore'); // Changed from totalMarks
-    const passMarkInput = document.getElementById('passMark');
-    const startTimeInput = document.getElementById('startTime');
-    const endTimeInput = document.getElementById('endTime');
-    const formMessageDiv = document.getElementById('formMessage');
+    // --- Modal Functions (re-used from dashboard.html for consistency) ---
+    let currentConfirmationCallback = null; 
 
-    // Displays a message to the user (success, error, info).
-    function showMessage(message, type = 'error') {
-        formMessageDiv.textContent = message;
-        formMessageDiv.classList.remove('hidden', 'error-message', 'success-message', 'info-message');
-        if (type === 'error') {
-            formMessageDiv.classList.add('error-message');
-        } else if (type === 'success') {
-            formMessageDiv.classList.add('success-message');
-        } else {
-            formMessageDiv.classList.add('info-message');
-        }
-        setTimeout(() => {
-            formMessageDiv.classList.add('hidden');
-        }, 5000); // Message disappears after 5 seconds
+    function showConfirmation(message) {
+        return new Promise(resolve => {
+            const modal = document.getElementById('confirmationModal');
+            modal.querySelector('#confirmationMessage').textContent = message;
+            modal.style.display = 'flex'; // Use flex to center
+            currentConfirmationCallback = resolve;
+        });
     }
 
+    function confirmAction(result) {
+        if (currentConfirmationCallback) {
+            currentConfirmationCallback(result);
+            currentConfirmationCallback = null; 
+        }
+        closeModal('confirmationModal');
+    }
 
-    // Fetch Class Levels
-    async function fetchClassLevels() {
+    function showAlert(message, title = "Alert") {
+        const modal = document.getElementById('alertDialog');
+        modal.querySelector('#alertTitle').textContent = title;
+        modal.querySelector('#alertMessage').textContent = message;
+        modal.style.display = 'flex'; // Use flex to center
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    // --- End Modal Functions ---
+
+    // Utility function to display messages
+    function showMessage(message, type = 'info') {
+      const msgDiv = document.getElementById('formMessage');
+      msgDiv.textContent = message;
+      msgDiv.className = `message ${type}-message`; // Reset classes
+      msgDiv.classList.remove('hidden');
+      setTimeout(() => {
+        msgDiv.classList.add('hidden');
+      }, 5000); // Hide after 5 seconds
+    }
+
+    // Function to load user data and build navigation
+    async function loadUserData() {
         try {
-            const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
+            const response = await fetch('/api/users/me', { credentials: 'include' });
             if (!response.ok) {
-                throw new Error('Failed to fetch class levels.');
+                window.location.href = '/login.html'; // Redirect to login if not authenticated
+                return null;
             }
-            const classLevels = await response.json();
-            classLevelSelect.innerHTML = '<option value="">Select Class Level</option>';
-            classLevels.forEach(level => {
-                const option = document.createElement('option');
-                option.value = level.level_id;
-                option.textContent = level.level_name;
-                classLevelSelect.appendChild(option);
-            });
-            allClassLevels = classLevels;
+            currentUser = await response.json();
+            createNavigationLinks(currentUser); // Build navigation based on user role
+            return currentUser;
         } catch (error) {
-            console.error("Error fetching class levels:", error);
-            showMessage("Failed to load class levels: " + error.message, 'error');
+            console.error("Error loading user data:", error);
+            window.location.href = '/login.html'; // Redirect on error
+            return null;
         }
     }
 
-    // Modified fetchSubjects: Now depends on selected class level
-    async function fetchSubjects(classLevelId = null) {
-        subjectSelect.innerHTML = '<option value="">Select Subject</option>'; // Reset subjects
-        subjectSelect.disabled = true;
-
-        if (!classLevelId) return;
-
-        try {
-            const response = await fetch(`/api/exams/config/subjects?class_level_id=${classLevelId}`, { credentials: 'include' }); 
-            if (!response.ok) {
-                throw new Error('Failed to fetch subjects for this class level.');
-            }
-            const subjects = await response.json();
-            allSubjects = subjects;
-            subjects.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject.subject_id;
-                option.textContent = subject.name;
-                subjectSelect.appendChild(option);
-            });
-            subjectSelect.disabled = false;
-        } catch (error) {
-            console.error("Error fetching subjects:", error);
-            showMessage("Failed to load subjects: " + error.message, 'error');
-        }
-    }
-
-    // Event listener for class level change
-    classLevelSelect.addEventListener('change', (event) => {
-        const selectedClassLevelId = event.target.value;
-        fetchSubjects(selectedClassLevelId);
-    });
-
-    function addQuestionField(sectionIndex, questionData = {}) {
-      questionCounter++;
-      const sectionQuestionsContainer = document.getElementById(`sectionQuestions-${sectionIndex}`);
-      const questionCard = document.createElement('div');
-      questionCard.classList.add('question-card');
-      questionCard.dataset.questionId = questionData.question_id || `new-q-${sectionIndex}-${questionCounter}`; 
-      questionCard.innerHTML = `
-        <div class="question-header">
-          <h3>Question ${questionCounter}</h3>
-          <button type="button" class="delete-question-btn" onclick="deleteQuestion(this)">Delete Question</button>
-        </div>
-        <div class="form-group">
-          <label for="questionText-${sectionIndex}-${questionCard.dataset.questionId}">Question Text:</label>
-          <textarea id="questionText-${sectionIndex}-${questionCard.dataset.questionId}" name="questionText" rows="3" required>${questionData.question_text || ''}</textarea>
-        </div>
-        <div class="form-grid-col-3">
-          <div class="form-group">
-            <label for="optionA-${sectionIndex}-${questionCard.dataset.questionId}">Option A:</label>
-            <input type="text" id="optionA-${sectionIndex}-${questionCard.dataset.questionId}" name="optionA" value="${questionData.option_a || ''}" required>
-          </div>
-          <div class="form-group">
-            <label for="optionB-${sectionIndex}-${questionCard.dataset.questionId}">Option B:</label>
-            <input type="text" id="optionB-${sectionIndex}-${questionCard.dataset.questionId}" name="optionB" value="${questionData.option_b || ''}" required>
-          </div>
-          <div class="form-group">
-            <label for="optionC-${sectionIndex}-${questionCard.dataset.questionId}">Option C:</label>
-            <input type="text" id="optionC-${sectionIndex}-${questionCard.dataset.questionId}" name="optionC" value="${questionData.option_c || ''}" required>
-          </div>
-          <div class="form-group">
-            <label for="optionD-${sectionIndex}-${questionCard.dataset.questionId}">Option D:</label>
-            <input type="text" id="optionD-${sectionIndex}-${questionCard.dataset.questionId}" name="optionD" value="${questionData.option_d || ''}" required>
-          </div>
-          <div class="form-group">
-            <label for="correctAnswer-${sectionIndex}-${questionCard.dataset.questionId}">Correct Answer:</label>
-            <select id="correctAnswer-${sectionIndex}-${questionCard.dataset.questionId}" name="correctAnswer" required>
-              <option value="">Select Correct Option</option>
-              <option value="A" ${questionData.correct_answer === 'A' ? 'selected' : ''}>A</option>
-              <option value="B" ${questionData.correct_answer === 'B' ? 'selected' : ''}>B</option>
-              <option value="C" ${questionData.correct_answer === 'C' ? 'selected' : ''}>C</option>
-              <option value="D" ${questionData.correct_answer === 'D' ? 'selected' : ''}>D</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="marks-${sectionIndex}-${questionCard.dataset.questionId}">Marks:</label>
-            <input type="number" id="marks-${sectionIndex}-${questionCard.dataset.questionId}" name="marks" min="1" value="${questionData.marks || 1}" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="explanation-${sectionIndex}-${questionCard.dataset.questionId}">Explanation (Optional):</label>
-          <textarea id="explanation-${sectionIndex}-${questionCard.dataset.questionId}" name="explanation" rows="2">${questionData.explanation || ''}</textarea>
-        </div>
-      `;
-      sectionQuestionsContainer.appendChild(questionCard);
-      updateQuestionNumbers(sectionIndex);
-      updateCalculatedMarks();
-    }
-
-    function deleteQuestion(button) {
-      const questionCard = button.closest('.question-card');
-      const sectionIndex = questionCard.closest('.section-card').dataset.sectionId;
-      questionCard.remove();
-      updateQuestionNumbers(sectionIndex);
-      updateCalculatedMarks();
-    }
-
-    function updateQuestionNumbers(sectionId) {
-        const sectionQuestionsContainer = document.getElementById(`sectionQuestions-${sectionId}`);
-        const questionCards = sectionQuestionsContainer.querySelectorAll('.question-card');
-        questionCards.forEach((card, index) => {
-            card.querySelector('.question-header h3').textContent = `Question ${index + 1}`;
-        });
-    }
-
-    function addSectionField(sectionData = {}) {
-        sectionCounter++;
-        const sectionsContainer = document.getElementById('sectionsContainer');
-        const sectionCard = document.createElement('div');
-        sectionCard.classList.add('section-card');
-        const currentSectionId = sectionData.section_id || `new-s-${Date.now()}-${sectionCounter}`;
-        sectionCard.dataset.sectionId = currentSectionId;
-        sectionCard.dataset.sectionIndex = sectionCounter;
-        sectionCard.innerHTML = `
-            <div class="section-header">
-                <h2>Section ${sectionCounter}: <input type="text" class="section-name-input" name="sectionName" placeholder="e.g., Comprehension" value="${sectionData.section_name || ''}" required></h2>
-                <div class="section-actions">
-                    <button type="button" class="btn danger-btn" onclick="deleteSection(this)">Delete Section</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="sectionInstructions-${currentSectionId}">Section Instructions:</label>
-                <textarea id="sectionInstructions-${currentSectionId}" name="sectionInstructions" rows="3" class="section-instructions" placeholder="Enter specific instructions for this section...">${sectionData.section_instructions || ''}</textarea>
-            </div>
-            <div class="section-questions" id="sectionQuestions-${currentSectionId}">
-                </div>
-            <button type="button" class="add-question-btn" onclick="addQuestionField('${currentSectionId}')">Add Question to Section</button>
-        `;
-        sectionsContainer.appendChild(sectionCard);
-
-        if (sectionData.questions && sectionData.questions.length > 0) {
-            questionCounter = 0; 
-            sectionData.questions.forEach(q => addQuestionField(currentSectionId, q));
-        } else {
-            addQuestionField(currentSectionId);
-        }
-        updateSectionNumbers();
-    }
-
-    function deleteSection(button) {
-        const sectionCard = button.closest('.section-card');
-        sectionCard.remove();
-        updateSectionNumbers();
-        updateCalculatedMarks();
-    }
-
-    function updateSectionNumbers() {
-        const sectionsContainer = document.getElementById('sectionsContainer');
-        const sectionCards = sectionsContainer.querySelectorAll('.section-card');
-        sectionCards.forEach((card, index) => {
-            card.dataset.sectionIndex = index + 1;
-            const sectionNameInput = card.querySelector('.section-name-input');
-            const currentSectionName = sectionNameInput.value.replace(/^Section \d+: /, '').trim();
-            sectionNameInput.value = `Section ${index + 1}: ${currentSectionName || 'New Section'}`;
-
-            const currentSectionId = card.dataset.sectionId;
-            
-            const addQuestionBtn = card.querySelector('.add-question-btn');
-            addQuestionBtn.setAttribute('onclick', `addQuestionField('${currentSectionId}')`);
-
-            card.querySelector(`[id^="sectionInstructions-"]`).id = `sectionInstructions-${currentSectionId}`;
-            card.querySelector(`[id^="sectionQuestions-"]`).id = `sectionQuestions-${currentSectionId}`;
-
-            card.querySelectorAll('.question-card').forEach((qCard, qIndex) => {
-                qCard.querySelector('.question-header h3').textContent = `Question ${qIndex + 1}`;
-                qCard.querySelectorAll('[id]').forEach(el => {
-                    const parts = el.id.split('-');
-                    if (parts.length >= 3 && parts[1].startsWith('new-s-')) {
-                        parts[1] = currentSectionId;
-                    }
-                    el.id = parts.join('-');
-                });
-            });
-            updateQuestionNumbers(currentSectionId);
-        });
-    }
-
-
-    document.getElementById('addSectionBtn').addEventListener('click', () => {
-        addSectionField();
-    });
-
-    // Calculate and display total question marks
-    function updateCalculatedMarks() {
-        let calculatedTotalMarks = 0;
-        document.querySelectorAll('.question-card').forEach(questionCard => {
-            const marksInput = questionCard.querySelector('input[name="marks"]');
-            if (marksInput && !isNaN(parseInt(marksInput.value))) {
-                calculatedTotalMarks += parseInt(marksInput.value);
-            }
-        });
-        document.getElementById('calculatedMarksDisplay').textContent = calculatedTotalMarks;
-
-        const maxScoreInputVal = parseInt(maxScoreInput.value); // Changed from totalMarksInput
-        const marksMismatchWarning = document.getElementById('marksMismatchWarning');
-        if (maxScoreInputVal && calculatedTotalMarks !== maxScoreInputVal) {
-            marksMismatchWarning.textContent = `Warning: Individual question marks sum (${calculatedTotalMarks}) does not match Total Exam Marks (${maxScoreInputVal}).`;
-            marksMismatchWarning.style.display = 'block';
-        } else {
-            marksMismatchWarning.style.display = 'none';
-        }
-    }
-
-    // Add event listener to marks input fields (call updateCalculatedMarks on change)
-    sectionsContainer.addEventListener('input', (event) => {
-        if (event.target.name === 'marks' && event.target.closest('.question-card')) {
-            updateCalculatedMarks();
-        }
-    });
-
-    // Add event listener to maxScoreInput
-    maxScoreInput.addEventListener('input', updateCalculatedMarks); // Changed from totalMarksInput
-
-     // Modified form submission: include max_score and add validation
-    examForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const submitButton = event.target.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Creating Exam...';
-        showMessage('', 'info');
-
-        const examTitle = document.getElementById('examTitle').value.trim();
-        const examInstructions = document.getElementById('examInstructions').value.trim();
-        const durationMinutes = document.getElementById('duration').value;
-        const subjectId = document.getElementById('subject').value;
-        const classLevelId = document.getElementById('classLevel').value;
-        const maxScore = maxScoreInput.value; // Changed from totalMarks
-        const passMark = passMarkInput.value;
-        const startTime = startTimeInput.value;
-        const endTime = endTimeInput.value;
-        const examType = examTypeSelect.value;
-        const isLocked = isLockedCheckbox.checked;
-        const term = termSelect.value;
-        const session = sessionInput.value;
-
-        const sessionPattern = /^\d{4}-\d{4}$/;
-        if (!sessionPattern.test(session)) {
-            showAlert('Academic Session must be in the formatYYYY-YYYY (e.g., 2023-2024).', 'Validation Error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        if (!startTime || !endTime) {
-            showMessage('Start Time and End Time are required.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        const startDateTime = new Date(startTime);
-        const endDateTime = new Date(endTime);
-
-        if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-            showMessage('Invalid Start Time or End Time format.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        if (startDateTime >= endDateTime) {
-            showMessage('End Time must be after Start Time.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-
-        if (!examTitle || !examInstructions || !durationMinutes || !subjectId || !classLevelId || !maxScore || !passMark || !examType || !term || !session) { // Changed totalMarks to maxScore
-            showMessage('Please fill in all general exam details: Title, Class Level, Subject, Duration, Exam Type, Term, Session, Total Marks, Pass Mark, and General Instructions.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        if (isNaN(parseInt(durationMinutes)) || parseInt(durationMinutes) <= 0) {
-            showMessage('Duration must be a positive number.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        if (isNaN(parseInt(maxScore)) || parseInt(maxScore) <= 0) { // Changed totalMarks to maxScore
-            showMessage('Total Marks must be a positive number.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        if (isNaN(parseInt(passMark)) || parseInt(passMark) < 0) {
-            showMessage('Pass Mark must be a non-negative number.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        const calculatedTotalMarks = parseInt(document.getElementById('calculatedMarksDisplay').textContent);
-        if (maxScore && calculatedTotalMarks !== parseInt(maxScore)) { // Changed totalMarks to maxScore
-            const proceed = await showConfirmation(`Warning: The sum of individual question marks (${calculatedTotalMarks}) does not match the Total Exam Marks entered (${maxScore}). Do you wish to proceed?`); // Changed totalMarks to maxScore
-            if (!proceed) {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Create Exam';
-                return;
-            }
-        }
-
-
-        const examSections = [];
-        let validationFailed = false;
-
-        document.querySelectorAll('.section-card').forEach(sectionCard => {
-            if (validationFailed) return;
-
-            const sectionNameInput = sectionCard.querySelector('.section-name-input');
-            const sectionName = sectionNameInput.value.replace(/^Section \d+: /, '').trim();
-            const sectionInstructions = sectionCard.querySelector('textarea[name="sectionInstructions"]').value.trim();
-
-            if (!sectionName) {
-                showMessage(`Section requires a title.`, 'error');
-                validationFailed = true;
-                return;
-            }
-
-            const questions = [];
-            sectionCard.querySelectorAll('.question-card').forEach(questionCard => {
-                if (validationFailed) return;
-
-                const questionText = questionCard.querySelector('textarea[name="questionText"]').value.trim();
-                const optionA = questionCard.querySelector('input[name="optionA"]').value.trim();
-                const optionB = questionCard.querySelector('input[name="optionB"]').value.trim();
-                const optionC = questionCard.querySelector('input[name="optionC"]').value.trim();
-                const optionD = questionCard.querySelector('input[name="optionD"]').value.trim();
-                const correctAnswer = questionCard.querySelector('select[name="correctAnswer"]').value.trim();
-                const explanation = questionCard.querySelector('textarea[name="explanation"]').value.trim();
-                const marks = questionCard.querySelector('input[name="marks"]').value;
-
-                if (!questionText || !optionA || !optionB || !optionC || !optionD || !correctAnswer || !marks) {
-                    showMessage(`All question fields in section "${sectionName}" must be filled.`, 'error');
-                    validationFailed = true;
-                    return;
-                }
-                if (isNaN(parseInt(marks)) || parseInt(marks) <= 0) {
-                    showMessage(`Marks for all questions in section "${sectionName}" must be positive numbers.`, 'error');
-                    validationFailed = true;
-                    return;
-                }
-
-                questions.push({
-                    question_text: questionText,
-                    option_a: optionA,
-                    option_b: optionB,
-                    option_c: optionC,
-                    option_d: optionD,
-                    correct_answer: correctAnswer,
-                    explanation: explanation,
-                    marks: parseInt(marks)
-                });
-            });
-
-            if (validationFailed) return;
-
-            if (questions.length === 0) {
-                 showMessage(`Section "${sectionName}" must have at least one question.`, 'error');
-                 validationFailed = true;
-                 return;
-            }
-
-            examSections.push({
-                section_name: sectionName,
-                section_instructions: sectionInstructions,
-                questions: questions
-            });
-        });
-
-        if (validationFailed) {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        if (examSections.length === 0) {
-            showMessage('The exam must have at least one section with at least one question.', 'error');
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/exams', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    title: examTitle, 
-                    exam_instructions: examInstructions,
-                    duration_minutes: parseInt(durationMinutes),
-                    subject_id: parseInt(subjectId),
-                    class_level_id: parseInt(classLevelId),
-                    max_score: parseInt(maxScore), // Changed from total_marks
-                    pass_mark: parseInt(passMark),
-                    start_time: startTime,
-                    end_time: endTime,
-                    exam_type: examType,
-                    is_locked: isLocked,
-                    term: term, 
-                    session: session, 
-                    sections: examSections
-                }),
-            });
-
-            const responseData = await response.json();
-            if (response.ok) {
-                showMessage('Exam created successfully! Redirecting...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-            } else {
-                showAlert(responseData.error || 'Failed to create exam.', 'Creation Error');
-            }
-        } catch (error) {
-            console.error('Network or unexpected error:', error);
-            showAlert('An unexpected error occurred: ' + error.message, 'Error');
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Create Exam';
-        }
-    });
-
-    // Navigation (copied for self-containment)
     function createNavigationLinks(user) {
         const navLinksContainer = document.getElementById('navLinksContainer');
-        navLinksContainer.innerHTML = ''; 
+        navLinksContainer.innerHTML = ''; // Clear existing links
 
         const links = [
             { href: "/dashboard.html", text: "Dashboard" },
             { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
             { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
-            { href: "/registration.html", text: "Register User", roles: ['admin'] },
-            { href: "/admin-reports.html", text: "Student Reports", roles: ['admin'] },
-            { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
-            { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
+            { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
         ];
 
         links.forEach(linkInfo => {
@@ -824,93 +408,343 @@
                 link.href = linkInfo.href;
                 link.textContent = linkInfo.text;
                 link.classList.add('nav-link');
-                
+                // Add active class if current page
                 if (window.location.pathname === linkInfo.href) {
                     link.classList.add('active');
                 }
-
                 listItem.appendChild(link);
                 navLinksContainer.appendChild(listItem);
             }
         });
 
+        // Add logout button
         const logoutLinkItem = document.createElement('li');
-        const logoutLink = document.createElement('button');
-        logoutLink.textContent = "Logout";
-        logoutLink.classList.add('btn', 'logout-btn');
-        logoutLink.onclick = async () => {
-            try {
-                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                if (response.ok) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = '/login.html';
-                } else {
-                    const errorMsg = ((await response.json().catch(()=>({}))).error || 'Please try again.');
-                    showAlert('Logout failed: ' + errorMsg, 'Logout Error');
-                }
-            } catch (error) {
-                console.error('Logout error:', error);
-                showAlert('Logout failed due to a network error.', 'Logout Error');
-            }
-        };
-        logoutLinkItem.appendChild(logoutLink);
+        const logoutBtn = document.createElement('button');
+        logoutBtn.textContent = "Logout";
+        logoutBtn.className = 'btn logout-btn'; // Use a specific class for styling
+        logoutLinkItem.appendChild(logoutBtn);
         navLinksContainer.appendChild(logoutLinkItem);
+
+        logoutBtn.addEventListener('click', handleLogout);
     }
 
-    async function loadUserData() {
+    async function handleLogout() {
         try {
-            const userResponse = await fetch('/api/users/me', { credentials: 'include' });
-            if (!userResponse.ok) {
-                if (userResponse.status === 401) window.location.href = '/login.html';
-                throw new Error('User not authenticated');
+            const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
             }
-            currentUser = await userResponse.json();
-            createNavigationLinks(currentUser);
-            return currentUser;
         } catch (error) {
-            console.error("Initialization error:", error);
-            showAlert(error.message || "Failed to initialize page.", 'Initialization Error');
-            return null;
+            console.error('Network error during logout:', error);
+        } finally {
+            localStorage.clear(); // Clear any local storage
+            sessionStorage.clear(); // Clear any session storage
+            window.location.href = '/login.html'; // Redirect to login page
         }
     }
 
-    // --- Modals for alerts and confirmations (copied for self-containment) ---
-    let currentConfirmationCallback = null; 
+    // Global counter for sections and questions to ensure unique IDs
+    let sectionCounter = 0;
+    let questionCounter = 0;
 
-    function showConfirmation(message) {
-        return new Promise(resolve => {
-            document.getElementById('confirmationMessage').textContent = message;
-            document.getElementById('confirmationModal').style.display = 'flex'; 
-            currentConfirmationCallback = resolve;
+    // Function to add a new section to the form
+    function addSection() {
+      sectionCounter++;
+      const sectionId = `section-${sectionCounter}`;
+      const sectionHtml = `
+        <div class="section-card" id="${sectionId}">
+          <div class="section-header">
+            <h2>Section ${sectionCounter}</h2>
+            <div class="section-actions">
+              <button type="button" class="btn danger-btn delete-section-btn" data-section-id="${sectionId}">Delete Section</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="sectionName-${sectionId}">Section Name:</label>
+            <input type="text" id="sectionName-${sectionId}" name="sectionName" required>
+          </div>
+          <div class="form-group">
+            <label for="sectionInstructions-${sectionId}">Section Instructions:</label>
+            <textarea id="sectionInstructions-${sectionId}" name="sectionInstructions" rows="3"></textarea>
+          </div>
+          <hr>
+          <h3>Questions for Section ${sectionCounter}</h3>
+          <div id="questionsContainer-${sectionId}">
+            <!-- Questions will be added here -->
+          </div>
+          <button type="button" class="btn add-question-btn" data-section-id="${sectionId}">Add New Question</button>
+        </div>
+      `;
+      document.getElementById('sectionsContainer').insertAdjacentHTML('beforeend', sectionHtml);
+
+      // Add event listener for "Add New Question" button in this new section
+      document.querySelector(`#${sectionId} .add-question-btn`).addEventListener('click', (e) => {
+        addQuestion(e.target.dataset.sectionId);
+      });
+
+      // Add event listener for "Delete Section" button
+      document.querySelector(`#${sectionId} .delete-section-btn`).addEventListener('click', (e) => {
+        const idToDelete = e.target.dataset.sectionId;
+        showConfirmation(`Are you sure you want to delete Section ${idToDelete.split('-')[1]} and all its questions?`).then(confirmed => {
+            if (confirmed) {
+                document.getElementById(idToDelete).remove();
+                updateCalculatedMarks(); // Recalculate total marks
+            }
         });
+      });
     }
 
-    function confirmAction(result) {
-        if (currentConfirmationCallback) {
-            currentConfirmationCallback(result);
-            currentConfirmationCallback = null; 
+    // Function to add a new question to a specific section
+    function addQuestion(sectionId) {
+      questionCounter++;
+      const questionId = `question-${questionCounter}`;
+      const questionHtml = `
+        <div class="question-card" id="${questionId}">
+          <div class="question-header">
+            <h3>Question ${questionCounter}</h3>
+            <button type="button" class="btn danger-btn delete-question-btn" data-question-id="${questionId}">Delete Question</button>
+          </div>
+          <div class="form-group">
+            <label for="questionText-${questionId}">Question Text:</label>
+            <textarea id="questionText-${questionId}" name="questionText" rows="3" required></textarea>
+          </div>
+          <div class="form-grid-col-3">
+            <div class="form-group">
+              <label for="optionA-${questionId}">Option A:</label>
+              <input type="text" id="optionA-${questionId}" name="optionA" required>
+            </div>
+            <div class="form-group">
+              <label for="optionB-${questionId}">Option B:</label>
+              <input type="text" id="optionB-${questionId}" name="optionB" required>
+            </div>
+            <div class="form-group">
+              <label for="optionC-${questionId}">Option C:</label>
+              <input type="text" id="optionC-${questionId}" name="optionC">
+            </div>
+            <div class="form-group">
+              <label for="optionD-${questionId}">Option D:</label>
+              <input type="text" id="optionD-${questionId}" name="optionD">
+            </div>
+            <div class="form-group">
+              <label for="correctAnswer-${questionId}">Correct Answer:</label>
+              <select id="correctAnswer-${questionId}" name="correctAnswer" required>
+                <option value="">Select Correct Option</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="marks-${questionId}">Marks:</label>
+              <input type="number" id="marks-${questionId}" name="marks" min="1" value="1" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="explanation-${questionId}">Explanation (Optional):</label>
+            <textarea id="explanation-${questionId}" name="explanation" rows="2"></textarea>
+          </div>
+        </div>
+      `;
+      document.getElementById(`questionsContainer-${sectionId}`).insertAdjacentHTML('beforeend', questionHtml);
+
+      // Add event listener for "Delete Question" button
+      document.querySelector(`#${questionId} .delete-question-btn`).addEventListener('click', (e) => {
+        const idToDelete = e.target.dataset.questionId;
+        showConfirmation(`Are you sure you want to delete Question ${idToDelete.split('-')[1]}?`).then(confirmed => {
+            if (confirmed) {
+                document.getElementById(idToDelete).remove();
+                updateCalculatedMarks(); // Recalculate total marks
+            }
+        });
+      });
+
+      // Add event listener to marks input for live total marks calculation
+      document.getElementById(`marks-${questionId}`).addEventListener('input', updateCalculatedMarks);
+      updateCalculatedMarks(); // Initial calculation
+    }
+
+    // Function to calculate and display total marks
+    function updateCalculatedMarks() {
+      let totalMarks = 0;
+      document.querySelectorAll('input[name="marks"]').forEach(input => {
+        totalMarks += parseInt(input.value) || 0;
+      });
+      document.getElementById('passMark').max = totalMarks; // Pass mark cannot exceed total marks
+      // You might want to display this total somewhere, e.g., in a disabled input or a span
+      // For now, it just updates the max for passMark.
+      // Example: document.getElementById('totalCalculatedMarks').textContent = totalMarks;
+    }
+
+    // Function to load class levels into the dropdown
+    async function loadClassLevels() {
+      try {
+        const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch class levels.');
+        const classLevels = await response.json();
+        const select = document.getElementById('classLevel');
+        select.innerHTML = '<option value="">Select Class Level</option>'; // Reset options
+        classLevels.forEach(level => {
+          const option = document.createElement('option');
+          option.value = level.level_id;
+          option.textContent = level.level_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading class levels:", error);
+        showMessage(`Error loading class levels: ${error.message}`, 'error');
+      }
+    }
+
+    // Function to load subjects based on selected class level
+    async function loadSubjects(classLevelId) {
+      const subjectSelect = document.getElementById('subject');
+      subjectSelect.innerHTML = '<option value="">Select Subject</option>'; // Reset subjects
+      subjectSelect.disabled = true; // Disable until subjects are loaded or no class selected
+
+      if (!classLevelId) return;
+
+      try {
+        const response = await fetch(`/api/exams/config/subjects?class_level_id=${classLevelId}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch subjects.');
+        const subjects = await response.json();
+        subjects.forEach(subject => {
+          const option = document.createElement('option');
+          option.value = subject.subject_id;
+          option.textContent = subject.name;
+          subjectSelect.appendChild(option);
+        });
+        subjectSelect.disabled = false; // Enable subject select once loaded
+      } catch (error) {
+        console.error("Error loading subjects:", error);
+        showMessage(`Error loading subjects: ${error.message}`, 'error');
+      }
+    }
+
+    // Event listener for class level change
+    document.getElementById('classLevel').addEventListener('change', (e) => {
+      loadSubjects(e.target.value);
+    });
+
+    // Handle form submission
+    document.getElementById('createExamForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      const examData = {};
+
+      // Collect top-level exam details
+      examData.title = formData.get('examTitle');
+      examData.subject_id = parseInt(formData.get('subject'));
+      examData.class_level_id = parseInt(formData.get('classLevel'));
+      examData.duration_minutes = parseInt(formData.get('duration'));
+      examData.pass_mark = parseInt(formData.get('passMark'));
+      examData.start_time = formData.get('startTime');
+      examData.end_time = formData.get('endTime');
+      examData.exam_type = formData.get('examType');
+      examData.is_locked = formData.get('isLocked') === 'on'; // Checkbox value
+      examData.term = formData.get('term');
+      examData.session = formData.get('session');
+      examData.exam_instructions = formData.get('examInstructions');
+
+      // Collect sections and questions dynamically
+      examData.sections = [];
+      let totalMaxScore = 0;
+
+      document.querySelectorAll('.section-card').forEach(sectionCard => {
+        const section = {};
+        section.section_name = sectionCard.querySelector('input[name="sectionName"]').value;
+        section.section_instructions = sectionCard.querySelector('textarea[name="sectionInstructions"]').value;
+        section.questions = [];
+
+        sectionCard.querySelectorAll('.question-card').forEach(questionCard => {
+          const question = {};
+          question.question_text = questionCard.querySelector('textarea[name="questionText"]').value;
+          question.option_a = questionCard.querySelector('input[name="optionA"]').value;
+          question.option_b = questionCard.querySelector('input[name="optionB"]').value;
+          question.option_c = questionCard.querySelector('input[name="optionC"]').value;
+          question.option_d = questionCard.querySelector('input[name="optionD"]').value;
+          question.correct_answer = questionCard.querySelector('select[name="correctAnswer"]').value;
+          question.marks = parseInt(questionCard.querySelector('input[name="marks"]').value);
+          question.explanation = questionCard.querySelector('textarea[name="explanation"]').value;
+          
+          // Basic validation for question fields
+          if (!question.question_text || !question.correct_answer || isNaN(question.marks)) {
+              showMessage('Please fill in all required question fields (text, correct answer, marks).', 'error');
+              return; // Stop submission
+          }
+          if (question.correct_answer === 'C' && !question.option_c) {
+              showMessage('Option C cannot be empty if it is the correct answer.', 'error');
+              return;
+          }
+          if (question.correct_answer === 'D' && !question.option_d) {
+              showMessage('Option D cannot be empty if it is the correct answer.', 'error');
+              return;
+          }
+
+          section.questions.push(question);
+          totalMaxScore += question.marks;
+        });
+        examData.sections.push(section);
+      });
+
+      examData.max_score = totalMaxScore; // Set the calculated total max score
+
+      // Basic validation for exam fields
+      if (!examData.title || !examData.subject_id || !examData.class_level_id || !examData.duration_minutes || 
+          isNaN(examData.pass_mark) || !examData.start_time || !examData.end_time || !examData.exam_type || 
+          examData.sections.length === 0) {
+          showMessage('Please fill in all required exam details and add at least one section with questions.', 'error');
+          return;
+      }
+      if (examData.pass_mark > examData.max_score) {
+          showMessage('Pass mark cannot be greater than total available marks.', 'error');
+          return;
+      }
+
+      // Show confirmation before submitting
+      const confirmed = await showConfirmation('Are you sure you want to create this exam?');
+      if (!confirmed) {
+          showMessage('Exam creation cancelled.', 'info');
+          return;
+      }
+
+      try {
+        const response = await fetch('/api/exams', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(examData),
+          credentials: 'include' // Send cookies for authentication
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create exam.');
         }
-        closeModal('confirmationModal');
-    }
 
-    function showAlert(message, title = "Alert") {
-        document.getElementById('alertTitle').textContent = title;
-        document.getElementById('alertMessage').textContent = message;
-        document.getElementById('alertDialog').style.display = 'flex'; 
-    }
+        showMessage('Exam created successfully!', 'success');
+        form.reset(); // Clear form
+        document.getElementById('sectionsContainer').innerHTML = ''; // Clear sections
+        sectionCounter = 0; // Reset counters
+        questionCounter = 0;
+        document.getElementById('subject').disabled = true; // Disable subject dropdown
+        updateCalculatedMarks(); // Reset marks display
+      } catch (error) {
+        console.error("Error creating exam:", error);
+        showMessage(`Failed to create exam: ${error.message}`, 'error');
+      }
+    });
 
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-    // --- End Modals ---
-
-
+    // Initial load
     async function loadInitialData() {
         const user = await loadUserData();
-        if (user && (user.role === 'teacher' || user.is_admin)) {
-            await fetchClassLevels();
-            addSectionField();
+        if (user && (user.is_admin || user.role === 'teacher')) {
+            await loadClassLevels();
+            addSection(); // Add one section by default
             updateCalculatedMarks();
         } else {
             document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to create exams.</p>';
@@ -950,5 +784,6 @@
         </div>
     </div>
 </div>
+
 </body>
 </html>

@@ -177,7 +177,7 @@
     <header>
         <nav>
             <a href="/dashboard.html" class="logo">SNA CBT System</a>
-            <ul class="nav-links" id="navLinksContainer">
+            <ul class="nav-links" id="navLinks">
                 <!-- Navigation links will be dynamically inserted here by JS -->
             </ul>
         </nav>
@@ -185,274 +185,170 @@
 
     <main>
         <div class="results-container">
-            <div id="messageContainer" class="hidden"></div> <!-- For general messages -->
+            <h1 class="results-header" id="resultsPageTitle">Exam Results</h1>
+            <div id="messageContainer" class="hidden"></div> <!-- For info/error messages -->
 
-            <!-- Conditional Header for Teacher/Admin View -->
-            <div id="teacherAdminSummary" class="hidden">
-                <h1 id="examTitleSummary"></h1>
-                <p>Exam Type: <span id="examTypeSummary"></span></p>
-                <p>Term: <span id="examTermSummary"></span>, Session: <span id="examSessionSummary"></span></p>
-                <h2>Student Results Summary</h2>
+            <!-- Student's individual result display -->
+            <div id="singleResultView" class="hidden">
+                <h2 id="examTitle"></h2>
+                <p><strong>Subject:</strong> <span id="subjectName"></span></p>
+                <p><strong>Class Level:</strong> <span id="classLevelName"></span></p>
+                <p><strong>Exam Type:</strong> <span id="examType"></span></p>
+                <p><strong>Term:</strong> <span id="examTerm"></span></p>
+                <p><strong>Session:</strong> <span id="examSession"></span></p>
+                <p><strong>Date Submitted:</strong> <span id="submissionDate"></span></p>
+                <p><strong>Time Taken:</strong> <span id="timeTaken"></span></p>
+                <p><strong>Your Score:</strong> <span id="studentScore" class="student-score-display"></span></p>
+                <p><strong>Total Possible Marks:</strong> <span id="totalPossibleMarks"></span></p>
+                <p><strong>Pass Mark:</strong> <span id="passMark"></span></p>
+                <p id="passFailStatus"></p>
+
+                <h2 style="margin-top: 2rem;">Question Review</h2>
+                <div id="questionsReviewContainer">
+                    <!-- Questions and answers will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Summary of results for an exam (for teacher/admin) -->
+            <div id="summaryResultsView" class="hidden">
+                <h2 id="summaryExamTitle"></h2>
+                <p><strong>Subject:</strong> <span id="summarySubjectName"></span></p>
+                <p><strong>Class Level:</strong> <span id="summaryClassLevelName"></span></p>
+                <p><strong>Exam Type:</strong> <span id="summaryExamType"></span></p>
+                <p><strong>Term:</strong> <span id="summaryExamTerm"></span></p>
+                <p><strong>Session:</strong> <span id="summaryExamSession"></span></p>
                 <table class="summary-table">
                     <thead>
                         <tr>
                             <th>Student Name</th>
                             <th>Admission No.</th>
-                            <th>Class</th>
-                            <th>Score</th>
+                            <th>Score (%)</th>
+                            <th>Raw Score</th>
+                            <th>Total Marks</th>
                             <th>Submission Date</th>
-                            <th>Actions</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody id="summaryTableBody">
-                        <!-- Results will be loaded here -->
+                    <tbody id="summaryResultsBody">
+                        <!-- Summary rows will be populated by JS -->
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Conditional Header for Student Detailed View -->
-            <div id="studentDetailedResult" class="hidden">
-                <h1 id="examTitleDetailed"></h1>
-                <p>Score: <span id="studentScoreDetailed" class="student-score-display"></span></p>
-                <p>Submission Time: <span id="submissionTimeDetailed"></span></p>
-                <p>Time Taken: <span id="timeTakenDetailed"></span></p>
-                <p>Exam Type: <span id="examTypeDetailed"></span></p>
-                <p>Pass Mark: <span id="passMarkDetailed"></span>%</p>
-                <p>Status: <span id="statusDetailed"></span></p>
-                <hr>
-                <h2>Question Review</h2>
-                <div id="questionsReviewContainer">
-                    <!-- Questions and answers will be loaded here -->
-                    <!-- A message will be displayed here if questions are not available -->
-                </div>
             </div>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2024 SNA CBT System. All rights reserved.</p>
+        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
     </footer>
 
     <script>
-        let currentUser = null; // Global variable to store current user data
+        let currentUser = null; // To store user data
 
         // Utility function to display messages
-        function showMessage(message, type = 'error', duration = 5000) {
+        function showMessage(message, type = 'info') {
             const msgDiv = document.getElementById('messageContainer');
             msgDiv.textContent = message;
-            msgDiv.classList.remove('hidden', 'error-message', 'info-message'); // Remove previous types
-            if (type === 'error') {
-                msgDiv.classList.add('error-message');
-            } else if (type === 'info') {
-                msgDiv.classList.add('info-message');
-            }
-            msgDiv.style.display = 'block'; // Ensure it's visible
-
+            msgDiv.className = `message ${type}-message`; // Reset classes
+            msgDiv.classList.remove('hidden');
             setTimeout(() => {
                 msgDiv.classList.add('hidden');
-                msgDiv.style.display = 'none'; // Hide after timeout
-            }, duration);
+            }, 5000); // Hide after 5 seconds
         }
 
-        // Function to load user data and manage authentication state
         async function loadUserData() {
             try {
                 const response = await fetch('/api/users/me', { credentials: 'include' });
                 if (!response.ok) {
-                    window.location.href = '/login.html';
+                    window.location.href = '/login.html'; // Redirect to login if not authenticated
                     return null;
                 }
                 currentUser = await response.json();
                 return currentUser;
             } catch (error) {
                 console.error("Error loading user data:", error);
-                window.location.href = '/login.html';
+                window.location.href = '/login.html'; // Redirect on error
                 return null;
             }
         }
 
-        // Function to create and update navigation links based on user role
         function createNavigationLinks(user) {
-            const navLinksContainer = document.getElementById('navLinksContainer');
+            const navLinksContainer = document.getElementById('navLinks');
             navLinksContainer.innerHTML = ''; // Clear existing links
 
-            const navLinks = [
-                { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'] },
-                { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'] },
-                { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'] },
-                { text: 'Register User', href: '/registration.html', roles: ['admin'] },
-                { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'] },
-                { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'] },
-                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'] },
-                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin', 'teacher'] }
+            const links = [
+                { href: "/dashboard.html", text: "Dashboard" },
+                { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
+                { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
+                { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
             ];
 
-            navLinks.forEach(link => {
-                const shouldDisplay = link.roles.some(role => {
+            links.forEach(linkInfo => {
+                const shouldDisplay = !linkInfo.roles || linkInfo.roles.some(role => {
                     if (role === 'admin') return user.is_admin;
                     return user.role === role;
                 });
 
                 if (shouldDisplay) {
-                    const navLi = document.createElement('li');
-                    const navA = document.createElement('a');
-                    navA.href = link.href;
-                    navA.textContent = link.text;
-                    navA.classList.add('nav-link');
-                    if (window.location.pathname === link.href) {
-                        navA.classList.add('active');
+                    const listItem = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = linkInfo.href;
+                    link.textContent = linkInfo.text;
+                    link.classList.add('nav-link');
+                    // Add active class if current page
+                    if (window.location.pathname === linkInfo.href) {
+                        link.classList.add('active');
                     }
-                    navLi.appendChild(navA);
-                    navLinksContainer.appendChild(navLi);
+                    listItem.appendChild(link);
+                    navLinksContainer.appendChild(listItem);
                 }
             });
 
-            const logoutLi = document.createElement('li');
+            // Add logout button
+            const logoutLinkItem = document.createElement('li');
             const logoutBtn = document.createElement('button');
-            logoutBtn.textContent = 'Logout';
-            logoutBtn.classList.add('btn', 'logout-btn');
-            logoutBtn.onclick = async () => {
-                try {
-                    const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
-                    }
-                } catch (error) {
-                    console.error('Network error during logout:', error);
-                } finally {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = '/login.html';
+            logoutBtn.textContent = "Logout";
+            logoutBtn.className = 'btn logout-btn'; // Use a specific class for styling
+            logoutLinkItem.appendChild(logoutBtn);
+            navLinksContainer.appendChild(logoutLinkItem);
+
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
                 }
-            };
-            logoutLi.appendChild(logoutBtn);
-            navLinksContainer.appendChild(logoutLi);
-        }
-
-        // Function to display results for a single student (detailed view)
-        function displayDetailedResult(data) {
-            document.getElementById('teacherAdminSummary').classList.add('hidden');
-            document.getElementById('studentDetailedResult').classList.remove('hidden');
-
-            document.getElementById('examTitleDetailed').textContent = data.exam.title || 'N/A';
-            document.getElementById('studentScoreDetailed').textContent = data.score !== null ? `${data.score.toFixed(1)}%` : 'N/A';
-            document.getElementById('submissionTimeDetailed').textContent = new Date(data.submission_time).toLocaleString();
-            
-            const minutes = Math.floor(data.time_taken_seconds / 60);
-            const seconds = data.time_taken_seconds % 60;
-            document.getElementById('timeTakenDetailed').textContent = `${minutes}m ${seconds}s`;
-
-            document.getElementById('examTypeDetailed').textContent = data.exam.exam_type || 'N/A';
-            document.getElementById('passMarkDetailed').textContent = data.exam.pass_mark || 'N/A';
-            document.getElementById('statusDetailed').textContent = data.score !== null ? (data.score >= data.exam.pass_mark ? 'Passed' : 'Failed') : 'N/A';
-            document.getElementById('statusDetailed').className = data.score !== null ? (data.score >= data.exam.pass_mark ? 'success' : 'danger') : '';
-
-
-            const questionsReviewContainer = document.getElementById('questionsReviewContainer');
-            questionsReviewContainer.innerHTML = ''; // Clear previous questions
-
-            // Only display question review if questions are provided and it's not a MAIN_EXAM for students
-            if (data.questions && data.questions.length > 0) {
-                data.questions.forEach((q, index) => {
-                    const studentAnswer = data.answers_submitted ? data.answers_submitted[q.question_id] : null;
-                    const isCorrect = studentAnswer === q.correct_answer;
-                    const cardClass = isCorrect ? 'correct' : 'incorrect';
-
-                    let optionsHtml = '';
-                    const options = ['a', 'b', 'c', 'd'];
-                    options.forEach(opt => {
-                        const optionText = q[`option_${opt}`];
-                        if (optionText) {
-                            let optionClass = '';
-                            if (opt.toUpperCase() === q.correct_answer) {
-                                optionClass = 'correct-answer';
-                            }
-                            if (studentAnswer && opt.toUpperCase() === studentAnswer && !isCorrect) {
-                                optionClass = 'incorrect-selected';
-                            } else if (studentAnswer && opt.toUpperCase() === studentAnswer && isCorrect) {
-                                 optionClass = 'selected'; // Highlight selected correct answer
-                            }
-                            optionsHtml += `<li class="review-option-label ${optionClass}">${opt.toUpperCase()}. ${optionText}</li>`;
-                        }
-                    });
-
-                    const studentAnswerDisplayText = studentAnswer ? `Your Answer: ${String(studentAnswer).toUpperCase()}` : 'Your Answer: Not Answered';
-                    const correctAnswerDisplayText = `Correct Answer: ${String(q.correct_answer).toUpperCase()}`;
-
-
-                    questionsReviewContainer.innerHTML += `
-                        <div class="question-review-card ${cardClass}">
-                            <h4>Question ${index + 1}: ${q.question_text || 'N/A'}</h4>
-                            <ul class="review-options-list">
-                                ${optionsHtml}
-                            </ul>
-                            <div class="answer-feedback">
-                                <p>${studentAnswerDisplayText}</p>
-                                <p>${correctAnswerDisplayText}</p>
-                            </div>
-                            ${q.explanation ? `<div class="explanation"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
-                        </div>
-                    `;
-                });
-            } else {
-                // Display message if question review is not available (e.g., MAIN_EXAM for students)
-                questionsReviewContainer.innerHTML = '<p style="text-align: center; color: #666;">Question review is not available for this exam type or your role.</p>';
+            } catch (error) {
+                console.error('Network error during logout:', error);
+            } finally {
+                localStorage.clear(); // Clear any local storage
+                sessionStorage.clear(); // Clear any session storage
+                window.location.href = '/login.html'; // Redirect to login page
             }
         }
 
-        // Function to display results summary (for teacher/admin view)
-        function displayResultsSummary(data) {
-            document.getElementById('studentDetailedResult').classList.add('hidden');
-            document.getElementById('teacherAdminSummary').classList.remove('hidden');
-
-            document.getElementById('examTitleSummary').textContent = data.exam_title || 'N/A';
-            document.getElementById('examTypeSummary').textContent = data.exam_type || 'N/A';
-            document.getElementById('examTermSummary').textContent = data.term || 'N/A';
-            document.getElementById('examSessionSummary').textContent = data.session || 'N/A';
-
-            const tableBody = document.getElementById('summaryTableBody');
-            tableBody.innerHTML = '';
-
-            if (data.results.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No student results for this exam yet.</td></tr>';
-                return;
-            }
-
-            data.results.forEach(result => {
-                const row = document.createElement('tr');
-                // Ensure score is handled for potential null values
-                const scoreDisplay = result.score !== null ? result.score.toFixed(1) : 'N/A';
-                row.innerHTML = `
-                    <td>${result.username || 'N/A'}</td>
-                    <td>${result.admission_number || 'N/A'}</td>
-                    <td>${result.class_name || 'N/A'}</td>
-                    <td>${scoreDisplay}%</td>
-                    <td>${new Date(result.submission_date).toLocaleDateString()}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="viewStudentResultDetails('${result.result_id}')">View Details</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        // Function to load results based on URL parameters
         async function loadResults() {
             const urlParams = new URLSearchParams(window.location.search);
             const resultId = urlParams.get('resultId');
-            const examId = urlParams.get('examId');
-            const viewMode = urlParams.get('view'); // 'teacher' or 'admin' for summary view
+            const examId = urlParams.get('examId'); // For teacher/admin summary view
+            const viewMode = urlParams.get('viewMode'); // 'teacher' or 'admin' for summary
+
+            document.getElementById('singleResultView').classList.add('hidden');
+            document.getElementById('summaryResultsView').classList.add('hidden');
+            document.getElementById('messageContainer').classList.add('hidden');
 
             try {
                 if (resultId) {
-                    // Load detailed single result
+                    // Load single result for student review
                     const response = await fetch(`/api/exam-results/${resultId}`, { credentials: 'include' });
                     if (!response.ok) {
-                        throw new Error('Failed to fetch detailed exam result.');
+                        throw new Error('Failed to fetch exam result details.');
                     }
                     const data = await response.json();
-                    displayDetailedResult(data);
+                    displaySingleResult(data);
                 } else if (examId && (viewMode === 'teacher' || viewMode === 'admin')) {
                     // Load summary of all results for an exam (for teacher/admin)
                     const response = await fetch(`/api/exam-results/exam/${examId}/all`, { credentials: 'include' });
@@ -470,12 +366,143 @@
             }
         }
 
+        function displaySingleResult(result) {
+            document.getElementById('singleResultView').classList.remove('hidden');
+            document.getElementById('resultsPageTitle').textContent = `Result for ${result.exam_title}`;
+
+            document.getElementById('examTitle').textContent = result.exam_title;
+            document.getElementById('subjectName').textContent = result.subject_name || 'N/A';
+            document.getElementById('classLevelName').textContent = result.class_level_name || 'N/A';
+            document.getElementById('examType').textContent = result.exam_type || 'N/A';
+            document.getElementById('examTerm').textContent = result.term || 'N/A';
+            document.getElementById('examSession').textContent = result.session || 'N/A';
+            document.getElementById('submissionDate').textContent = new Date(result.submission_date).toLocaleString();
+            
+            const minutes = Math.floor(result.time_taken_seconds / 60);
+            const seconds = result.time_taken_seconds % 60;
+            document.getElementById('timeTaken').textContent = `${minutes}m ${seconds}s`;
+
+            document.getElementById('totalPossibleMarks').textContent = result.total_possible_marks;
+            document.getElementById('passMark').textContent = result.pass_mark;
+
+            // Conditional display of score for students
+            const studentScoreElement = document.getElementById('studentScore');
+            const passFailStatusElement = document.getElementById('passFailStatus');
+
+            if (currentUser && currentUser.role === 'student') {
+                studentScoreElement.textContent = "Score hidden by administrator.";
+                studentScoreElement.style.color = '#555'; // Muted color
+                studentScoreElement.style.backgroundColor = '#f0f0f0'; // Muted background
+                passFailStatusElement.textContent = "Results will be released soon.";
+                passFailStatusElement.style.color = '#555';
+            } else {
+                studentScoreElement.textContent = `${result.score.toFixed(1)}%`;
+                studentScoreElement.style.color = result.score >= result.pass_mark ? '#4CAF50' : '#e74c3c';
+                studentScoreElement.style.backgroundColor = result.score >= result.pass_mark ? '#e8f5e9' : '#ffebee';
+                
+                passFailStatusElement.textContent = result.score >= result.pass_mark ? 'Status: Passed' : 'Status: Failed';
+                passFailStatusElement.style.color = result.score >= result.pass_mark ? '#4CAF50' : '#e74c3c';
+            }
+
+
+            const questionsReviewContainer = document.getElementById('questionsReviewContainer');
+            questionsReviewContainer.innerHTML = '';
+
+            result.sections.forEach(section => {
+                const sectionTitle = document.createElement('h3');
+                sectionTitle.textContent = section.section_name;
+                questionsReviewContainer.appendChild(sectionTitle);
+
+                if (section.section_instructions) {
+                    const instructions = document.createElement('p');
+                    instructions.textContent = section.section_instructions;
+                    instructions.style.fontStyle = 'italic';
+                    questionsReviewContainer.appendChild(instructions);
+                }
+
+                section.questions.forEach((question, index) => {
+                    const questionCard = document.createElement('div');
+                    questionCard.classList.add('question-review-card');
+                    if (currentUser && currentUser.role !== 'student') { // Only show correct/incorrect for non-students
+                        questionCard.classList.add(question.is_correct ? 'correct' : 'incorrect');
+                    }
+
+                    questionCard.innerHTML = `
+                        <p><strong>Question ${index + 1}:</strong> ${question.question_text}</p>
+                        <ul class="review-options-list">
+                            ${['A', 'B', 'C', 'D'].map(optionKey => {
+                                const optionText = question[`option_${optionKey.toLowerCase()}`];
+                                if (!optionText) return ''; // Skip if option is empty
+
+                                let classList = 'review-option-label';
+                                if (question.user_answer === optionKey) {
+                                    classList += ' selected';
+                                }
+                                if (currentUser && currentUser.role !== 'student') { // Only show correct answer for non-students
+                                    if (question.correct_answer === optionKey) {
+                                        classList += ' correct-answer';
+                                    }
+                                    if (question.user_answer === optionKey && question.user_answer !== question.correct_answer) {
+                                        classList += ' incorrect-selected';
+                                    }
+                                }
+                                return `<li class="${classList}"><strong>${optionKey}:</strong> ${optionText}</li>`;
+                            }).join('')}
+                        </ul>
+                        ${(currentUser && currentUser.role !== 'student' && question.explanation) ? `<div class="explanation"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}
+                    `;
+                    questionsReviewContainer.appendChild(questionCard);
+                });
+            });
+        }
+
+        function displayResultsSummary(results) {
+            document.getElementById('summaryResultsView').classList.remove('hidden');
+            document.getElementById('resultsPageTitle').textContent = `Results Summary for ${results[0]?.exam_title || 'Exam'}`;
+
+            if (results.length > 0) {
+                const firstResult = results[0];
+                document.getElementById('summaryExamTitle').textContent = firstResult.exam_title;
+                document.getElementById('summarySubjectName').textContent = firstResult.subject_name || 'N/A';
+                document.getElementById('summaryClassLevelName').textContent = firstResult.class_level_name || 'N/A';
+                document.getElementById('summaryExamType').textContent = firstResult.exam_type || 'N/A';
+                document.getElementById('summaryExamTerm').textContent = firstResult.term || 'N/A';
+                document.getElementById('summaryExamSession').textContent = firstResult.session || 'N/A';
+            } else {
+                document.getElementById('summaryExamTitle').textContent = 'No results found for this exam.';
+            }
+
+            const summaryResultsBody = document.getElementById('summaryResultsBody');
+            summaryResultsBody.innerHTML = '';
+
+            if (results.length > 0) {
+                results.forEach(result => {
+                    const row = `
+                        <tr>
+                            <td>${result.student_name}</td>
+                            <td>${result.admission_number || 'N/A'}</td>
+                            <td>${result.score.toFixed(1)}%</td>
+                            <td>${result.raw_score_obtained}</td>
+                            <td>${result.total_possible_marks}</td>
+                            <td>${new Date(result.submission_date).toLocaleString()}</td>
+                            <td>
+                                <button class="btn btn-info" onclick="viewStudentResultDetails(${result.result_id})">View Details</button>
+                            </td>
+                        </tr>
+                    `;
+                    summaryResultsBody.innerHTML += row;
+                });
+            } else {
+                summaryResultsBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No student results available for this exam.</td></tr>`;
+            }
+        }
+
         // Modified to accept resultId only, as examType is now determined by backend
         function viewStudentResultDetails(resultId) {
             window.location.href = `results.html?resultId=${resultId}`;
         }
 
-        // --- PAGE INITIALIZATION ---
+        // --- PAGE INITIALIZATION ---\
         window.addEventListener('DOMContentLoaded', async () => {
             await loadUserData(); // Load user data first
             if (currentUser) {

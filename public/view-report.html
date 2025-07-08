@@ -760,10 +760,11 @@
             data.metadata.cumulative_data.forEach(cumSubject => {
                 const subjectEntry = subjectsMap.get(cumSubject.subjectName);
                 if (subjectEntry) {
-                    subjectEntry.firstTerm = cumSubject.firstTerm !== null ? parseFloat(cumSubject.firstTerm).toFixed(1) : 'N/A';
-                    subjectEntry.secondTerm = cumSubject.secondTerm !== null ? parseFloat(cumSubject.secondTerm).toFixed(1) : 'N/A';
-                    subjectEntry.thirdTerm = cumSubject.thirdTerm !== null ? parseFloat(cumSubject.thirdTerm).toFixed(1) : 'N/A';
-                    subjectEntry.cumulativeAvg = cumSubject.cumulativeAvg !== null ? parseFloat(cumSubject.cumulativeAvg).toFixed(1) : 'N/A';
+                    // Only update if the cumulative data has a value for that term
+                    if (cumSubject.firstTerm !== null) subjectEntry.firstTerm = parseFloat(cumSubject.firstTerm).toFixed(1);
+                    if (cumSubject.secondTerm !== null) subjectEntry.secondTerm = parseFloat(cumSubject.secondTerm).toFixed(1);
+                    if (cumSubject.thirdTerm !== null) subjectEntry.thirdTerm = parseFloat(cumSubject.thirdTerm).toFixed(1);
+                    if (cumSubject.cumulativeAvg !== null) subjectEntry.cumulativeAvg = parseFloat(cumSubject.cumulativeAvg).toFixed(1);
                 }
             });
         }
