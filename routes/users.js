@@ -198,14 +198,14 @@ router.post("/login", async (req, res) => {
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role, is_admin: user.is_admin },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' } // Token expires in 1 hour
+            { expiresIn: '2h' } // Token expires in 1 hour
         );
 
         res.cookie('jwt', token, {
             httpOnly: true, // Makes the cookie inaccessible to JavaScript
             secure: process.env.NODE_ENV === 'production', // Send cookie only over HTTPS in production
             sameSite: 'Lax', // Protects against CSRF
-            maxAge: 3600000 // 1 hour in milliseconds
+            maxAge: 7200000 // 1 hour in milliseconds
         });
 
         res.json({ message: "Logged in successfully", user: { id: user.id, username: user.username, email: user.email, role: user.role, is_admin: user.is_admin, profile_picture_url: user.profile_picture_url, admission_number: user.admission_number, class_level_id: user.class_level_id, class_level_name: user.class_level_name, dob: user.dob, gender: user.gender } });
