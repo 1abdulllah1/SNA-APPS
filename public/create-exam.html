@@ -43,79 +43,74 @@
       transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .primary-btn { background-color: var(--primary-blue); color: white; }
-    .primary-btn:hover { background-color: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-    .danger-btn { background-color: var(--danger-red); color: white; }
-    .danger-btn:hover { background-color: #cc0000; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-    .add-question-btn, .add-section-btn { background-color: #28a745; color: white; margin-top: 15px; } /* Green for add buttons */
-    .add-question-btn:hover, .add-section-btn:hover { background-color: #218838; }
-
-    /* Section and Question Cards */
-    .section-card {
-      background: #eef4ff; /* Lighter blue background */
-      border: 1px solid #c9d9ff;
-      border-radius: 12px; /* Consistent rounding */
-      padding: 25px;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #b3caff; }
-    .section-header h2 { margin: 0; color: var(--primary-blue); }
-    .section-actions { display: flex; gap: 10px; }
-    .section-instructions, .exam-instructions { min-height: 80px; resize: vertical; }
+    .btn-primary { background-color: #1a237e; color: white; } /* Dark blue */
+    .btn-secondary { background-color: #6c757d; color: white; } /* Gray */
+    .btn-danger { background-color: #dc3545; color: white; } /* Red */
+    .btn-success { background-color: #28a745; color: white; } /* Green */
+    .btn-info { background-color: #17a2b8; color: white; } /* Blue-green */
 
-    .question-card {
-      background: #f8f9ff;
-      border: 1px solid #e0e5ff;
-      border-radius: 10px; /* Consistent rounding */
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    /* Section & Question Styling */
+    .section-card, .question-card {
+      background: #fdfdff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #d1d9ff; }
-    .question-header h3 { margin: 0; color: var(--primary-blue); }
-    .delete-question-btn { background-color: var(--danger-red); color: white; padding: 6px 12px; font-size: 0.9em; }
+    .section-card h3, .question-card h4 {
+      color: #283593; /* Slightly lighter blue for subheadings */
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+    .question-options label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: normal;
+      color: #333;
+    }
+    .question-options input[type="radio"] {
+      margin-right: 8px;
+    }
 
-    /* Messages */
-    .error-message, .info-message, .success-message {
+    .add-button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    /* Message styles */
+    .message {
         padding: 10px 15px;
         border-radius: 8px;
         margin-bottom: 1rem;
-        text-align: center;
         font-weight: 500;
+        text-align: center;
     }
-    .error-message { background-color: #ffebeb; color: var(--danger-red); border: 1px solid var(--danger-red); }
-    .info-message { background-color: #e0f7fa; color: #007bb5; border: 1px solid #00acc1; }
-    .success-message { background-color: #e6ffed; color: var(--success-green); border: 1px solid var(--success-green); }
-    .hidden { display: none; }
+    .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .info-message {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    .hidden {
+        display: none;
+    }
 
-    /* Footer */
-    footer { text-align: center; padding: 20px; margin-top: 2rem; color: #777; font-size: 0.9em; }
-
-    /* Navbar Styles (copied for consistency) */
-    header { background-color: #1a237e; padding: 1rem 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); font-family: 'Inter', sans-serif; }
-    nav { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-    nav .logo { color: #e8eaf6; font-size: 1.8rem; font-weight: 700; text-decoration: none; transition: color 0.3s ease; }
-    nav .logo:hover { color: #ffffff; }
-    .nav-links { list-style: none; margin: 0; padding: 0; display: flex; gap: 25px; }
-    .nav-links li { position: relative; }
-    .nav-links .nav-link {
-        color: #c5cae9; text-decoration: none; font-size: 1.05rem; font-weight: 500; padding: 8px 0;
-        transition: color 0.3s ease, transform 0.2s ease; position: relative; white-space: nowrap;
-    }
-    .nav-links .nav-link::after { content: ''; position: absolute; left: 0; bottom: 0; width: 0; height: 2px; background-color: #ffffff; transition: width 0.3s ease; }
-    .nav-links .nav-link:hover { color: #ffffff; transform: translateY(-2px); }
-    .nav-links .nav-link:hover::after, .nav-links .nav-link.active::after { width: 100%; }
-    .logout-btn { background-color: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; }
-    .logout-btn:hover { background-color: #d32f2f; }
-    @media (max-width: 768px) {
-        nav { flex-direction: column; align-items: flex-start; }
-        .nav-links { flex-direction: column; width: 100%; gap: 5px; margin-top: 15px; }
-        .nav-links .nav-link { padding: 10px 15px; width: calc(100% - 30px); border-radius: 6px; }
-        .nav-links .nav-link:hover::after, .nav-links .nav-link.active::after { width: 0; }
-        .nav-links .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); transform: none; }
-    }
-    /* Modals */
+    /* Modal styles */
     .modal {
         display: none; /* Hidden by default */
         position: fixed; /* Stay in place */
@@ -126,38 +121,42 @@
         height: 100%; /* Full height */
         overflow: auto; /* Enable scroll if needed */
         background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        display: flex; /* Use flexbox for centering */
-        align-items: center; /* Center vertically */
         justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
     }
+
     .modal-content {
         background-color: #fefefe;
         margin: auto;
         padding: 0;
         border: 1px solid #888;
-        width: 80%; /* Could be responsive */
+        width: 80%;
         max-width: 500px;
-        border-radius: 10px; /* Rounded corners */
+        border-radius: 10px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-        overflow: hidden; /* Ensures rounded corners on content */
+        overflow: hidden;
     }
+
     .modal-header {
         padding: 15px 20px;
-        background-color: var(--primary-blue);
+        background-color: #1a237e;
         color: white;
         display: flex;
         justify-content: space-between;
         align-items: center;
         border-radius: 10px 10px 0 0;
     }
+
     .modal-header h2 {
         margin: 0;
         font-size: 1.2rem;
     }
+
     .modal-body {
         padding: 20px;
         text-align: center;
     }
+
     .modal-footer {
         padding: 15px 20px;
         background-color: #f1f1f1;
@@ -165,6 +164,7 @@
         border-top: 1px solid #e0e0e0;
         border-radius: 0 0 10px 10px;
     }
+
     .close-button {
         color: #aaa;
         float: right;
@@ -173,6 +173,7 @@
         cursor: pointer;
         transition: color 0.3s ease;
     }
+
     .close-button:hover,
     .close-button:focus {
         color: #ddd;
@@ -185,104 +186,96 @@
   <header>
     <nav>
       <a href="/dashboard.html" class="logo">SNA CBT System</a>
-      <ul class="nav-links" id="navLinksContainer">
-        </ul>
+      <ul class="nav-links" id="navLinks">
+        <!-- Navigation links will be dynamically inserted here by JS -->
+      </ul>
     </nav>
   </header>
 
   <main>
-    <div class="container">
-      <h1>Create New Exam</h1>
-      <form id="createExamForm" class="app-form">
-        <div id="formMessage" class="hidden"></div> <!-- Unified message display -->
-
-        <div class="form-group">
-          <label for="examTitle">Exam Title:</label>
-          <input type="text" id="examTitle" name="examTitle" required>
-        </div>
-
-        <div class="form-grid-col-3">
-          <div class="form-group">
-            <label for="classLevel">Class Level:</label>
-            <select id="classLevel" name="classLevel" required>
-              <option value="">Select Class Level</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="subject">Subject:</label>
-            <select id="subject" name="subject" required disabled>
-              <option value="">Select Subject</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="duration">Duration (minutes):</label>
-            <input type="number" id="duration" name="duration" min="1" value="60" required>
-          </div>
-        </div>
-
-        <!-- NEW: Term and Session fields -->
-        <div class="form-grid-col-3">
-          <div class="form-group">
-            <label for="term">Term:</label>
-            <select id="term" name="term" required>
-              <option value="">Select Term</option>
-              <option value="FIRST">First Term</option>
-              <option value="SECOND">Second Term</option>
-              <option value="THIRD">Third Term</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="session">Academic Session:</label>
-            <!-- Changed session from select to text input with pattern -->
-            <input type="text" id="session" name="session" required pattern="\d{4}-\d{4}" placeholder="e.g., 2023-2024">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="passMark">Pass Mark:</label>
-          <input type="number" id="passMark" name="passMark" min="0" required>
-        </div>
-
-        <div class="form-grid-col-3">
-          <div class="form-group">
-            <label for="startTime">Start Time:</label>
-            <input type="datetime-local" id="startTime" name="startTime" required>
-          </div>
-          <div class="form-group">
-            <label for="endTime">End Time:</label>
-            <input type="datetime-local" id="endTime" name="endTime" required>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="examType">Exam Type:</label>
-          <select id="examType" name="examType" required>
-            <option value="">Select Exam Type</option>
-            <option value="CA1">Continuous Assessment 1 (CA1)</option>
-            <option value="CA2">Continuous Assessment 2 (CA2)</option>
-            <option value="CA3">Continuous Assessment 3 (CA3)</option>
-            <option value="CA4">Continuous Assessment 4 (CA4)</option>
-            <option value="MID_TERM">Mid Term Test</option>
-            <option value="MAIN_EXAM">General Exam</option>
-            <!-- Removed 'OTHER' as it violates database constraint -->
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="isLocked">Lock Exam (Students cannot take it):</label>
-          <input type="checkbox" id="isLocked" name="isLocked">
-        </div>
-
-        <hr>
-        <h2>Exam Sections & Questions</h2>
-        <div id="sectionsContainer">
-          <!-- Sections will be dynamically added here -->
-        </div>
-
-        <button type="button" class="btn add-section-btn" id="addSectionBtn">Add New Section</button>
-        <button type="submit" class="btn primary-btn">Create Exam</button>
-      </form>
+    <div class="message-container">
+        <div id="pageMessage" class="message hidden"></div>
     </div>
+    <h1>Create New Exam</h1>
+    <form id="examForm" class="app-form">
+      <div class="form-group">
+        <label for="examTitle">Exam Title:</label>
+        <input type="text" id="examTitle" required>
+      </div>
+
+      <div class="form-grid-col-3">
+        <div class="form-group">
+          <label for="subject">Subject:</label>
+          <select id="subject" required></select>
+        </div>
+        <div class="form-group">
+          <label for="classLevel">Class Level:</label>
+          <select id="classLevel" required></select>
+        </div>
+        <div class="form-group">
+            <label for="examType">Exam Type:</label>
+            <select id="examType" required>
+                <option value="">Select Type</option>
+                <option value="MAIN_EXAM">Main Exam</option>
+                <option value="CA1">CA 1</option>
+                <option value="CA2">CA 2</option>
+                <option value="CA3">CA 3</option>
+                <option value="CA4">CA 4</option>
+                <option value="MID_TERM">Mid Term</option>
+                <option value="OTHER">Other</option>
+            </select>
+        </div>
+      </div>
+
+      <div class="form-grid-col-3">
+        <div class="form-group">
+          <label for="duration">Duration (minutes):</label>
+          <input type="number" id="duration" min="1" required>
+        </div>
+        <div class="form-group">
+          <label for="passMark">Pass Mark (%):</label>
+          <input type="number" id="passMark" min="0" max="100" required>
+        </div>
+        <div class="form-group">
+            <label for="maxScore">Max Score:</label>
+            <input type="number" id="maxScore" min="1" required>
+        </div>
+      </div>
+
+      <div class="form-grid-col-3">
+        <div class="form-group">
+            <label for="term">Term:</label>
+            <select id="term" required>
+                <option value="">Select Term</option>
+                <option value="FIRST">First Term</option>
+                <option value="SECOND">Second Term</option>
+                <option value="THIRD">Third Term</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="session">Academic Session (e.g., 2023/2024):</label>
+            <input type="text" id="session" pattern="^\d{4}\/\d{4}$" placeholder="YYYY/YYYY" required>
+        </div>
+        <div class="form-group">
+            <label for="scheduledTime">Scheduled Time (Optional):</label>
+            <input type="datetime-local" id="scheduledTime">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <input type="checkbox" id="isLocked">
+        <label for="isLocked">Lock Exam (Prevent students from taking it)</label>
+      </div>
+
+      <hr>
+      <h2>Exam Sections & Questions</h2>
+      <div id="sectionsContainer">
+        <!-- Sections will be dynamically added here -->
+      </div>
+      <button type="button" class="btn btn-secondary" id="addSectionBtn">Add Section</button>
+
+      <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">Create Exam</button>
+    </form>
   </main>
 
   <footer>
@@ -322,61 +315,57 @@
 </div>
 
   <script>
-    let currentUser = null; // To store user data
+    let currentUser = null;
+    let confirmCallback = null; // Callback for confirmation modal
 
-    // --- Modal Functions (re-used from dashboard.html for consistency) ---
-    let currentConfirmationCallback = null; 
-
-    function showConfirmation(message) {
-        return new Promise(resolve => {
-            const modal = document.getElementById('confirmationModal');
-            modal.querySelector('#confirmationMessage').textContent = message;
-            modal.style.display = 'flex'; // Use flex to center
-            currentConfirmationCallback = resolve;
-        });
-    }
-
-    function confirmAction(result) {
-        if (currentConfirmationCallback) {
-            currentConfirmationCallback(result);
-            currentConfirmationCallback = null; 
-        }
-        closeModal('confirmationModal');
-    }
-
-    function showAlert(message, title = "Alert") {
-        const modal = document.getElementById('alertDialog');
-        modal.querySelector('#alertTitle').textContent = title;
-        modal.querySelector('#alertMessage').textContent = message;
-        modal.style.display = 'flex'; // Use flex to center
+    // --- Modal Functions ---
+    function showModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
     }
 
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
     }
-    // --- End Modal Functions ---
 
-    // Utility function to display messages
-    function showMessage(message, type = 'info') {
-      const msgDiv = document.getElementById('formMessage');
-      msgDiv.textContent = message;
-      msgDiv.className = `message ${type}-message`; // Reset classes
-      msgDiv.classList.remove('hidden');
-      setTimeout(() => {
-        msgDiv.classList.add('hidden');
-      }, 5000); // Hide after 5 seconds
+    function showAlert(title, message) {
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertMessage').textContent = message;
+        showModal('alertDialog');
     }
 
-    // Function to load user data and build navigation
+    function showConfirmation(message) {
+        return new Promise((resolve) => {
+            document.getElementById('confirmationMessage').textContent = message;
+            showModal('confirmationModal');
+            confirmCallback = resolve; // Store resolve function
+        });
+    }
+
+    function confirmAction(result) {
+        closeModal('confirmationModal');
+        if (confirmCallback) {
+            confirmCallback(result); // Call the stored resolve function
+            confirmCallback = null; // Clear the callback
+        }
+    }
+
+    // Utility function to display messages on the page
+    function showPageMessage(message, type = 'info') {
+        const msgDiv = document.getElementById('pageMessage');
+        msgDiv.textContent = message;
+        msgDiv.className = `message ${type}-message`; // Apply styling classes
+        msgDiv.classList.remove('hidden');
+    }
+
     async function loadUserData() {
         try {
             const response = await fetch('/api/users/me', { credentials: 'include' });
             if (!response.ok) {
-                window.location.href = '/login.html'; // Redirect to login if not authenticated
+                window.location.href = '/login.html'; // Redirect if not authenticated
                 return null;
             }
             currentUser = await response.json();
-            createNavigationLinks(currentUser); // Build navigation based on user role
+            createNavigationLinks(currentUser); // Populate navbar
             return currentUser;
         } catch (error) {
             console.error("Error loading user data:", error);
@@ -386,7 +375,7 @@
     }
 
     function createNavigationLinks(user) {
-        const navLinksContainer = document.getElementById('navLinksContainer');
+        const navLinksContainer = document.getElementById('navLinks');
         navLinksContainer.innerHTML = ''; // Clear existing links
 
         const links = [
@@ -394,6 +383,9 @@
             { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
             { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
             { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
+            { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
+            { href: "/manage-class-levels.html", text: "Manage Levels", roles: ['admin'] },
+            { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
         ];
 
         links.forEach(linkInfo => {
@@ -417,11 +409,16 @@
             }
         });
 
-        // Add logout button
         const logoutLinkItem = document.createElement('li');
         const logoutBtn = document.createElement('button');
         logoutBtn.textContent = "Logout";
-        logoutBtn.className = 'btn logout-btn'; // Use a specific class for styling
+        logoutBtn.className = 'btn logout-btn';
+        logoutBtn.style.background = '#f44336';
+        logoutBtn.style.color = 'white';
+        logoutBtn.style.border = 'none';
+        logoutBtn.style.padding = '8px 15px';
+        logoutBtn.style.borderRadius = '5px';
+        logoutBtn.style.cursor = 'pointer';
         logoutLinkItem.appendChild(logoutBtn);
         navLinksContainer.appendChild(logoutLinkItem);
 
@@ -438,278 +435,210 @@
         } catch (error) {
             console.error('Network error during logout:', error);
         } finally {
-            localStorage.clear(); // Clear any local storage
-            sessionStorage.clear(); // Clear any session storage
-            window.location.href = '/login.html'; // Redirect to login page
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/login.html';
         }
     }
 
-    // Global counter for sections and questions to ensure unique IDs
+
     let sectionCounter = 0;
     let questionCounter = 0;
 
-    // Function to add a new section to the form
+    async function fetchSubjects(classLevelId = null) {
+        try {
+            let url = '/api/exams/config/subjects';
+            if (classLevelId) {
+                url += `?class_level_id=${classLevelId}`;
+            }
+            const response = await fetch(url, { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error('Failed to fetch subjects.');
+            }
+            const subjects = await response.json();
+            const subjectSelect = document.getElementById('subject');
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.subject_id;
+                option.textContent = subject.name;
+                subjectSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error fetching subjects:", error);
+            showPageMessage(`Error loading subjects: ${error.message}`, 'error');
+        }
+    }
+
+    async function fetchClassLevels() {
+        try {
+            const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error('Failed to fetch class levels.');
+            }
+            const classLevels = await response.json();
+            const classLevelSelect = document.getElementById('classLevel');
+            classLevelSelect.innerHTML = '<option value="">Select Class Level</option>';
+            classLevels.forEach(level => {
+                const option = document.createElement('option');
+                option.value = level.level_id;
+                option.textContent = level.level_name;
+                classLevelSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error fetching class levels:", error);
+            showPageMessage(`Error loading class levels: ${error.message}`, 'error');
+        }
+    }
+
     function addSection() {
       sectionCounter++;
-      const sectionId = `section-${sectionCounter}`;
-      const sectionHtml = `
-        <div class="section-card" id="${sectionId}">
-          <div class="section-header">
-            <h2>Section ${sectionCounter}</h2>
-            <div class="section-actions">
-              <button type="button" class="btn danger-btn delete-section-btn" data-section-id="${sectionId}">Delete Section</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="sectionName-${sectionId}">Section Name:</label>
-            <input type="text" id="sectionName-${sectionId}" name="sectionName" required>
-          </div>
-          <div class="form-group">
-            <label for="sectionInstructions-${sectionId}">Section Instructions:</label>
-            <textarea id="sectionInstructions-${sectionId}" name="sectionInstructions" rows="3"></textarea>
-          </div>
-          <hr>
-          <h3>Questions for Section ${sectionCounter}</h3>
-          <div id="questionsContainer-${sectionId}">
-            <!-- Questions will be added here -->
-          </div>
-          <button type="button" class="btn add-question-btn" data-section-id="${sectionId}">Add New Question</button>
+      const sectionsContainer = document.getElementById('sectionsContainer');
+      const sectionDiv = document.createElement('div');
+      sectionDiv.classList.add('section-card');
+      sectionDiv.dataset.sectionId = sectionCounter;
+      sectionDiv.innerHTML = `
+        <h3>Section ${sectionCounter}</h3>
+        <div class="form-group">
+          <label for="sectionName${sectionCounter}">Section Name:</label>
+          <input type="text" id="sectionName${sectionCounter}" class="section-name" required>
         </div>
+        <div class="form-group">
+          <label for="sectionInstructions${sectionCounter}">Instructions:</label>
+          <textarea id="sectionInstructions${sectionCounter}" class="section-instructions" rows="3"></textarea>
+        </div>
+        <div id="questionsContainer${sectionCounter}">
+          <!-- Questions for this section will be added here -->
+        </div>
+        <button type="button" class="btn btn-info add-question-btn" data-section-id="${sectionCounter}">Add Question</button>
+        <button type="button" class="btn btn-danger remove-section-btn" data-section-id="${sectionCounter}">Remove Section</button>
+        <hr>
       `;
-      document.getElementById('sectionsContainer').insertAdjacentHTML('beforeend', sectionHtml);
+      sectionsContainer.appendChild(sectionDiv);
 
-      // Add event listener for "Add New Question" button in this new section
-      document.querySelector(`#${sectionId} .add-question-btn`).addEventListener('click', (e) => {
-        addQuestion(e.target.dataset.sectionId);
-      });
-
-      // Add event listener for "Delete Section" button
-      document.querySelector(`#${sectionId} .delete-section-btn`).addEventListener('click', (e) => {
-        const idToDelete = e.target.dataset.sectionId;
-        showConfirmation(`Are you sure you want to delete Section ${idToDelete.split('-')[1]} and all its questions?`).then(confirmed => {
-            if (confirmed) {
-                document.getElementById(idToDelete).remove();
-                updateCalculatedMarks(); // Recalculate total marks
-            }
-        });
-      });
+      // Add event listeners for the new section's buttons
+      sectionDiv.querySelector('.add-question-btn').addEventListener('click', (e) => addQuestion(e.target.dataset.sectionId));
+      sectionDiv.querySelector('.remove-section-btn').addEventListener('click', (e) => removeSection(e.target.dataset.sectionId));
     }
 
-    // Function to add a new question to a specific section
+    function removeSection(sectionId) {
+        const confirmed = showConfirmation('Are you sure you want to remove this section and all its questions?');
+        if (confirmed) {
+            document.querySelector(`.section-card[data-section-id="${sectionId}"]`).remove();
+            showPageMessage('Section removed successfully.', 'info');
+        }
+    }
+
     function addQuestion(sectionId) {
       questionCounter++;
-      const questionId = `question-${questionCounter}`;
-      const questionHtml = `
-        <div class="question-card" id="${questionId}">
-          <div class="question-header">
-            <h3>Question ${questionCounter}</h3>
-            <button type="button" class="btn danger-btn delete-question-btn" data-question-id="${questionId}">Delete Question</button>
-          </div>
-          <div class="form-group">
-            <label for="questionText-${questionId}">Question Text:</label>
-            <textarea id="questionText-${questionId}" name="questionText" rows="3" required></textarea>
-          </div>
-          <div class="form-grid-col-3">
-            <div class="form-group">
-              <label for="optionA-${questionId}">Option A:</label>
-              <input type="text" id="optionA-${questionId}" name="optionA" required>
-            </div>
-            <div class="form-group">
-              <label for="optionB-${questionId}">Option B:</label>
-              <input type="text" id="optionB-${questionId}" name="optionB" required>
-            </div>
-            <div class="form-group">
-              <label for="optionC-${questionId}">Option C:</label>
-              <input type="text" id="optionC-${questionId}" name="optionC">
-            </div>
-            <div class="form-group">
-              <label for="optionD-${questionId}">Option D:</label>
-              <input type="text" id="optionD-${questionId}" name="optionD">
-            </div>
-            <div class="form-group">
-              <label for="correctAnswer-${questionId}">Correct Answer:</label>
-              <select id="correctAnswer-${questionId}" name="correctAnswer" required>
-                <option value="">Select Correct Option</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="marks-${questionId}">Marks:</label>
-              <input type="number" id="marks-${questionId}" name="marks" min="1" value="1" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="explanation-${questionId}">Explanation (Optional):</label>
-            <textarea id="explanation-${questionId}" name="explanation" rows="2"></textarea>
+      const questionsContainer = document.getElementById(`questionsContainer${sectionId}`);
+      const questionDiv = document.createElement('div');
+      questionDiv.classList.add('question-card');
+      questionDiv.dataset.questionId = questionCounter;
+      questionDiv.innerHTML = `
+        <h4>Question ${questionCounter}</h4>
+        <div class="form-group">
+          <label for="questionText${questionCounter}">Question Text:</label>
+          <textarea id="questionText${questionCounter}" class="question-text" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Options:</label>
+          <div class="question-options">
+            <label><input type="radio" name="correctAnswer${questionCounter}" value="A" required> A: <input type="text" class="option-a" required></label>
+            <label><input type="radio" name="correctAnswer${questionCounter}" value="B"> B: <input type="text" class="option-b" required></label>
+            <label><input type="radio" name="correctAnswer${questionCounter}" value="C"> C: <input type="text" class="option-c" required></label>
+            <label><input type="radio" name="correctAnswer${questionCounter}" value="D"> D: <input type="text" class="option-d" required></label>
           </div>
         </div>
+        <div class="form-group">
+          <label for="explanation${questionCounter}">Explanation (Optional):</label>
+          <textarea id="explanation${questionCounter}" class="explanation" rows="2"></textarea>
+        </div>
+        <button type="button" class="btn btn-danger remove-question-btn" data-question-id="${questionCounter}">Remove Question</button>
       `;
-      document.getElementById(`questionsContainer-${sectionId}`).insertAdjacentHTML('beforeend', questionHtml);
+      questionsContainer.appendChild(questionDiv);
 
-      // Add event listener for "Delete Question" button
-      document.querySelector(`#${questionId} .delete-question-btn`).addEventListener('click', (e) => {
-        const idToDelete = e.target.dataset.questionId;
-        showConfirmation(`Are you sure you want to delete Question ${idToDelete.split('-')[1]}?`).then(confirmed => {
-            if (confirmed) {
-                document.getElementById(idToDelete).remove();
-                updateCalculatedMarks(); // Recalculate total marks
-            }
-        });
-      });
-
-      // Add event listener to marks input for live total marks calculation
-      document.getElementById(`marks-${questionId}`).addEventListener('input', updateCalculatedMarks);
-      updateCalculatedMarks(); // Initial calculation
+      // Add event listener for the new question's remove button
+      questionDiv.querySelector('.remove-question-btn').addEventListener('click', (e) => removeQuestion(e.target.dataset.questionId));
     }
 
-    // Function to calculate and display total marks
-    function updateCalculatedMarks() {
-      let totalMarks = 0;
-      document.querySelectorAll('input[name="marks"]').forEach(input => {
-        totalMarks += parseInt(input.value) || 0;
-      });
-      document.getElementById('passMark').max = totalMarks; // Pass mark cannot exceed total marks
-      // You might want to display this total somewhere, e.g., in a disabled input or a span
-      // For now, it just updates the max for passMark.
-      // Example: document.getElementById('totalCalculatedMarks').textContent = totalMarks;
+    function removeQuestion(questionId) {
+        const confirmed = showConfirmation('Are you sure you want to remove this question?');
+        if (confirmed) {
+            document.querySelector(`.question-card[data-question-id="${questionId}"]`).remove();
+            showPageMessage('Question removed successfully.', 'info');
+        }
     }
 
-    // Function to load class levels into the dropdown
-    async function loadClassLevels() {
-      try {
-        const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
-        if (!response.ok) throw new Error('Failed to fetch class levels.');
-        const classLevels = await response.json();
-        const select = document.getElementById('classLevel');
-        select.innerHTML = '<option value="">Select Class Level</option>'; // Reset options
-        classLevels.forEach(level => {
-          const option = document.createElement('option');
-          option.value = level.level_id;
-          option.textContent = level.level_name;
-          select.appendChild(option);
-        });
-      } catch (error) {
-        console.error("Error loading class levels:", error);
-        showMessage(`Error loading class levels: ${error.message}`, 'error');
-      }
-    }
+    document.getElementById('addSectionBtn').addEventListener('click', addSection);
 
-    // Function to load subjects based on selected class level
-    async function loadSubjects(classLevelId) {
-      const subjectSelect = document.getElementById('subject');
-      subjectSelect.innerHTML = '<option value="">Select Subject</option>'; // Reset subjects
-      subjectSelect.disabled = true; // Disable until subjects are loaded or no class selected
-
-      if (!classLevelId) return;
-
-      try {
-        const response = await fetch(`/api/exams/config/subjects?class_level_id=${classLevelId}`, { credentials: 'include' });
-        if (!response.ok) throw new Error('Failed to fetch subjects.');
-        const subjects = await response.json();
-        subjects.forEach(subject => {
-          const option = document.createElement('option');
-          option.value = subject.subject_id;
-          option.textContent = subject.name;
-          subjectSelect.appendChild(option);
-        });
-        subjectSelect.disabled = false; // Enable subject select once loaded
-      } catch (error) {
-        console.error("Error loading subjects:", error);
-        showMessage(`Error loading subjects: ${error.message}`, 'error');
-      }
-    }
-
-    // Event listener for class level change
-    document.getElementById('classLevel').addEventListener('change', (e) => {
-      loadSubjects(e.target.value);
-    });
-
-    // Handle form submission
-    document.getElementById('createExamForm').addEventListener('submit', async (e) => {
+    document.getElementById('examForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const form = e.target;
-      const formData = new FormData(form);
-      const examData = {};
-
-      // Collect top-level exam details
-      examData.title = formData.get('examTitle');
-      examData.subject_id = parseInt(formData.get('subject'));
-      examData.class_level_id = parseInt(formData.get('classLevel'));
-      examData.duration_minutes = parseInt(formData.get('duration'));
-      examData.pass_mark = parseInt(formData.get('passMark'));
-      examData.start_time = formData.get('startTime');
-      examData.end_time = formData.get('endTime');
-      examData.exam_type = formData.get('examType');
-      examData.is_locked = formData.get('isLocked') === 'on'; // Checkbox value
-      examData.term = formData.get('term');
-      examData.session = formData.get('session');
-      examData.exam_instructions = formData.get('examInstructions');
-
-      // Collect sections and questions dynamically
-      examData.sections = [];
-      let totalMaxScore = 0;
-
-      document.querySelectorAll('.section-card').forEach(sectionCard => {
-        const section = {};
-        section.section_name = sectionCard.querySelector('input[name="sectionName"]').value;
-        section.section_instructions = sectionCard.querySelector('textarea[name="sectionInstructions"]').value;
-        section.questions = [];
-
-        sectionCard.querySelectorAll('.question-card').forEach(questionCard => {
-          const question = {};
-          question.question_text = questionCard.querySelector('textarea[name="questionText"]').value;
-          question.option_a = questionCard.querySelector('input[name="optionA"]').value;
-          question.option_b = questionCard.querySelector('input[name="optionB"]').value;
-          question.option_c = questionCard.querySelector('input[name="optionC"]').value;
-          question.option_d = questionCard.querySelector('input[name="optionD"]').value;
-          question.correct_answer = questionCard.querySelector('select[name="correctAnswer"]').value;
-          question.marks = parseInt(questionCard.querySelector('input[name="marks"]').value);
-          question.explanation = questionCard.querySelector('textarea[name="explanation"]').value;
-          
-          // Basic validation for question fields
-          if (!question.question_text || !question.correct_answer || isNaN(question.marks)) {
-              showMessage('Please fill in all required question fields (text, correct answer, marks).', 'error');
-              return; // Stop submission
-          }
-          if (question.correct_answer === 'C' && !question.option_c) {
-              showMessage('Option C cannot be empty if it is the correct answer.', 'error');
-              return;
-          }
-          if (question.correct_answer === 'D' && !question.option_d) {
-              showMessage('Option D cannot be empty if it is the correct answer.', 'error');
-              return;
-          }
-
-          section.questions.push(question);
-          totalMaxScore += question.marks;
-        });
-        examData.sections.push(section);
-      });
-
-      examData.max_score = totalMaxScore; // Set the calculated total max score
-
-      // Basic validation for exam fields
-      if (!examData.title || !examData.subject_id || !examData.class_level_id || !examData.duration_minutes || 
-          isNaN(examData.pass_mark) || !examData.start_time || !examData.end_time || !examData.exam_type || 
-          examData.sections.length === 0) {
-          showMessage('Please fill in all required exam details and add at least one section with questions.', 'error');
-          return;
-      }
-      if (examData.pass_mark > examData.max_score) {
-          showMessage('Pass mark cannot be greater than total available marks.', 'error');
-          return;
-      }
-
-      // Show confirmation before submitting
       const confirmed = await showConfirmation('Are you sure you want to create this exam?');
       if (!confirmed) {
-          showMessage('Exam creation cancelled.', 'info');
+          showPageMessage('Exam creation cancelled.', 'info');
           return;
       }
+
+      const examTitle = document.getElementById('examTitle').value;
+      const subjectId = document.getElementById('subject').value;
+      const classLevelId = document.getElementById('classLevel').value;
+      const examType = document.getElementById('examType').value;
+      const durationMinutes = parseInt(document.getElementById('duration').value);
+      const passMark = parseInt(document.getElementById('passMark').value);
+      const maxScore = parseInt(document.getElementById('maxScore').value);
+      const term = document.getElementById('term').value;
+      const session = document.getElementById('session').value;
+      const scheduledTime = document.getElementById('scheduledTime').value;
+      const isLocked = document.getElementById('isLocked').checked;
+
+      const sections = [];
+      document.querySelectorAll('.section-card').forEach(sectionDiv => {
+        const sectionName = sectionDiv.querySelector('.section-name').value;
+        const sectionInstructions = sectionDiv.querySelector('.section-instructions').value;
+        const sectionOrder = parseInt(sectionDiv.dataset.sectionId); // Use data-section-id for order
+
+        const questions = [];
+        sectionDiv.querySelectorAll('.question-card').forEach(questionDiv => {
+          const questionText = questionDiv.querySelector('.question-text').value;
+          const optionA = questionDiv.querySelector('.option-a').value;
+          const optionB = questionDiv.querySelector('.option-b').value;
+          const optionC = questionDiv.querySelector('.option-c').value;
+          const optionD = questionDiv.querySelector('.option-d').value;
+          const correctAnswer = questionDiv.querySelector(`input[name="correctAnswer${questionDiv.dataset.questionId}"]:checked`).value;
+          const explanation = questionDiv.querySelector('.explanation').value;
+
+          questions.push({
+            question_text: questionText,
+            options: { A: optionA, B: optionB, C: optionC, D: optionD },
+            correct_answer: correctAnswer,
+            explanation: explanation
+          });
+        });
+
+        sections.push({
+          section_name: sectionName,
+          section_instructions: sectionInstructions,
+          section_order: sectionOrder,
+          questions: questions
+        });
+      });
+
+      const examData = {
+        title: examTitle,
+        subject_id: parseInt(subjectId),
+        class_level_id: parseInt(classLevelId),
+        exam_type: examType,
+        duration_minutes: durationMinutes,
+        pass_mark: passMark,
+        max_score: maxScore,
+        term: term,
+        session: session,
+        scheduled_time: scheduledTime || null, // Send null if empty
+        is_locked: isLocked,
+        sections: sections
+      };
 
       try {
         const response = await fetch('/api/exams', {
@@ -718,7 +647,7 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(examData),
-          credentials: 'include' // Send cookies for authentication
+          credentials: 'include'
         });
 
         const result = await response.json();
@@ -726,26 +655,26 @@
           throw new Error(result.error || 'Failed to create exam.');
         }
 
-        showMessage('Exam created successfully!', 'success');
-        form.reset(); // Clear form
+        showPageMessage('Exam created successfully!', 'success');
+        document.getElementById('examForm').reset(); // Clear form
         document.getElementById('sectionsContainer').innerHTML = ''; // Clear sections
-        sectionCounter = 0; // Reset counters
+        sectionCounter = 0;
         questionCounter = 0;
-        document.getElementById('subject').disabled = true; // Disable subject dropdown
-        updateCalculatedMarks(); // Reset marks display
       } catch (error) {
         console.error("Error creating exam:", error);
-        showMessage(`Failed to create exam: ${error.message}`, 'error');
+        showPageMessage(`Failed to create exam: ${error.message}`, 'error');
       }
     });
 
-    // Initial load
+    // Initial load of subjects and class levels
     async function loadInitialData() {
         const user = await loadUserData();
         if (user && (user.is_admin || user.role === 'teacher')) {
-            await loadClassLevels();
-            addSection(); // Add one section by default
-            updateCalculatedMarks();
+            await fetchClassLevels();
+            await fetchSubjects(); // Load all subjects initially
+            document.getElementById('classLevel').addEventListener('change', (e) => {
+                fetchSubjects(e.target.value); // Filter subjects by selected class level
+            });
         } else {
             document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to create exams.</p>';
         }
@@ -753,37 +682,5 @@
 
     window.addEventListener('DOMContentLoaded', loadInitialData);
   </script>
-  <!-- Modals HTML (add these to the end of your body tag) -->
-<div id="confirmationModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Confirm Action</h2>
-            <span class="close-button" onclick="closeModal('confirmationModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p id="confirmationMessage"></p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
-            <button class="btn btn-danger" onclick="confirmAction(true)">Confirm</button>
-        </div>
-    </div>
-</div>
-
-<div id="alertDialog" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="alertTitle">Alert</h2>
-            <span class="close-button" onclick="closeModal('alertDialog')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p id="alertMessage"></p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
-        </div>
-    </div>
-</div>
-
 </body>
 </html>

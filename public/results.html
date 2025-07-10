@@ -15,48 +15,55 @@
         /* Question Review Card */
         .question-review-card { border-left: 5px solid; margin-bottom: 1.5rem; padding: 1.5rem; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-radius: 8px;}
         .question-review-card.correct { border-left-color: #4CAF50; } /* Success green */
-        .question-review-card.incorrect { border-left-color: #e74c3c; } /* Danger red */
-        .review-options-list { list-style: none; padding: 0; margin-top: 1rem; }
-        .review-option-label { border: 1px solid #e9ecef; border-radius: 6px; padding: 10px 15px; margin-bottom: 8px; display: flex; align-items: center; }
-        .review-option-label.selected { background-color: #e0f7fa; border-color: #1a237e; font-weight: 500; }
-        .review-option-label.correct-answer { background-color: #e6ffed; border-color: #4CAF50; font-weight: 600; }
-        .review-option-label.incorrect-selected { background-color: #ffebee; border-color: #e74c3c; font-weight: 600; }
-        .explanation { background-color: #f0f8ff; border-left: 3px solid #1a237e; padding: 1rem; margin-top: 1rem; border-radius: 0 0 8px 8px; font-size: 0.95em; color: #333; }
-        
-        /* Score Display */
-        .student-score-display {
-            font-size: 3em;
-            font-weight: bold;
-            color: #1a237e;
-            background-color: #e8f5e9; /* Light green background */
-            padding: 20px 30px;
-            border-radius: 15px;
-            display: inline-block;
-            margin-top: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        /* Utility */
-        .hidden { display: none !important; } /* Use !important to ensure override */
-        .error-message, .info-message {
-            color: #e74c3c;
-            background-color: #ffebeb;
-            border: 1px solid #e74c3c;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-        .info-message { background-color: #e0f7fa; color: #007bb5; border-color: #00acc1; }
+        .question-review-card.incorrect { border-left-color: #f44336; } /* Danger red */
+        .question-review-card.unanswered { border-left-color: #ff9800; } /* Warning orange */
 
-        /* Summary Table for Teacher View */
+        .question-review-card h3 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .question-review-card p {
+            margin-bottom: 0.5rem;
+        }
+
+        .question-review-card .options span {
+            display: block;
+            padding: 5px 0;
+            font-size: 0.95rem;
+        }
+        .question-review-card .options .correct-option {
+            font-weight: bold;
+            color: #28a745; /* Green for correct answer */
+        }
+        .question-review-card .options .user-answer {
+            font-weight: bold;
+            color: #17a2b8; /* Info blue for user's answer */
+        }
+        .question-review-card .options .user-answer.incorrect {
+            color: #dc3545; /* Red for incorrect user answer */
+        }
+
+        .explanation {
+            background-color: #e8f5e9; /* Light green background for explanation */
+            border-left: 3px solid #4CAF50;
+            padding: 10px 15px;
+            margin-top: 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: #388e3c;
+        }
+
+        /* Summary Table */
         .summary-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 2rem;
             border-radius: 8px;
-            overflow: hidden; /* Ensures rounded corners */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .summary-table th, .summary-table td {
             border: 1px solid #e0e0e0;
@@ -64,112 +71,58 @@
             text-align: left;
         }
         .summary-table th {
-            background-color: #1a237e;
-            color: white;
+            background-color: #e8eaf6;
+            color: #1a237e;
             font-weight: 600;
         }
         .summary-table tr:nth-child(even) {
             background-color: #f8f9fa;
         }
-        .summary-table tr:hover {
-            background-color: #f0f4f8;
-        } /* Hover effect for rows */
+        .summary-table .score-percentage {
+            font-weight: bold;
+            color: #1a237e;
+            font-size: 1.1rem;
+        }
+        .summary-table .pass { color: #28a745; }
+        .summary-table .fail { color: #dc3545; }
 
-        /* Buttons */
-        .btn {
-            padding: 8px 15px;
-            border: none;
+        /* General Message Styles */
+        .message {
+            padding: 15px;
             border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
+            margin-bottom: 20px;
+            text-align: center;
             font-weight: 500;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        .btn-primary {
-            background-color: #1a237e;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0d47a1;
-        }
+        .info-message { background-color: #e0f7fa; color: #0c5460; border: 1px solid #00acc1; }
+        .error-message { background-color: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; }
+        .hidden { display: none; }
 
-        /* Professional Navbar Styles (Unified) */
-        header {
-            background-color: #2c3e50; /* Dark blue/grey */
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        /* Student List for Summary View */
+        .student-results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
+        .student-results-table th, .student-results-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
         }
-        .logo {
-            color: #ecf0f1; /* Light grey text */
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-decoration: none;
-            transition: color 0.3s ease;
+        .student-results-table th {
+            background-color: #e8eaf6;
+            color: #1a237e;
+            font-weight: 600;
         }
-        .logo:hover {
-            color: #3498db; /* Primary blue on hover */
+        .student-results-table tr:nth-child(even) {
+            background-color: #f8f9fa;
         }
-        .nav-links {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 1.5rem; /* Space between nav items */
-        }
-        .nav-links li a, .nav-links li button {
-            color: #ecf0f1; /* Light grey text */
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.5rem 0.8rem;
-            border-radius: 5px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .nav-links li a:hover, .nav-links li button:hover {
-            background-color: #34495e; /* Slightly darker background on hover */
-            color: #ffffff;
-        }
-        .nav-links li button.btn {
-            background-color: #e74c3c; /* Red for logout */
-            border: none;
-            cursor: pointer;
-        }
-        .nav-links li button.btn:hover {
-            background-color: #c0392b; /* Darker red on hover */
-        }
-        @media (max-width: 768px) {
-            nav {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .nav-links {
-                flex-direction: column;
-                width: 100%;
-                margin-top: 1rem;
-            }
-            .nav-links li {
-                width: 100%;
-            }
-            .nav-links li a, .nav-links li button {
-                display: block;
-                width: 100%;
-                text-align: left;
-                padding: 0.8rem 1rem;
-            }
+        .student-results-table .btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
         }
     </style>
 </head>
@@ -185,39 +138,53 @@
 
     <main>
         <div class="results-container">
-            <h1 class="results-header" id="resultsPageTitle">Exam Results</h1>
-            <div id="messageContainer" class="hidden"></div> <!-- For info/error messages -->
+            <div id="messageContainer" class="message hidden"></div>
+            <div id="loadingMessage" class="message info-message">Loading results...</div>
 
-            <!-- Student's individual result display -->
-            <div id="singleResultView" class="hidden">
-                <h2 id="examTitle"></h2>
-                <p><strong>Subject:</strong> <span id="subjectName"></span></p>
-                <p><strong>Class Level:</strong> <span id="classLevelName"></span></p>
-                <p><strong>Exam Type:</strong> <span id="examType"></span></p>
-                <p><strong>Term:</strong> <span id="examTerm"></span></p>
-                <p><strong>Session:</strong> <span id="examSession"></span></p>
-                <p><strong>Date Submitted:</strong> <span id="submissionDate"></span></p>
-                <p><strong>Time Taken:</strong> <span id="timeTaken"></span></p>
-                <p><strong>Your Score:</strong> <span id="studentScore" class="student-score-display"></span></p>
-                <p><strong>Total Possible Marks:</strong> <span id="totalPossibleMarks"></span></p>
-                <p><strong>Pass Mark:</strong> <span id="passMark"></span></p>
-                <p id="passFailStatus"></p>
+            <!-- Individual Result View -->
+            <div id="individualResult" class="hidden">
+                <div class="results-header">
+                    <h1 id="examTitle"></h1>
+                    <p>Subject: <span id="subjectName"></span> | Class: <span id="classLevelName"></span></p>
+                    <p>Student: <span id="studentName"></span> (<span id="admissionNumber"></span>)</p>
+                    <p>Submitted On: <span id="submissionDate"></span> | Time Taken: <span id="timeTaken"></span></p>
+                </div>
 
-                <h2 style="margin-top: 2rem;">Question Review</h2>
-                <div id="questionsReviewContainer">
-                    <!-- Questions and answers will be loaded here -->
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Score</th>
+                            <th>Raw Score</th>
+                            <th>Total Possible Marks</th>
+                            <th>Pass Mark</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="percentageScore" class="score-percentage"></td>
+                            <td id="rawScore"></td>
+                            <td id="totalMarks"></td>
+                            <td id="passMarkDisplay"></td>
+                            <td id="resultStatus"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 style="margin-top: 2rem; color: #1a237e;">Question Review</h2>
+                <div id="questionReviewContainer">
+                    <!-- Question review cards will be inserted here -->
                 </div>
             </div>
 
-            <!-- Summary of results for an exam (for teacher/admin) -->
-            <div id="summaryResultsView" class="hidden">
-                <h2 id="summaryExamTitle"></h2>
-                <p><strong>Subject:</strong> <span id="summarySubjectName"></span></p>
-                <p><strong>Class Level:</strong> <span id="summaryClassLevelName"></span></p>
-                <p><strong>Exam Type:</strong> <span id="summaryExamType"></span></p>
-                <p><strong>Term:</strong> <span id="summaryExamTerm"></span></p>
-                <p><strong>Session:</strong> <span id="summaryExamSession"></span></p>
-                <table class="summary-table">
+            <!-- Exam Results Summary View (for Teachers/Admins) -->
+            <div id="examSummary" class="hidden">
+                <div class="results-header">
+                    <h1 id="summaryExamTitle"></h1>
+                    <p>Subject: <span id="summarySubjectName"></span> | Class: <span id="summaryClassLevelName"></span></p>
+                    <p>Exam Type: <span id="summaryExamType"></span> | Term: <span id="summaryTerm"></span> | Session: <span id="summarySession"></span></p>
+                </div>
+                <table class="student-results-table">
                     <thead>
                         <tr>
                             <th>Student Name</th>
@@ -226,11 +193,11 @@
                             <th>Raw Score</th>
                             <th>Total Marks</th>
                             <th>Submission Date</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="summaryResultsBody">
-                        <!-- Summary rows will be populated by JS -->
+                        <!-- Student results summary will be populated here -->
                     </tbody>
                 </table>
             </div>
@@ -242,47 +209,53 @@
     </footer>
 
     <script>
-        let currentUser = null; // To store user data
+        let currentUser = null;
 
-        // Utility function to display messages
         function showMessage(message, type = 'info') {
-            const msgDiv = document.getElementById('messageContainer');
-            msgDiv.textContent = message;
-            msgDiv.className = `message ${type}-message`; // Reset classes
-            msgDiv.classList.remove('hidden');
-            setTimeout(() => {
-                msgDiv.classList.add('hidden');
-            }, 5000); // Hide after 5 seconds
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.textContent = message;
+            messageContainer.className = `message ${type}-message`;
+            messageContainer.classList.remove('hidden');
+            document.getElementById('loadingMessage').classList.add('hidden');
+            document.getElementById('individualResult').classList.add('hidden');
+            document.getElementById('examSummary').classList.add('hidden');
         }
 
         async function loadUserData() {
             try {
                 const response = await fetch('/api/users/me', { credentials: 'include' });
                 if (!response.ok) {
-                    window.location.href = '/login.html'; // Redirect to login if not authenticated
+                    // If not authenticated, redirect to login
+                    window.location.href = '/login.html';
                     return null;
                 }
                 currentUser = await response.json();
+                createNavigationLinks(currentUser);
                 return currentUser;
             } catch (error) {
                 console.error("Error loading user data:", error);
-                window.location.href = '/login.html'; // Redirect on error
+                // If there's a network error or other issue, also redirect
+                window.location.href = '/login.html';
                 return null;
             }
         }
 
         function createNavigationLinks(user) {
             const navLinksContainer = document.getElementById('navLinks');
-            navLinksContainer.innerHTML = ''; // Clear existing links
+            navLinksContainer.innerHTML = '';
 
             const links = [
                 { href: "/dashboard.html", text: "Dashboard" },
                 { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
                 { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
                 { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
+                { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
+                { href: "/manage-class-levels.html", text: "Manage Levels", roles: ['admin'] },
+                { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
             ];
 
             links.forEach(linkInfo => {
+                // Determine if the link should be displayed based on user roles
                 const shouldDisplay = !linkInfo.roles || linkInfo.roles.some(role => {
                     if (role === 'admin') return user.is_admin;
                     return user.role === role;
@@ -303,57 +276,66 @@
                 }
             });
 
-            // Add logout button
             const logoutLinkItem = document.createElement('li');
             const logoutBtn = document.createElement('button');
             logoutBtn.textContent = "Logout";
-            logoutBtn.className = 'btn logout-btn'; // Use a specific class for styling
+            logoutBtn.className = 'btn logout-btn';
+            logoutBtn.style.background = '#f44336';
+            logoutBtn.style.color = 'white';
+            logoutBtn.style.border = 'none';
+            logoutBtn.style.padding = '8px 15px';
+            logoutBtn.style.borderRadius = '5px';
+            logoutBtn.style.cursor = 'pointer';
             logoutLinkItem.appendChild(logoutBtn);
             navLinksContainer.appendChild(logoutLinkItem);
 
-            logoutBtn.addEventListener('click', handleLogout);
-        }
-
-        async function handleLogout() {
-            try {
-                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                } catch (error) {
+                    console.error('Network error during logout:', error);
+                } finally {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/login.html';
                 }
-            } catch (error) {
-                console.error('Network error during logout:', error);
-            } finally {
-                localStorage.clear(); // Clear any local storage
-                sessionStorage.clear(); // Clear any session storage
-                window.location.href = '/login.html'; // Redirect to login page
-            }
+            });
         }
 
         async function loadResults() {
+            document.getElementById('loadingMessage').classList.remove('hidden');
+            document.getElementById('messageContainer').classList.add('hidden');
+            document.getElementById('individualResult').classList.add('hidden');
+            document.getElementById('examSummary').classList.add('hidden');
+
             const urlParams = new URLSearchParams(window.location.search);
             const resultId = urlParams.get('resultId');
-            const examId = urlParams.get('examId'); // For teacher/admin summary view
-            const viewMode = urlParams.get('viewMode'); // 'teacher' or 'admin' for summary
-
-            document.getElementById('singleResultView').classList.add('hidden');
-            document.getElementById('summaryResultsView').classList.add('hidden');
-            document.getElementById('messageContainer').classList.add('hidden');
+            const examId = urlParams.get('examId');
+            const viewMode = urlParams.get('viewMode'); // 'teacher' or 'admin'
 
             try {
                 if (resultId) {
-                    // Load single result for student review
                     const response = await fetch(`/api/exam-results/${resultId}`, { credentials: 'include' });
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch exam result details.');
+                     if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        // Display error message on the page instead of immediate redirect
+                        showMessage(`Error fetching individual result: ${errorData.error || response.statusText}`, 'error');
+                        return; // Stop execution here
                     }
                     const data = await response.json();
-                    displaySingleResult(data);
+                    displayIndividualResult(data);
                 } else if (examId && (viewMode === 'teacher' || viewMode === 'admin')) {
-                    // Load summary of all results for an exam (for teacher/admin)
+                    if (!currentUser.is_admin && currentUser.role !== 'teacher') {
+                        showMessage("Access Denied: You do not have permission to view exam summaries.", 'error');
+                        return;
+                    }
+
                     const response = await fetch(`/api/exam-results/exam/${examId}/all`, { credentials: 'include' });
                     if (!response.ok) {
-                        throw new Error('Failed to fetch exam results summary.');
+                        const errorData = await response.json().catch(() => ({}));
+                        // Display error message on the page instead of immediate redirect
+                        showMessage(`Error fetching exam summary: ${errorData.error || response.statusText}`, 'error');
+                        return; // Stop execution here
                     }
                     const data = await response.json();
                     displayResultsSummary(data);
@@ -363,127 +345,138 @@
             } catch (error) {
                 console.error("Error loading results:", error);
                 showMessage(`Failed to load results: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loadingMessage').classList.add('hidden'); // Ensure loading message is hidden
             }
         }
 
-        function displaySingleResult(result) {
-            document.getElementById('singleResultView').classList.remove('hidden');
-            document.getElementById('resultsPageTitle').textContent = `Result for ${result.exam_title}`;
+        function displayIndividualResult(result) {
+            document.getElementById('loadingMessage').classList.add('hidden');
+            document.getElementById('individualResult').classList.remove('hidden');
 
-            document.getElementById('examTitle').textContent = result.exam_title;
+            document.getElementById('examTitle').textContent = result.exam_title || 'N/A';
             document.getElementById('subjectName').textContent = result.subject_name || 'N/A';
             document.getElementById('classLevelName').textContent = result.class_level_name || 'N/A';
-            document.getElementById('examType').textContent = result.exam_type || 'N/A';
-            document.getElementById('examTerm').textContent = result.term || 'N/A';
-            document.getElementById('examSession').textContent = result.session || 'N/A';
-            document.getElementById('submissionDate').textContent = new Date(result.submission_date).toLocaleString();
-            
-            const minutes = Math.floor(result.time_taken_seconds / 60);
-            const seconds = result.time_taken_seconds % 60;
+            document.getElementById('studentName').textContent = result.student_name || 'N/A';
+            document.getElementById('admissionNumber').textContent = result.admission_number || 'N/A';
+            document.getElementById('submissionDate').textContent = new Date(result.submission_date).toLocaleString() || 'N/A';
+
+            const totalSeconds = result.time_taken_seconds || 0;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
             document.getElementById('timeTaken').textContent = `${minutes}m ${seconds}s`;
 
-            document.getElementById('totalPossibleMarks').textContent = result.total_possible_marks;
-            document.getElementById('passMark').textContent = result.pass_mark;
+            // Safely display score, raw score, total marks, and pass mark
+            document.getElementById('percentageScore').textContent = (typeof result.score === 'number' ? result.score.toFixed(1) : 'N/A') + '%';
+            document.getElementById('rawScore').textContent = typeof result.raw_score_obtained === 'number' ? result.raw_score_obtained : 'N/A';
+            document.getElementById('totalMarks').textContent = typeof result.total_possible_marks === 'number' ? result.total_possible_marks : 'N/A';
+            document.getElementById('passMarkDisplay').textContent = (typeof result.pass_mark === 'number' ? result.pass_mark : 'N/A') + '%';
 
-            // Conditional display of score for students
-            const studentScoreElement = document.getElementById('studentScore');
-            const passFailStatusElement = document.getElementById('passFailStatus');
 
-            if (currentUser && currentUser.role === 'student') {
-                studentScoreElement.textContent = "Score hidden by administrator.";
-                studentScoreElement.style.color = '#555'; // Muted color
-                studentScoreElement.style.backgroundColor = '#f0f0f0'; // Muted background
-                passFailStatusElement.textContent = "Results will be released soon.";
-                passFailStatusElement.style.color = '#555';
+            const resultStatusElement = document.getElementById('resultStatus');
+            if (typeof result.score === 'number' && typeof result.pass_mark === 'number') {
+                if (result.score >= result.pass_mark) {
+                    resultStatusElement.textContent = 'PASS';
+                    resultStatusElement.className = 'pass';
+                } else {
+                    resultStatusElement.textContent = 'FAIL';
+                    resultStatusElement.className = 'fail';
+                }
             } else {
-                studentScoreElement.textContent = `${result.score.toFixed(1)}%`;
-                studentScoreElement.style.color = result.score >= result.pass_mark ? '#4CAF50' : '#e74c3c';
-                studentScoreElement.style.backgroundColor = result.score >= result.pass_mark ? '#e8f5e9' : '#ffebee';
-                
-                passFailStatusElement.textContent = result.score >= result.pass_mark ? 'Status: Passed' : 'Status: Failed';
-                passFailStatusElement.style.color = result.score >= result.pass_mark ? '#4CAF50' : '#e74c3c';
+                resultStatusElement.textContent = 'N/A';
+                resultStatusElement.className = ''; // Clear any pass/fail classes
             }
 
 
-            const questionsReviewContainer = document.getElementById('questionsReviewContainer');
-            questionsReviewContainer.innerHTML = '';
+            const questionReviewContainer = document.getElementById('questionReviewContainer');
+            questionReviewContainer.innerHTML = '';
 
-            result.sections.forEach(section => {
-                const sectionTitle = document.createElement('h3');
-                sectionTitle.textContent = section.section_name;
-                questionsReviewContainer.appendChild(sectionTitle);
+            // Determine if detailed question review should be shown
+            // Backend already restricts student role from viewing detailed results for MAIN_EXAM,
+            // but this adds a client-side check for clarity and robustness.
+            const isMainExam = result.exam_type === 'MAIN_EXAM';
+            const canViewDetailedReview = (currentUser.is_admin || currentUser.role === 'teacher' || !isMainExam);
 
-                if (section.section_instructions) {
-                    const instructions = document.createElement('p');
-                    instructions.textContent = section.section_instructions;
-                    instructions.style.fontStyle = 'italic';
-                    questionsReviewContainer.appendChild(instructions);
-                }
+            if (canViewDetailedReview && result.sections && result.sections.length > 0) {
+                result.sections.forEach(section => {
+                    const sectionHeader = document.createElement('h4');
+                    sectionHeader.textContent = `Section: ${section.section_name}`;
+                    questionReviewContainer.appendChild(sectionHeader);
 
-                section.questions.forEach((question, index) => {
-                    const questionCard = document.createElement('div');
-                    questionCard.classList.add('question-review-card');
-                    if (currentUser && currentUser.role !== 'student') { // Only show correct/incorrect for non-students
-                        questionCard.classList.add(question.is_correct ? 'correct' : 'incorrect');
+                    if (section.questions && section.questions.length > 0) {
+                        section.questions.forEach((question, index) => {
+                            const card = document.createElement('div');
+                            card.classList.add('question-review-card');
+
+                            let cardClass = 'unanswered';
+                            if (question.user_answer) {
+                                cardClass = question.is_correct ? 'correct' : 'incorrect';
+                            }
+                            card.classList.add(cardClass);
+
+                            let optionsHtml = '';
+                            ['A', 'B', 'C', 'D'].forEach(optionKey => {
+                                const optionText = question.options[optionKey];
+                                let optionClass = '';
+                                if (optionKey === question.correct_answer) {
+                                    optionClass += 'correct-option ';
+                                }
+                                if (optionKey === question.user_answer) {
+                                    optionClass += 'user-answer ';
+                                    if(!question.is_correct) optionClass += 'incorrect';
+                                }
+                                optionsHtml += `<span class="${optionClass}">${optionKey}: ${optionText || ''}</span>`;
+                            });
+
+                            card.innerHTML = `
+                                <h3>Question ${index + 1}: ${question.question_text}</h3>
+                                <div class="options">${optionsHtml}</div>
+                                <p><strong>Your Answer:</strong> ${question.user_answer || 'N/A'}</p>
+                                <p><strong>Correct Answer:</strong> ${question.correct_answer || 'N/A'}</p>
+                                ${question.explanation ? `<div class="explanation"><p><strong>Explanation:</strong> ${question.explanation}</p></div>` : ''}
+                            `;
+                            questionReviewContainer.appendChild(card);
+                        });
                     }
-
-                    questionCard.innerHTML = `
-                        <p><strong>Question ${index + 1}:</strong> ${question.question_text}</p>
-                        <ul class="review-options-list">
-                            ${['A', 'B', 'C', 'D'].map(optionKey => {
-                                const optionText = question[`option_${optionKey.toLowerCase()}`];
-                                if (!optionText) return ''; // Skip if option is empty
-
-                                let classList = 'review-option-label';
-                                if (question.user_answer === optionKey) {
-                                    classList += ' selected';
-                                }
-                                if (currentUser && currentUser.role !== 'student') { // Only show correct answer for non-students
-                                    if (question.correct_answer === optionKey) {
-                                        classList += ' correct-answer';
-                                    }
-                                    if (question.user_answer === optionKey && question.user_answer !== question.correct_answer) {
-                                        classList += ' incorrect-selected';
-                                    }
-                                }
-                                return `<li class="${classList}"><strong>${optionKey}:</strong> ${optionText}</li>`;
-                            }).join('')}
-                        </ul>
-                        ${(currentUser && currentUser.role !== 'student' && question.explanation) ? `<div class="explanation"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}
-                    `;
-                    questionsReviewContainer.appendChild(questionCard);
                 });
-            });
+            } else {
+                 questionReviewContainer.innerHTML = '<p class="info-message">Detailed question review is not available for this exam type or for your role.</p>';
+            }
         }
 
         function displayResultsSummary(results) {
-            document.getElementById('summaryResultsView').classList.remove('hidden');
-            document.getElementById('resultsPageTitle').textContent = `Results Summary for ${results[0]?.exam_title || 'Exam'}`;
+            document.getElementById('loadingMessage').classList.add('hidden');
+            document.getElementById('examSummary').classList.remove('hidden');
 
             if (results.length > 0) {
                 const firstResult = results[0];
-                document.getElementById('summaryExamTitle').textContent = firstResult.exam_title;
+                document.getElementById('summaryExamTitle').textContent = firstResult.exam_title || 'N/A';
                 document.getElementById('summarySubjectName').textContent = firstResult.subject_name || 'N/A';
                 document.getElementById('summaryClassLevelName').textContent = firstResult.class_level_name || 'N/A';
                 document.getElementById('summaryExamType').textContent = firstResult.exam_type || 'N/A';
-                document.getElementById('summaryExamTerm').textContent = firstResult.term || 'N/A';
-                document.getElementById('summaryExamSession').textContent = firstResult.session || 'N/A';
+                document.getElementById('summaryTerm').textContent = firstResult.term || 'N/A';
+                document.getElementById('summarySession').textContent = firstResult.session || 'N/A';
             } else {
-                document.getElementById('summaryExamTitle').textContent = 'No results found for this exam.';
+                document.getElementById('summaryExamTitle').textContent = 'No Results Found';
             }
 
             const summaryResultsBody = document.getElementById('summaryResultsBody');
             summaryResultsBody.innerHTML = '';
 
-            if (results.length > 0) {
+            if (results && results.length > 0) {
                 results.forEach(result => {
+                    // Safely access score and other numeric properties
+                    const scoreDisplay = typeof result.score === 'number' ? result.score.toFixed(1) + '%' : 'N/A';
+                    const rawScoreDisplay = typeof result.raw_score_obtained === 'number' ? result.raw_score_obtained : 'N/A';
+                    const totalMarksDisplay = typeof result.total_possible_marks === 'number' ? result.total_possible_marks : 'N/A';
+
                     const row = `
                         <tr>
-                            <td>${result.student_name}</td>
+                            <td>${result.student_name || 'N/A'}</td>
                             <td>${result.admission_number || 'N/A'}</td>
-                            <td>${result.score.toFixed(1)}%</td>
-                            <td>${result.raw_score_obtained}</td>
-                            <td>${result.total_possible_marks}</td>
+                            <td>${scoreDisplay}</td>
+                            <td>${rawScoreDisplay}</td>
+                            <td>${totalMarksDisplay}</td>
                             <td>${new Date(result.submission_date).toLocaleString()}</td>
                             <td>
                                 <button class="btn btn-info" onclick="viewStudentResultDetails(${result.result_id})">View Details</button>
@@ -497,16 +490,27 @@
             }
         }
 
-        // Modified to accept resultId only, as examType is now determined by backend
         function viewStudentResultDetails(resultId) {
-            window.location.href = `results.html?resultId=${resultId}`;
+            // Ensure that only teachers/admins can view detailed results for MAIN_EXAM types
+            // This client-side check complements the backend authorization.
+            // For other exam types, students can view their own details.
+            if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) {
+                 window.location.href = `results.html?resultId=${resultId}`;
+            } else {
+                // If it's a student, we need to check the exam type associated with this resultId
+                // This would require an additional API call or passing exam_type in the summary view.
+                // For now, we'll rely on the backend to enforce this strictly.
+                // If the backend allows it for non-MAIN_EXAM, the student will see it.
+                // If the backend denies for MAIN_EXAM, an error message will be shown.
+                window.location.href = `results.html?resultId=${resultId}`;
+            }
         }
 
-        // --- PAGE INITIALIZATION ---\
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadUserData(); // Load user data first
-            if (currentUser) {
-                createNavigationLinks(currentUser); // Populate navbar
+            // Load user data first. If not authenticated, it will redirect to login.
+            const user = await loadUserData();
+            if (user) {
+                // Only proceed to load results if user data was successfully loaded (i.e., user is authenticated).
                 await loadResults();
             }
         });

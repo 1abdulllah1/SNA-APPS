@@ -266,6 +266,9 @@
         .signature-item {
             flex: 1 1 45%; /* Allow items to grow/shrink, minimum 45% width */
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .signature-line {
@@ -276,6 +279,36 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             padding-bottom: 5px; /* Space for the line itself */
+            width: 100%; /* Ensure line spans full width of its container */
+        }
+
+        .signature-preview {
+            max-width: 150px;
+            max-height: 80px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            object-fit: contain;
+            background-color: #f9f9f9;
+        }
+
+        .signature-upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .signature-upload-area input[type="file"] {
+            width: 100%;
+            max-width: 200px;
+            border: 1px solid #c5cae9;
+            border-radius: 6px;
+            padding: 5px;
+            font-size: 0.9rem;
+        }
+        .signature-upload-area input[type="file"]:disabled {
+            background-color: #eceff1;
+            cursor: not-allowed;
         }
 
         /* Action bar buttons */
@@ -551,9 +584,19 @@
 
                 <div class="signature-section">
                     <div class="signature-item">
+                        <img id="teacherSignaturePreview" class="signature-preview" src="" alt="Teacher Signature" style="display: none;">
+                        <div class="signature-upload-area">
+                            <input type="file" id="teacherSignatureUpload" accept="image/*" disabled>
+                            <label for="teacherSignatureUpload" class="signature-label">Upload Teacher's Signature</label>
+                        </div>
                         <div class="signature-line">Teacher's Signature</div>
                     </div>
                     <div class="signature-item">
+                        <img id="principalSignaturePreview" class="signature-preview" src="" alt="Principal Signature" style="display: none;">
+                        <div class="signature-upload-area">
+                            <input type="file" id="principalSignatureUpload" accept="image/*" disabled>
+                            <label for="principalSignatureUpload" class="signature-label">Upload Principal's Signature</label>
+                        </div>
                         <div class="signature-line">Principal's Signature</div>
                     </div>
                 </div>
@@ -562,7 +605,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2025 Sealed Nectar Academy. All rights reserved.</p>
+        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
     </footer>
 
     <!-- Modals HTML -->
@@ -712,9 +755,13 @@
 
         async function handleLogout() {
             try {
-                await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
+                }
             } catch (error) {
-                console.error('Logout error:', error);
+                console.error('Network error during logout:', error);
             } finally {
                 localStorage.clear();
                 sessionStorage.clear();
@@ -734,8 +781,14 @@
             const nextTermBeginsInput = document.getElementById('nextTermBeginsInput');
             const nextTermBeginsDisplay = document.getElementById('nextTermBeginsDisplay');
 
+            const teacherSignatureUpload = document.getElementById('teacherSignatureUpload');
+            const principalSignatureUpload = document.getElementById('principalSignatureUpload');
+
             teacherComment.disabled = !isEditing;
             principalComment.disabled = !isEditing;
+            teacherSignatureUpload.disabled = !isEditing;
+            principalSignatureUpload.disabled = !isEditing;
+
 
             if (isEditing) {
                 nextTermBeginsDisplay.classList.add('hidden');
@@ -757,14 +810,14 @@
         }
 
         async function loadReport() {
+            document.getElementById('loadingMessage').classList.remove('hidden');
+            document.getElementById('reportContent').classList.add('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+
             const urlParams = new URLSearchParams(window.location.search);
             const studentId = urlParams.get('studentId');
             const term = urlParams.get('term');
             const academicYear = urlParams.get('academicYear');
-
-            document.getElementById('loadingMessage').classList.remove('hidden');
-            document.getElementById('reportContent').classList.add('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
 
             if (!studentId || !term || !academicYear) {
                 showPageMessage("Missing student ID, term, or academic year in the URL. Please navigate from the student reports page.", 'error');
@@ -780,7 +833,6 @@
                 }
 
                 if (!data.student_info || !data.report_data) {
-                    // This is the crucial check for incomplete data
                     throw new Error("Incomplete report data received from server. Missing student_info or report_data.");
                 }
 
@@ -819,13 +871,13 @@
                     const row = `
                         <tr>
                             <td>${subject.subject_name || 'N/A'}</td>
-                            <td>${subject.ca_score !== undefined ? subject.ca_score : 'N/A'}</td>
-                            <td>${subject.exam_score !== undefined ? subject.exam_score : 'N/A'}</td>
-                            <td>${subject.total_score !== undefined ? subject.total_score : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['FIRST'] !== undefined && subject.cumulative_data['FIRST'] !== null) ? subject.cumulative_data['FIRST'].toFixed(2) : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['SECOND'] !== undefined && subject.cumulative_data['SECOND'] !== null) ? subject.cumulative_data['SECOND'].toFixed(2) : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['THIRD'] !== undefined && subject.cumulative_data['THIRD'] !== null) ? subject.cumulative_data['THIRD'].toFixed(2) : 'N/A'}</td>
-                            <td>${subject.cumulative_avg !== undefined ? subject.cumulative_avg : 'N/A'}</td>
+                            <td>${subject.ca_score !== undefined && subject.ca_score !== null ? parseFloat(subject.ca_score).toFixed(2) : 'N/A'}</td>
+                            <td>${subject.exam_score !== undefined && subject.exam_score !== null ? parseFloat(subject.exam_score).toFixed(2) : 'N/A'}</td>
+                            <td>${subject.total_score !== undefined && subject.total_score !== null ? parseFloat(subject.total_score).toFixed(2) : 'N/A'}</td>
+                            <td>${(subject.cumulative_data && subject.cumulative_data['FIRST'] !== undefined && subject.cumulative_data['FIRST'] !== null) ? parseFloat(subject.cumulative_data['FIRST']).toFixed(2) : 'N/A'}</td>
+                            <td>${(subject.cumulative_data && subject.cumulative_data['SECOND'] !== undefined && subject.cumulative_data['SECOND'] !== null) ? parseFloat(subject.cumulative_data['SECOND']).toFixed(2) : 'N/A'}</td>
+                            <td>${(subject.cumulative_data && subject.cumulative_data['THIRD'] !== undefined && subject.cumulative_data['THIRD'] !== null) ? parseFloat(subject.cumulative_data['THIRD']).toFixed(2) : 'N/A'}</td>
+                            <td>${subject.cumulative_avg !== undefined && subject.cumulative_avg !== null ? parseFloat(subject.cumulative_avg).toFixed(2) : 'N/A'}</td>
                             <td>${subject.grade || 'N/A'}</td>
                             <td>${subject.remark || 'N/A'}</td>
                         </tr>
@@ -837,9 +889,11 @@
             }
 
             // Overall Summary
-            document.getElementById('grandTotalScore').textContent = report_data.total_final_score !== undefined ? report_data.total_final_score : 'N/A';
-            document.getElementById('overallPercentage').textContent = report_data.total_final_score !== undefined ? `${report_data.total_final_score}%` : 'N/A';
-            document.getElementById('classPosition').textContent = report_data.position !== undefined && report_data.class_size !== undefined ? `${report_data.position}${getOrdinalSuffix(report_data.position)} of ${report_data.class_size}` : 'N/A';
+            // Using grand_total_score for the sum of all subject scores
+            document.getElementById('grandTotalScore').textContent = report_data.grand_total_score !== undefined && report_data.grand_total_score !== null ? parseFloat(report_data.grand_total_score).toFixed(2) : 'N/A';
+            // Correctly using overall_percentage for the average percentage
+            document.getElementById('overallPercentage').textContent = report_data.overall_percentage !== undefined && report_data.overall_percentage !== null ? `${parseFloat(report_data.overall_percentage).toFixed(2)}%` : 'N/A';
+            document.getElementById('classPosition').textContent = report_data.position !== undefined && report_data.class_size !== undefined && report_data.position !== null && report_data.class_size !== null ? `${report_data.position}${getOrdinalSuffix(report_data.position)} of ${report_data.class_size}` : 'N/A';
 
             // Comments Section
             document.getElementById('teacherComment').value = meta_data.teacher_comment || '';
@@ -855,6 +909,24 @@
             } else {
                 nextTermBeginsDisplay.textContent = 'N/A';
                 nextTermBeginsInput.value = '';
+            }
+
+            // Signature Previews
+            const teacherSignaturePreview = document.getElementById('teacherSignaturePreview');
+            const principalSignaturePreview = document.getElementById('principalSignaturePreview');
+
+            if (meta_data.teacher_signature_url) {
+                teacherSignaturePreview.src = meta_data.teacher_signature_url;
+                teacherSignaturePreview.style.display = 'block';
+            } else {
+                teacherSignaturePreview.style.display = 'none';
+            }
+
+            if (meta_data.principal_signature_url) {
+                principalSignaturePreview.src = meta_data.principal_signature_url;
+                principalSignaturePreview.style.display = 'block';
+            } else {
+                principalSignaturePreview.style.display = 'none';
             }
         }
 
@@ -874,6 +946,31 @@
             return "th";
         }
 
+        async function uploadSignature(file) {
+            if (!file) return null;
+
+            const formData = new FormData();
+            formData.append('signature', file);
+
+            try {
+                const response = await fetch('/api/users/upload-signature', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to upload signature.');
+                }
+                return result.url; // Return the Cloudinary URL
+            } catch (error) {
+                console.error("Error uploading signature:", error);
+                showAlert('Upload Error', `Failed to upload signature: ${error.message}`);
+                return null;
+            }
+        }
+
         async function saveReportData() {
             const confirmed = await showConfirmation('Are you sure you want to save these comments and date?');
             if (!confirmed) {
@@ -890,6 +987,22 @@
             const principalComment = document.getElementById('principalComment').value;
             const nextTermBegins = document.getElementById('nextTermBeginsInput').value; // Get value from input
 
+            const teacherSignatureFile = document.getElementById('teacherSignatureUpload').files[0];
+            const principalSignatureFile = document.getElementById('principalSignatureUpload').files[0];
+
+            let teacherSignatureUrl = document.getElementById('teacherSignaturePreview').src;
+            let principalSignatureUrl = document.getElementById('principalSignaturePreview').src;
+
+            // Only upload if a new file is selected
+            if (teacherSignatureFile) {
+                teacherSignatureUrl = await uploadSignature(teacherSignatureFile);
+                if (!teacherSignatureUrl) return; // Stop if upload failed
+            }
+            if (principalSignatureFile) {
+                principalSignatureUrl = await uploadSignature(principalSignatureFile);
+                if (!principalSignatureUrl) return; // Stop if upload failed
+            }
+
             try {
                 const response = await fetch('/api/exam-results/report-card-meta', {
                     method: 'PUT',
@@ -902,7 +1015,9 @@
                         session: academicYear, // Backend expects 'session'
                         teacher_comment: teacherComment,
                         principal_comment: principalComment,
-                        next_term_begins: nextTermBegins || null // Send null if empty
+                        next_term_begins: nextTermBegins || null, // Send null if empty
+                        teacher_signature_url: teacherSignatureUrl === 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg' ? null : teacherSignatureUrl, // Don't save default avatar as signature
+                        principal_signature_url: principalSignatureUrl === 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg' ? null : principalSignatureUrl // Don't save default avatar as signature
                     }),
                     credentials: 'include'
                 });
@@ -912,7 +1027,7 @@
                     throw new Error(result.error || 'Failed to save report data.');
                 }
 
-                showAlert('Success', 'Report comments and next term date saved successfully!');
+                showAlert('Success', 'Report comments and signature saved successfully!');
                 toggleEdit(false); // Exit edit mode after saving
                 // Re-load report data to ensure display is updated from backend
                 await loadReport();
@@ -922,6 +1037,40 @@
                 showAlert('Error', `Failed to save report data: ${error.message}`);
             }
         }
+
+        // Event listeners for signature file inputs to show preview
+        document.getElementById('teacherSignatureUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('teacherSignaturePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('teacherSignaturePreview').style.display = 'none';
+                document.getElementById('teacherSignaturePreview').src = '';
+            }
+        });
+
+        document.getElementById('principalSignatureUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('principalSignaturePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('principalSignaturePreview').style.display = 'none';
+                document.getElementById('principalSignaturePreview').src = '';
+            }
+        });
+
 
         // --- PAGE INITIALIZATION ---
         window.addEventListener('DOMContentLoaded', async () => {

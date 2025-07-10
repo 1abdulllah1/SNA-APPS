@@ -69,6 +69,13 @@ const transporter = nodemailer.createTransport({
 */
 // =========================================================
 
+// *** FIX: Added missing isAdminOrTeacher middleware function ***
+const isAdminOrTeacher = (req, res, next) => {
+  if (!req.user || (!req.user.is_admin && req.user.role !== 'teacher')) {
+    return res.status(403).json({ error: "Access denied. Admin or Teacher privileges required." });
+  }
+  next();
+};
 
 // GET /api/users/me - Get current user's profile
 router.get("/me", auth, async (req, res) => {
@@ -538,6 +545,26 @@ router.post("/logout", (req, res) => {
         sameSite: 'Lax'
     });
     res.status(200).json({ message: "Logged out successfully" });
+});
+
+// POST /api/users/upload-signature - Upload signature image
+router.post("/upload-signature", auth, isAdminOrTeacher, upload.single('signature'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No signature file provided." });
+        }
+
+        const uploadResult = await cloudinary.uploader.upload(`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`, {
+            folder: "signatures",
+            transformation: [{ width: 300, height: 150, crop: "limit" }]
+        });
+
+        res.status(200).json({ message: "Signature uploaded successfully.", url: uploadResult.secure_url });
+
+    } catch (error) {
+        console.error("Error uploading signature to Cloudinary:", error);
+        res.status(500).json({ error: "Failed to upload signature: " + error.message });
+    }
 });
 
 // Debug route (optional, for development) - Corrected to use class_level_id

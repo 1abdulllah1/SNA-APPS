@@ -61,9 +61,9 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
         const { term, academicYear } = req.query;
         const requestingUser = req.user;
 
-        // Authorization check: Only admin or teacher can access this report card
-        if (!requestingUser.is_admin && requestingUser.role !== 'teacher') {
-            return res.status(403).json({ error: "Unauthorized." });
+        // Authorization check
+        if (!requestingUser.is_admin && requestingUser.role !== 'teacher' && requestingUser.id !== parseInt(studentId)) {
+            return res.status(403).json({ error: "Unauthorized: You do not have permission to view this report card." });
         }
         if (!term || !academicYear) {
             return res.status(400).json({ error: "Term and Academic Year are required." });
@@ -80,164 +80,160 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
             return res.status(404).json({ error: "Student not found." });
         }
         const student = studentQuery.rows[0];
-
-        // --- Data Fetching for the entire class for ranking ---
         const studentClassLevelId = student.class_level_id;
-        let classReportData = { // Initialize with default values
-            student_id: student.id,
-            total_final_score: 'N/A',
-            overall_grade: 'N/A',
-            overall_remark: 'N/A',
-            subjects: [],
-            position: 'N/A',
-            class_size: 0
-        };
 
-        if (studentClassLevelId) {
-            const classmatesResult = await client.query('SELECT id FROM users WHERE class_level_id = $1 AND role = \'student\'', [studentClassLevelId]);
-            const classmateIds = classmatesResult.rows.map(u => u.id);
+        // Fetch all subjects for the student's class level
+        const allSubjectsQuery = await client.query(`SELECT subject_id, name FROM subjects WHERE class_level_id = $1 ORDER BY name ASC`, [studentClassLevelId]);
+        const allSubjects = allSubjectsQuery.rows;
 
-            // Fetch all exam results for all classmates for the current academic year
-            const allClassResultsQuery = await client.query(
-                `SELECT er.student_id, er.score, e.exam_type, s.name as subject_name, e.max_score, e.term
-                 FROM exam_results er
-                 JOIN exams e ON er.exam_id = e.exam_id
-                 LEFT JOIN subjects s ON e.subject_id = s.subject_id
-                 WHERE er.student_id = ANY($1::int[]) AND e.session = $2`,
-                [classmateIds, academicYear]
-            );
+        // Fetch all classmates
+        const classmatesResult = await client.query('SELECT id FROM users WHERE class_level_id = $1 AND role = \'student\'', [studentClassLevelId]);
+        const classmateIds = classmatesResult.rows.map(u => u.id);
 
-            // --- Process data for ALL students in the class ---
-            const allStudentsProcessedData = classmateIds.map(id => {
-                const studentResults = allClassResultsQuery.rows.filter(r => r.student_id === id);
-                const subjectsMap = new Map();
+        // Fetch all results for all classmates for the entire academic year
+        const allClassResultsQuery = await client.query(
+            `SELECT er.student_id, er.score, e.exam_type, s.name as subject_name, e.max_score, e.term
+             FROM exam_results er
+             JOIN exams e ON er.exam_id = e.exam_id
+             LEFT JOIN subjects s ON e.subject_id = s.subject_id
+             WHERE er.student_id = ANY($1::int[]) AND e.session = $2`,
+            [classmateIds, academicYear]
+        );
 
-                studentResults.forEach(res => {
-                    if (!res.subject_name) return;
-                    if (!subjectsMap.has(res.subject_name)) {
-                        subjectsMap.set(res.subject_name, { CAs: {}, EXAM: {}, terms: {} }); // Store CA and EXAM by term
+        // --- Process data for ALL students to determine ranks and averages ---
+        const allStudentsProcessedData = classmateIds.map(id => {
+            const studentResults = allClassResultsQuery.rows.filter(r => r.student_id === id);
+            const subjectsMap = new Map();
+
+            studentResults.forEach(res => {
+                if (!res.subject_name) return;
+                if (!subjectsMap.has(res.subject_name)) subjectsMap.set(res.subject_name, { terms: {} });
+                
+                const subjectData = subjectsMap.get(res.subject_name);
+                const resultTerm = res.term.toUpperCase();
+                if (!subjectData.terms[resultTerm]) subjectData.terms[resultTerm] = { CAs: [], EXAM: null };
+
+                const examType = (res.exam_type || '').toUpperCase();
+                const scoreData = { score: parseFloat(res.score), maxScore: parseFloat(res.max_score) || 100 };
+                if (isNaN(scoreData.score)) return;
+
+                if (examType === 'MAIN_EXAM') {
+                    subjectData.terms[resultTerm].EXAM = scoreData;
+                } else {
+                    subjectData.terms[resultTerm].CAs.push(scoreData);
+                }
+            });
+
+            let grandTotalForTerm = 0;
+            let subjectsWithScoresCount = 0;
+            const processedSubjects = [];
+
+            allSubjects.forEach(subject => {
+                const subjectName = subject.name;
+                const subjectScoresByTerm = subjectsMap.get(subjectName)?.terms || {};
+                const cumulativeData = {};
+                let currentTermFinalScore = null;
+                let cumulativeSum = 0;
+                let cumulativeCount = 0;
+
+                for (const t of ['FIRST', 'SECOND', 'THIRD']) {
+                    const termData = subjectScoresByTerm[t] || { CAs: [], EXAM: null };
+
+                    // Calculate aggregated CA score (out of 40)
+                    let aggregatedCAScore = 0;
+                    const totalCAScore = termData.CAs.reduce((sum, ca) => sum + ca.score, 0);
+                    const totalCAMaxScore = termData.CAs.reduce((sum, ca) => sum + ca.maxScore, 0);
+                    if (totalCAMaxScore > 0) { // Only calculate if total max score for CAs is positive
+                        aggregatedCAScore = (totalCAScore / totalCAMaxScore) * 40;
+                        aggregatedCAScore = Math.min(40, Math.max(0, aggregatedCAScore)); // Cap between 0 and 40
                     }
-                    const subjectData = subjectsMap.get(res.subject_name);
-                    const score = parseFloat(res.score);
-                    const maxScore = parseFloat(res.max_score) || 100;
-                    const resultTerm = res.term.toUpperCase();
 
-                    if (isNaN(score)) return;
-
-                    const examType = (res.exam_type || '').toUpperCase();
-
-                    if (!subjectData.terms[resultTerm]) {
-                        subjectData.terms[resultTerm] = { CAs: [], EXAM: null };
+                    // Calculate exam score (out of 60)
+                    let examScore = 0;
+                    if (termData.EXAM && termData.EXAM.maxScore > 0) { // Only calculate if exam data exists and max score is positive
+                        examScore = (termData.EXAM.score / termData.EXAM.maxScore) * 60;
+                        examScore = Math.min(60, Math.max(0, examScore)); // Cap between 0 and 60
                     }
 
-                    if (examType === 'MAIN_EXAM') {
-                        subjectData.terms[resultTerm].EXAM = { score, maxScore };
-                    } else {
-                        subjectData.terms[resultTerm].CAs.push({ score, maxScore });
+                    // Calculate final score for the term (out of 100)
+                    let finalScoreForTerm = null;
+                    // Only calculate if there was any valid CA or Exam data (i.e., at least one component had a positive max score)
+                    if (totalCAMaxScore > 0 || (termData.EXAM && termData.EXAM.maxScore > 0)) {
+                        finalScoreForTerm = aggregatedCAScore + examScore;
+                        finalScoreForTerm = Math.min(100, Math.max(0, finalScoreForTerm)); // Cap between 0 and 100
                     }
+
+                    cumulativeData[t] = finalScoreForTerm;
+
+                    if (termOrder[t] <= termOrder[term.toUpperCase()] && finalScoreForTerm !== null) {
+                        cumulativeSum += finalScoreForTerm;
+                        cumulativeCount++;
+                    }
+                    if (t === term.toUpperCase()) {
+                        currentTermFinalScore = finalScoreForTerm;
+                    }
+                }
+
+                if (currentTermFinalScore !== null) {
+                    grandTotalForTerm += currentTermFinalScore;
+                    subjectsWithScoresCount++;
+                }
+
+                const currentTermData = subjectScoresByTerm[term.toUpperCase()] || { CAs: [], EXAM: null };
+                const sumCAs = currentTermData.CAs.reduce((sum, ca) => sum + ca.score, 0);
+                const sumCAMax = currentTermData.CAs.reduce((sum, ca) => sum + ca.maxScore, 0);
+
+                // Recalculate CA and Exam scores for the current term for display purposes
+                let ca_score_display = null;
+                if (sumCAMax > 0) {
+                    ca_score_display = (sumCAs / sumCAMax) * 40;
+                    ca_score_display = Math.min(40, Math.max(0, ca_score_display));
+                }
+
+                let exam_score_display = null;
+                if (currentTermData.EXAM && currentTermData.EXAM.maxScore > 0) {
+                    exam_score_display = (currentTermData.EXAM.score / currentTermData.EXAM.maxScore) * 60;
+                    exam_score_display = Math.min(60, Math.max(0, exam_score_display));
+                }
+
+
+                processedSubjects.push({
+                    subject_name: subjectName,
+                    ca_score: ca_score_display,
+                    exam_score: exam_score_display,
+                    total_score: currentTermFinalScore, // This will now be capped at 100
+                    grade: getGradeAndRemark(currentTermFinalScore).grade,
+                    remark: getGradeAndRemark(currentTermFinalScore).remark,
+                    cumulative_data: cumulativeData,
+                    cumulative_avg: cumulativeCount > 0 ? (cumulativeSum / cumulativeCount) : null
                 });
-
-                let totalFinalScoreOverall = 0; // Sum of final scores for all subjects for this student across terms
-                let subjectsWithScoresCountOverall = 0;
-                const processedSubjects = [];
-
-                // Iterate over all subjects found for this student across all terms in the academic year
-                const allSubjectsForStudent = new Set(studentResults.map(res => res.subject_name).filter(Boolean));
-
-                allSubjectsForStudent.forEach(subjectName => {
-                    const subjectScoresByTerm = subjectsMap.get(subjectName)?.terms || {};
-                    const cumulativeData = {};
-                    let currentTermFinalScore = 0;
-                    let cumulativeSum = 0;
-                    let cumulativeCount = 0;
-
-                    // Calculate scores for each term and cumulative average
-                    for (const t of ['FIRST', 'SECOND', 'THIRD']) {
-                        const termData = subjectScoresByTerm[t] || { CAs: [], EXAM: null };
-
-                        let totalCAScore = 0;
-                        let totalCAMaxScore = 0;
-                        termData.CAs.forEach(ca => {
-                            totalCAScore += ca.score;
-                            totalCAMaxScore += ca.maxScore;
-                        });
-                        const aggregatedCAScore = totalCAMaxScore > 0 ? (totalCAScore / totalCAMaxScore) * 40 : 0;
-
-                        const examScore = termData.EXAM ? (termData.EXAM.score / termData.EXAM.maxScore) * 60 : 0;
-                        const finalScore = aggregatedCAScore + examScore;
-                        
-                        cumulativeData[t] = !isNaN(finalScore) ? finalScore : 'N/A';
-
-                        if (termOrder[t] <= termOrder[term.toUpperCase()] && !isNaN(finalScore)) {
-                            cumulativeSum += finalScore;
-                            cumulativeCount++;
-                        }
-
-                        if (t === term.toUpperCase()) {
-                            currentTermFinalScore = finalScore;
-                        }
-                    }
-
-                    const cumulativeAvg = cumulativeCount > 0 ? (cumulativeSum / cumulativeCount) : 'N/A';
-                    const { grade, remark } = getGradeAndRemark(currentTermFinalScore);
-
-                    if (!isNaN(currentTermFinalScore)) {
-                        totalFinalScoreOverall += currentTermFinalScore;
-                        subjectsWithScoresCountOverall++;
-                    }
-
-                    processedSubjects.push({
-                        subject_name: subjectName,
-                        ca_score: !isNaN(subjectScoresByTerm[term.toUpperCase()]?.CAs[0]?.score) ? (subjectScoresByTerm[term.toUpperCase()].CAs.reduce((sum, ca) => sum + ca.score, 0) / subjectScoresByTerm[term.toUpperCase()].CAs.length).toFixed(2) : 'N/A', // Display average CA for current term
-                        exam_score: subjectScoresByTerm[term.toUpperCase()]?.EXAM?.score !== undefined ? subjectScoresByTerm[term.toUpperCase()].EXAM.score.toFixed(2) : 'N/A', // Raw exam score for current term
-                        total_score: !isNaN(currentTermFinalScore) ? currentTermFinalScore.toFixed(2) : 'N/A', // Final score for current term
-                        grade,
-                        remark,
-                        cumulative_data: cumulativeData, // All terms' final scores
-                        cumulative_avg: !isNaN(cumulativeAvg) ? cumulativeAvg.toFixed(2) : 'N/A'
-                    });
-                });
-
-                const overallAverage = subjectsWithScoresCountOverall > 0 ? (totalFinalScoreOverall / subjectsWithScoresCountOverall).toFixed(2) : 'N/A';
-                const { grade: overallGrade, remark: overallRemark } = getGradeAndRemark(parseFloat(overallAverage));
-
-                return {
-                    student_id: id,
-                    total_final_score: parseFloat(overallAverage), // Use the overall average for ranking
-                    overall_grade: overallGrade,
-                    overall_remark: overallRemark,
-                    subjects: processedSubjects // Include detailed subject scores
-                };
             });
 
-            // Sort all students by their total final score for ranking
-            allStudentsProcessedData.sort((a, b) => {
-                const scoreA = parseFloat(a.total_final_score);
-                const scoreB = parseFloat(b.total_final_score);
-                if (isNaN(scoreA) && isNaN(scoreB)) return 0;
-                if (isNaN(scoreA)) return 1;
-                if (isNaN(scoreB)) return -1;
-                return scoreB - scoreA; // Descending order
-            });
+            const overallAverageForTerm = subjectsWithScoresCount > 0 ? (grandTotalForTerm / subjectsWithScoresCount) : null;
 
-            // Assign ranks
-            allStudentsProcessedData.forEach((data, i) => {
-                data.position = i + 1;
-            });
+            return {
+                student_id: id,
+                grand_total_score: grandTotalForTerm, // Sum of all subject final scores (each capped at 100)
+                overall_percentage: overallAverageForTerm, // Average percentage across subjects
+                subjects: processedSubjects
+            };
+        });
 
-            // Find the current student's data and rank
-            const foundStudentReportData = allStudentsProcessedData.find(d => d.student_id === studentId);
-            if (foundStudentReportData) {
-                classReportData = {
-                    ...foundStudentReportData,
-                    class_size: classmateIds.length
-                };
-            }
-        }
+        // Sort students by their grand total score for ranking
+        allStudentsProcessedData.sort((a, b) => b.grand_total_score - a.grand_total_score);
 
-        // Fetch report card metadata (teacher/principal comments, next term begins)
+        // Assign ranks
+        allStudentsProcessedData.forEach((data, i) => {
+            data.position = i + 1;
+        });
+
+        // Find the current student's complete report data
+        const finalReportData = allStudentsProcessedData.find(d => d.student_id === parseInt(studentId)) || {};
+        finalReportData.class_size = classmateIds.length;
+
+        // Fetch report card metadata
         const metaQuery = await client.query(
-            `SELECT teacher_comment, principal_comment, next_term_begins FROM report_card_meta
+            `SELECT teacher_comment, principal_comment, next_term_begins, teacher_signature_url, principal_signature_url FROM report_card_meta
              WHERE student_id = $1 AND term = $2 AND session = $3`,
             [studentId, term, academicYear]
         );
@@ -245,7 +241,7 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
 
         res.json({
             student_info: student,
-            report_data: classReportData, // This now contains subjects and overall scores/rank
+            report_data: finalReportData,
             meta_data: metaData
         });
 
@@ -262,11 +258,8 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
 router.get("/:resultId", auth, async (req, res) => {
     try {
         const { resultId } = req.params;
-        const userId = req.user.id;
-        const isAdmin = req.user.is_admin;
-        const isTeacher = req.user.role === 'teacher';
-
-        // Fetch the exam result
+        const requestingUser = req.user;
+        
         const resultQuery = await pool.query(
             `SELECT er.*, e.title as exam_title, e.duration_minutes, e.pass_mark, e.exam_type, e.term, e.session,
                     s.name as subject_name, cl.level_name as class_level_name,
@@ -283,21 +276,21 @@ router.get("/:resultId", auth, async (req, res) => {
         if (resultQuery.rows.length === 0) {
             return res.status(404).json({ error: "Exam result not found." });
         }
-
         const examResult = resultQuery.rows[0];
 
-        // Authorization check: student can only view their own results, admin/teacher can view any
-        if (!isAdmin && !isTeacher && examResult.student_id !== userId) {
+        // Students are now blocked from viewing their own results.
+        if (requestingUser.role === 'student') {
+            return res.status(403).json({ error: "Access Denied. Students are not permitted to view detailed results." });
+        }
+
+        // Authorization check for teacher/admin
+        if (!requestingUser.is_admin && requestingUser.role !== 'teacher') {
             return res.status(403).json({ error: "Unauthorized to view this result." });
         }
 
-        // Parse answers from JSONB
         const studentAnswers = examResult.answers || {};
-
-        // Fetch exam details with sections and questions
         const examDetailsQuery = await pool.query(
-            `SELECT es.section_id, es.section_name, es.section_instructions,
-                    q.question_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.explanation
+            `SELECT es.section_id, es.section_name, q.question_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.explanation
              FROM exam_sections es
              JOIN questions q ON es.section_id = q.section_id
              WHERE es.exam_id = $1
@@ -311,27 +304,21 @@ router.get("/:resultId", auth, async (req, res) => {
                 sectionsMap.set(row.section_id, {
                     section_id: row.section_id,
                     section_name: row.section_name,
-                    section_instructions: row.section_instructions,
                     questions: []
                 });
             }
-            const section = sectionsMap.get(row.section_id);
-            section.questions.push({
+            sectionsMap.get(row.section_id).questions.push({
                 question_id: row.question_id,
                 question_text: row.question_text,
-                option_a: row.option_a,
-                option_b: row.option_b,
-                option_c: row.option_c,
-                option_d: row.option_d,
+                options: { A: row.option_a, B: row.option_b, C: row.option_c, D: row.option_d },
                 correct_answer: row.correct_answer,
                 explanation: row.explanation,
-                user_answer: studentAnswers[row.question_id] || null, // Add student's answer
-                is_correct: studentAnswers[row.question_id] === row.correct_answer // Add correctness flag
+                user_answer: studentAnswers[row.question_id] || null,
+                is_correct: studentAnswers[row.question_id] === row.correct_answer
             });
         });
 
         examResult.sections = Array.from(sectionsMap.values());
-
         res.json(examResult);
     } catch (error) {
         console.error("Error fetching exam result details:", error);
@@ -340,16 +327,9 @@ router.get("/:resultId", auth, async (req, res) => {
 });
 
 // GET /api/exam-results/exam/:examId/all - Get all results for a specific exam (for teacher/admin)
-router.get("/exam/:examId/all", auth, async (req, res) => {
+router.get("/exam/:examId/all", auth, isAdminOrTeacher, async (req, res) => {
     try {
         const { examId } = req.params;
-        const requestingUser = req.user;
-
-        // Authorization: Only admin or teacher can view all results for an exam
-        if (!requestingUser.is_admin && requestingUser.role !== 'teacher') {
-            return res.status(403).json({ error: "Unauthorized: Only administrators or teachers can view all exam results." });
-        }
-
         const resultsQuery = await pool.query(
             `SELECT er.result_id, er.student_id, er.score, er.raw_score_obtained, er.total_possible_marks, er.submission_date,
                     u.username as student_name, u.admission_number,
@@ -360,10 +340,9 @@ router.get("/exam/:examId/all", auth, async (req, res) => {
              LEFT JOIN subjects s ON e.subject_id = s.subject_id
              LEFT JOIN class_levels cl ON e.class_level_id = cl.level_id
              WHERE er.exam_id = $1
-             ORDER BY u.username ASC`, // Order by student name
+             ORDER BY u.username ASC`,
             [examId]
         );
-
         res.json(resultsQuery.rows);
     } catch (error) {
         console.error("Error fetching all exam results for exam:", error);
@@ -371,33 +350,61 @@ router.get("/exam/:examId/all", auth, async (req, res) => {
     }
 });
 
-// PUT /api/exam-results/report-card-meta - Update report card metadata (teacher/principal comments)
-router.put("/report-card-meta", auth, async (req, res) => {
+// GET /api/exam-results/student/:studentId/recent - Get recent attempts for a student
+router.get("/student/:studentId/recent", auth, async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        if (req.user.id !== parseInt(studentId) && !req.user.is_admin) {
+            return res.status(403).json({ error: "Unauthorized to view these results." });
+        }
+
+        const recentResultsQuery = await pool.query(
+            `SELECT 
+                er.result_id,
+                er.submission_date AS "submissionDate",
+                e.title AS "examTitle",
+                e.exam_type AS "examType"
+             FROM exam_results er
+             JOIN exams e ON er.exam_id = e.exam_id
+             WHERE er.student_id = $1
+             ORDER BY er.submission_date DESC
+             LIMIT 5`,
+            [studentId]
+        );
+        res.json(recentResultsQuery.rows);
+    } catch (error) {
+        console.error("Error fetching recent student exam results:", error);
+        res.status(500).json({ error: "Failed to fetch recent exam results." });
+    }
+});
+
+
+// PUT /api/exam-results/report-card-meta - Update report card metadata
+router.put("/report-card-meta", auth, isAdminOrTeacher, async (req, res) => {
     const client = await pool.connect();
     try {
-        const { studentId, term, session, teacher_comment, principal_comment, next_term_begins } = req.body;
+        await client.query('BEGIN');
+        const { studentId, term, session, teacher_comment, principal_comment, next_term_begins, teacher_signature_url, principal_signature_url } = req.body;
         
-        if (!req.user.is_admin && req.user.role !== 'teacher') {
-            return res.status(403).json({ error: "Unauthorized." });
-        }
         if (!studentId || !term || !session) {
+            await client.query('ROLLBACK');
             return res.status(400).json({ error: "Missing required parameters." });
         }
         
-        await client.query('BEGIN');
-
         const query = `
-            INSERT INTO report_card_meta (student_id, term, session, teacher_comment, principal_comment, next_term_begins)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO report_card_meta (student_id, term, session, teacher_comment, principal_comment, next_term_begins, teacher_signature_url, principal_signature_url)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             ON CONFLICT (student_id, term, session) DO UPDATE SET
                 teacher_comment = EXCLUDED.teacher_comment,
                 principal_comment = EXCLUDED.principal_comment,
                 next_term_begins = EXCLUDED.next_term_begins,
+                teacher_signature_url = EXCLUDED.teacher_signature_url,
+                principal_signature_url = EXCLUDED.principal_signature_url,
                 updated_at = NOW()
             RETURNING *;
         `;
 
-        const result = await client.query(query, [studentId, term, session, teacher_comment, principal_comment, next_term_begins]);
+        const result = await client.query(query, [studentId, term, session, teacher_comment, principal_comment, next_term_begins, teacher_signature_url, principal_signature_url]);
         await client.query('COMMIT');
         res.json({ message: "Report card metadata updated successfully.", data: result.rows[0] });
 
@@ -410,14 +417,7 @@ router.put("/report-card-meta", auth, async (req, res) => {
     }
 });
 
-/**
- * @route DELETE /api/report-card-meta/:studentId/:term/:session
- * @description Delete a specific report card metadata entry. Admin or Teacher only.
- * @access AdminOrTeacher
- * @param {string} studentId - The ID of the student.
- * @param {string} term - The academic term.
- * @param {string} session - The academic session.
- */
+// DELETE /api/report-card-meta/:studentId/:term/:session - Delete metadata
 router.delete('/:studentId/:term/:session', auth, isAdminOrTeacher, async (req, res) => {
   const { studentId, term, session } = req.params;
   try {
