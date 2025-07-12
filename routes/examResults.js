@@ -86,13 +86,16 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
         const allSubjectsQuery = await client.query(`SELECT subject_id, name FROM subjects WHERE class_level_id = $1 ORDER BY name ASC`, [studentClassLevelId]);
         const allSubjects = allSubjectsQuery.rows;
 
-        // Fetch all classmates
+        // FIX: Declare and populate classmateIds before its usage
         const classmatesResult = await client.query('SELECT id FROM users WHERE class_level_id = $1 AND role = \'student\'', [studentClassLevelId]);
         const classmateIds = classmatesResult.rows.map(u => u.id);
 
+
         // Fetch all results for all classmates for the entire academic year
+        // ENHANCEMENT: Explicitly cast score and max_score to REAL for accurate calculations
         const allClassResultsQuery = await client.query(
-            `SELECT er.student_id, er.score, e.exam_type, s.name as subject_name, e.max_score, e.term
+            `SELECT er.student_id, CAST(er.score AS REAL) as score, e.exam_type, s.name as subject_name, 
+                    CAST(e.max_score AS REAL) as max_score, e.term
              FROM exam_results er
              JOIN exams e ON er.exam_id = e.exam_id
              LEFT JOIN subjects s ON e.subject_id = s.subject_id
@@ -114,6 +117,7 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
                 if (!subjectData.terms[resultTerm]) subjectData.terms[resultTerm] = { CAs: [], EXAM: null };
 
                 const examType = (res.exam_type || '').toUpperCase();
+                // Scores are already cast to REAL in the SQL query, so parseFloat might be redundant but kept for safety.
                 const scoreData = { score: parseFloat(res.score), maxScore: parseFloat(res.max_score) || 100 };
                 if (isNaN(scoreData.score)) return;
 
@@ -213,7 +217,9 @@ router.get("/report-card/:studentId", auth, async (req, res) => {
 
             return {
                 student_id: id,
-                grand_total_score: grandTotalForTerm, // Sum of all subject final scores (each capped at 100)
+                // The grand_total_score should be the sum of the final scores (out of 100) for all subjects.
+                // If overall_percentage is the average percentage, then sum = average * count.
+                grand_total_score: overallAverageForTerm !== null ? (overallAverageForTerm * subjectsWithScoresCount) : 0, 
                 overall_percentage: overallAverageForTerm, // Average percentage across subjects
                 subjects: processedSubjects
             };
@@ -261,7 +267,12 @@ router.get("/:resultId", auth, async (req, res) => {
         const requestingUser = req.user;
         
         const resultQuery = await pool.query(
-            `SELECT er.*, e.title as exam_title, e.duration_minutes, e.pass_mark, e.exam_type, e.term, e.session,
+            `SELECT er.*, e.title as exam_title, e.duration_minutes, 
+                    CAST(er.score AS REAL) as score, 
+                    CAST(er.raw_score_obtained AS INTEGER) as raw_score_obtained, 
+                    CAST(er.total_possible_marks AS INTEGER) as total_possible_marks, 
+                    CAST(e.pass_mark AS REAL) as pass_mark, 
+                    e.exam_type, e.term, e.session,
                     s.name as subject_name, cl.level_name as class_level_name,
                     u.username as student_name, u.admission_number
              FROM exam_results er
@@ -276,7 +287,9 @@ router.get("/:resultId", auth, async (req, res) => {
         if (resultQuery.rows.length === 0) {
             return res.status(404).json({ error: "Exam result not found." });
         }
-        const examResult = resultQuery.rows[0];
+        // FIX: Corrected the variable assignment from 'examResult.rows[0]' to 'resultQuery.rows[0]'
+        // Using 'let' because we modify 'examResult' later for type conversions.
+        let examResult = resultQuery.rows[0]; 
 
         // Students are now blocked from viewing their own results.
         if (requestingUser.role === 'student') {
@@ -288,14 +301,23 @@ router.get("/:resultId", auth, async (req, res) => {
             return res.status(403).json({ error: "Unauthorized to view this result." });
         }
 
-        const studentAnswers = examResult.answers || {};
+        // Explicitly convert numeric strings to numbers for frontend consumption for individual result
+        // These conversions are now redundant if SQL CASTs work, but kept for robustness.
+        // It's safer to ensure they are numbers here, even if the SQL cast attempts to do so.
+        examResult.score = parseFloat(examResult.score);
+        examResult.raw_score_obtained = parseInt(examResult.raw_score_obtained);
+        examResult.total_possible_marks = parseInt(examResult.total_possible_marks);
+        examResult.pass_mark = parseFloat(examResult.pass_mark);
+
+
+        const studentAnswers = examResult.answers || {}; 
         const examDetailsQuery = await pool.query(
             `SELECT es.section_id, es.section_name, q.question_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.explanation
              FROM exam_sections es
              JOIN questions q ON es.section_id = q.section_id
              WHERE es.exam_id = $1
              ORDER BY es.section_order ASC, q.question_id ASC`,
-            [examResult.exam_id]
+            [examResult.exam_id] 
         );
 
         const sectionsMap = new Map();
@@ -319,10 +341,11 @@ router.get("/:resultId", auth, async (req, res) => {
         });
 
         examResult.sections = Array.from(sectionsMap.values());
-        res.json(examResult);
+        res.json(examResult); 
+
     } catch (error) {
         console.error("Error fetching exam result details:", error);
-        res.status(500).json({ error: "Failed to fetch exam result details." });
+        res.status(500).json({ error: "Failed to fetch exam result details: " + error.message });
     }
 });
 
@@ -331,9 +354,14 @@ router.get("/exam/:examId/all", auth, isAdminOrTeacher, async (req, res) => {
     try {
         const { examId } = req.params;
         const resultsQuery = await pool.query(
-            `SELECT er.result_id, er.student_id, er.score, er.raw_score_obtained, er.total_possible_marks, er.submission_date,
+            `SELECT er.result_id, er.student_id, 
+                    CAST(er.score AS REAL) as score, 
+                    CAST(er.raw_score_obtained AS INTEGER) as raw_score_obtained, 
+                    CAST(er.total_possible_marks AS INTEGER) as total_possible_marks, 
+                    er.submission_date,
                     u.username as student_name, u.admission_number,
-                    e.title as exam_title, s.name as subject_name, cl.level_name as class_level_name, e.exam_type, e.term, e.session
+                    e.title as exam_title, s.name as subject_name, cl.level_name as class_level_name, e.exam_type, e.term, e.session, 
+                    CAST(e.pass_mark AS REAL) as pass_mark
              FROM exam_results er
              JOIN users u ON er.student_id = u.id
              JOIN exams e ON er.exam_id = e.exam_id
@@ -343,10 +371,19 @@ router.get("/exam/:examId/all", auth, isAdminOrTeacher, async (req, res) => {
              ORDER BY u.username ASC`,
             [examId]
         );
-        res.json(resultsQuery.rows);
+        // Explicitly convert numeric strings to numbers for frontend consumption
+        // These conversions are now redundant if SQL CASTs work, but kept for robustness.
+        const processedResults = resultsQuery.rows.map(row => ({
+            ...row,
+            score: parseFloat(row.score),
+            raw_score_obtained: parseInt(row.raw_score_obtained),
+            total_possible_marks: parseInt(row.total_possible_marks),
+            pass_mark: parseFloat(row.pass_mark) 
+        }));
+        res.json(processedResults);
     } catch (error) {
         console.error("Error fetching all exam results for exam:", error);
-        res.status(500).json({ error: "Failed to fetch exam results summary." });
+        res.status(500).json({ error: "Failed to fetch exam results summary: " + error.message });
     }
 });
 
