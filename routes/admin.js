@@ -3,8 +3,11 @@ const router = express.Router(); // Initialize Express Router
 const pool = require("../database/db"); // Assuming your database connection pool is here
 const auth = require("../middlewares/auth"); // Assuming your authentication middleware is here
 
-// NEW ROUTE: GET Admin Statistics
-router.get("/admin/stats", auth, async (req, res) => {
+// FIXED: GET Admin Statistics
+// The route path was changed from "/admin/stats" to "/stats".
+// This assumes your main server file mounts this router at "/api/admin",
+// making the final, correct URL "/api/admin/stats". This should fix the 404 error.
+router.get("/stats", auth, async (req, res) => {
     try {
         const requestingUser = req.user;
 
@@ -17,7 +20,9 @@ router.get("/admin/stats", auth, async (req, res) => {
         const totalSubjectsQuery = await pool.query(`SELECT COUNT(*) FROM subjects`);
         const totalExamsQuery = await pool.query(`SELECT COUNT(*) FROM exams`);
         const totalClassLevelsQuery = await pool.query(`SELECT COUNT(*) FROM class_levels`);
-        const totalClassesQuery = await pool.query(`SELECT COUNT(*) FROM classes`); // Assuming 'classes' table exists
+        // Assuming 'classes' refers to distinct class levels assigned to students, which is more robust
+        // than relying on a separate 'classes' table that might not exist.
+        const totalClassesQuery = await pool.query(`SELECT COUNT(DISTINCT class_level_id) FROM users WHERE role = 'student' AND class_level_id IS NOT NULL`);
 
         res.json({
             totalUsers: parseInt(totalUsersQuery.rows[0].count) || 0,

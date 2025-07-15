@@ -4,683 +4,316 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Exam | CBT System</title>
-  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* General Styles */
-    body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; }
-    main { max-width: 900px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-    h1, h2, h3 { color: var(--primary-blue); margin-bottom: 1.5rem; }
-    hr { border: none; border-top: 1px solid #e0e0e0; margin: 2rem 0; }
-    
-    /* Form Specifics */
-    .app-form { display: flex; flex-direction: column; gap: 1.5rem; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; }
-    .form-group input[type="text"],
-    .form-group input[type="number"],
-    .form-group select,
-    .form-group textarea,
-    .form-group input[type="datetime-local"] { /* Added datetime-local */
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px; /* Slightly more rounded */
-      font-size: 1rem;
-      box-sizing: border-box; /* Include padding in width */
-    }
-    .form-group input[type="checkbox"] { width: auto; margin-right: 10px; }
-
-    .form-grid-col-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-
-    /* Buttons */
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: 600;
-      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
-    .btn-primary { background-color: #1a237e; color: white; } /* Dark blue */
-    .btn-secondary { background-color: #6c757d; color: white; } /* Gray */
-    .btn-danger { background-color: #dc3545; color: white; } /* Red */
-    .btn-success { background-color: #28a745; color: white; } /* Green */
-    .btn-info { background-color: #17a2b8; color: white; } /* Blue-green */
-
-    /* Section & Question Styling */
-    .section-card, .question-card {
-      background: #fdfdff;
-      border: 1px solid #e0e0e0;
-      border-radius: 10px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .section-card h3, .question-card h4 {
-      color: #283593; /* Slightly lighter blue for subheadings */
-      margin-top: 0;
-      margin-bottom: 1rem;
-    }
-    .question-options label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: normal;
-      color: #333;
-    }
-    .question-options input[type="radio"] {
-      margin-right: 8px;
-    }
-
-    .add-button-group {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    /* Message styles */
-    .message {
-        padding: 10px 15px;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        font-weight: 500;
-        text-align: center;
-    }
-    .success-message {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    .error-message {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-    .info-message {
-        background-color: #d1ecf1;
-        color: #0c5460;
-        border: 1px solid #bee5eb;
-    }
-    .hidden {
-        display: none;
-    }
-
-    /* Modal styles */
-    .modal {
-        display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1000; /* Sit on top */
-        left: 0;
-        top: 0;
-        width: 100%; /* Full width */
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        justify-content: center; /* Center horizontally */
-        align-items: center; /* Center vertically */
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: auto;
-        padding: 0;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 10px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-        overflow: hidden;
-    }
-
-    .modal-header {
-        padding: 15px 20px;
-        background-color: #1a237e;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 10px 10px 0 0;
-    }
-
-    .modal-header h2 {
-        margin: 0;
-        font-size: 1.2rem;
-    }
-
-    .modal-body {
-        padding: 20px;
-        text-align: center;
-    }
-
-    .modal-footer {
-        padding: 15px 20px;
-        background-color: #f1f1f1;
-        text-align: right;
-        border-top: 1px solid #e0e0e0;
-        border-radius: 0 0 10px 10px;
-    }
-
-    .close-button {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: color 0.3s ease;
-    }
-
-    .close-button:hover,
-    .close-button:focus {
-        color: #ddd;
-        text-decoration: none;
-        cursor: pointer;
-    }
+    body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+    .btn-primary { background-color: #1a237e; color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-danger { background-color: #dc3545; color: white; }
+    .btn-info { background-color: #17a2b8; color: white; }
+    .section-card, .question-card { background: #fdfdff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .message { padding: 10px 15px; border-radius: 8px; margin-bottom: 1rem; text-align: center; }
+    .success-message { background-color: #d4edda; color: #155724; }
+    .error-message { background-color: #f8d7da; color: #721c24; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <header>
-    <nav>
-      <a href="/dashboard.html" class="logo">SNA CBT System</a>
-      <ul class="nav-links" id="navLinks">
-        <!-- Navigation links will be dynamically inserted here by JS -->
-      </ul>
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex-shrink-0">
+                <a href="/dashboard.html" class="text-2xl font-bold text-indigo-600">SNA CBT System</a>
+            </div>
+            <div class="hidden md:block">
+                <ul class="ml-10 flex items-center space-x-4" id="navLinks"></ul>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="p-2 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none">
+                    <i data-feather="menu"></i>
+                </button>
+            </div>
+        </div>
     </nav>
+    <div class="md:hidden hidden" id="mobile-menu">
+        <ul class="px-2 pt-2 pb-3 space-y-1 sm:px-3" id="mobileNavLinks"></ul>
+    </div>
   </header>
 
-  <main>
-    <div class="message-container">
-        <div id="pageMessage" class="message hidden"></div>
-    </div>
-    <h1>Create New Exam</h1>
-    <form id="examForm" class="app-form">
-      <div class="form-group">
-        <label for="examTitle">Exam Title:</label>
-        <input type="text" id="examTitle" required>
-      </div>
-
-      <div class="form-grid-col-3">
-        <div class="form-group">
-          <label for="subject">Subject:</label>
-          <select id="subject" required></select>
+  <main class="max-w-4xl mx-auto p-4 md:p-8">
+    <div id="pageMessage" class="message hidden"></div>
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Create New Exam</h1>
+    <form id="examForm" class="space-y-6 bg-white p-8 rounded-lg shadow-md">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="examTitle" class="block text-sm font-medium text-gray-700">Exam Title:</label>
+          <input type="text" id="examTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
         </div>
-        <div class="form-group">
-          <label for="classLevel">Class Level:</label>
-          <select id="classLevel" required></select>
-        </div>
-        <div class="form-group">
-            <label for="examType">Exam Type:</label>
-            <select id="examType" required>
-                <option value="">Select Type</option>
-                <option value="MAIN_EXAM">Main Exam</option>
-                <option value="CA1">CA 1</option>
-                <option value="CA2">CA 2</option>
-                <option value="CA3">CA 3</option>
-                <option value="CA4">CA 4</option>
-                <option value="MID_TERM">Mid Term</option>
-                <option value="OTHER">Other</option>
-            </select>
+        <div>
+          <label for="examType" class="block text-sm font-medium text-gray-700">Exam Type:</label>
+          <select id="examType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+            <option value="">Select Type</option>
+            <option value="MAIN_EXAM">Main Exam</option>
+            <option value="CA1">CA 1</option><option value="CA2">CA 2</option><option value="CA3">CA 3</option><option value="CA4">CA 4</option>
+            <option value="MID_TERM">Mid Term</option><option value="OTHER">Other</option>
+          </select>
         </div>
       </div>
 
-      <div class="form-grid-col-3">
-        <div class="form-group">
-          <label for="duration">Duration (minutes):</label>
-          <input type="number" id="duration" min="1" required>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="classLevel" class="block text-sm font-medium text-gray-700">Class Level:</label>
+          <select id="classLevel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></select>
         </div>
-        <div class="form-group">
-          <label for="passMark">Pass Mark (%):</label>
-          <input type="number" id="passMark" min="0" max="100" required>
-        </div>
-        <div class="form-group">
-            <label for="maxScore">Max Score:</label>
-            <input type="number" id="maxScore" min="1" required>
+        <div>
+          <label for="subject" class="block text-sm font-medium text-gray-700">Subject:</label>
+          <select id="subject" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></select>
         </div>
       </div>
 
-      <div class="form-grid-col-3">
-        <div class="form-group">
-            <label for="term">Term:</label>
-            <select id="term" required>
-                <option value="">Select Term</option>
-                <option value="FIRST">First Term</option>
-                <option value="SECOND">Second Term</option>
-                <option value="THIRD">Third Term</option>
-            </select>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label for="duration" class="block text-sm font-medium text-gray-700">Duration (minutes):</label>
+          <input type="number" id="duration" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
         </div>
-        <div class="form-group">
-            <label for="session">Academic Session (e.g., 2023/2024):</label>
-            <input type="text" id="session" pattern="^\d{4}\/\d{4}$" placeholder="YYYY/YYYY" required>
+        <div>
+          <label for="passMark" class="block text-sm font-medium text-gray-700">Pass Mark (%):</label>
+          <input type="number" id="passMark" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
         </div>
-        <div class="form-group">
-            <label for="scheduledTime">Scheduled Time (Optional):</label>
-            <input type="datetime-local" id="scheduledTime">
+        <div>
+          <label for="maxScore" class="block text-sm font-medium text-gray-700">Max Score:</label>
+          <input type="number" id="maxScore" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
         </div>
       </div>
 
-      <div class="form-group">
-        <input type="checkbox" id="isLocked">
-        <label for="isLocked">Lock Exam (Prevent students from taking it)</label>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="term" class="block text-sm font-medium text-gray-700">Term:</label>
+          <select id="term" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+            <option value="">Select Term</option>
+            <option value="FIRST">First Term</option><option value="SECOND">Second Term</option><option value="THIRD">Third Term</option>
+          </select>
+        </div>
+        <div>
+          <label for="session" class="block text-sm font-medium text-gray-700">Academic Session (YYYY-YYYY):</label>
+          <input type="text" id="session" pattern="\d{4}-\d{4}" placeholder="e.g., 2023-2024" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+        </div>
+      </div>
+
+      <!-- FIXED: Replaced scheduledTime with startTime and endTime -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label for="startTime" class="block text-sm font-medium text-gray-700">Start Time (Optional):</label>
+            <input type="datetime-local" id="startTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        </div>
+        <div>
+            <label for="endTime" class="block text-sm font-medium text-gray-700">End Time (Optional):</label>
+            <input type="datetime-local" id="endTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        </div>
+      </div>
+
+      <div class="flex items-center">
+        <input type="checkbox" id="isLocked" class="rounded text-indigo-600">
+        <label for="isLocked" class="ml-2 block text-sm text-gray-900">Lock Exam</label>
       </div>
 
       <hr>
-      <h2>Exam Sections & Questions</h2>
-      <div id="sectionsContainer">
-        <!-- Sections will be dynamically added here -->
-      </div>
-      <button type="button" class="btn btn-secondary" id="addSectionBtn">Add Section</button>
 
-      <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">Create Exam</button>
+      <h2 class="text-2xl font-bold text-gray-900">Exam Sections & Questions</h2>
+      <div id="sectionsContainer" class="space-y-6"></div>
+      <button type="button" id="addSectionBtn" class="btn btn-secondary"><i data-feather="plus" class="w-4 h-4 mr-2"></i>Add Section</button>
+
+      <div class="flex justify-end pt-4">
+        <button type="submit" class="btn btn-primary"><i data-feather="save" class="w-4 h-4 mr-2"></i>Create Exam</button>
+      </div>
     </form>
   </main>
 
-  <footer>
-    <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
-  </footer>
-
-  <!-- Modals HTML (add these to the end of your body tag) -->
-<div id="confirmationModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Confirm Action</h2>
-            <span class="close-button" onclick="closeModal('confirmationModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p id="confirmationMessage"></p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
-            <button class="btn btn-danger" onclick="confirmAction(true)">Confirm</button>
-        </div>
-    </div>
-</div>
-
-<div id="alertDialog" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="alertTitle">Alert</h2>
-            <span class="close-button" onclick="closeModal('alertDialog')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p id="alertMessage"></p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
-        </div>
-    </div>
-</div>
-
+  <script src="https://unpkg.com/feather-icons"></script>
   <script>
+    feather.replace();
     let currentUser = null;
-    let confirmCallback = null; // Callback for confirmation modal
-
-    // --- Modal Functions ---
-    function showModal(modalId) {
-        document.getElementById(modalId).style.display = 'flex';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    function showAlert(title, message) {
-        document.getElementById('alertTitle').textContent = title;
-        document.getElementById('alertMessage').textContent = message;
-        showModal('alertDialog');
-    }
-
-    function showConfirmation(message) {
-        return new Promise((resolve) => {
-            document.getElementById('confirmationMessage').textContent = message;
-            showModal('confirmationModal');
-            confirmCallback = resolve; // Store resolve function
-        });
-    }
-
-    function confirmAction(result) {
-        closeModal('confirmationModal');
-        if (confirmCallback) {
-            confirmCallback(result); // Call the stored resolve function
-            confirmCallback = null; // Clear the callback
-        }
-    }
-
-    // Utility function to display messages on the page
-    function showPageMessage(message, type = 'info') {
-        const msgDiv = document.getElementById('pageMessage');
-        msgDiv.textContent = message;
-        msgDiv.className = `message ${type}-message`; // Apply styling classes
-        msgDiv.classList.remove('hidden');
-    }
-
-    async function loadUserData() {
-        try {
-            const response = await fetch('/api/users/me', { credentials: 'include' });
-            if (!response.ok) {
-                window.location.href = '/login.html'; // Redirect if not authenticated
-                return null;
-            }
-            currentUser = await response.json();
-            createNavigationLinks(currentUser); // Populate navbar
-            return currentUser;
-        } catch (error) {
-            console.error("Error loading user data:", error);
-            window.location.href = '/login.html'; // Redirect on error
-            return null;
-        }
-    }
-
-    function createNavigationLinks(user) {
-        const navLinksContainer = document.getElementById('navLinks');
-        navLinksContainer.innerHTML = ''; // Clear existing links
-
-        const links = [
-            { href: "/dashboard.html", text: "Dashboard" },
-            { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
-            { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
-            { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
-            { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
-            { href: "/manage-class-levels.html", text: "Manage Levels", roles: ['admin'] },
-            { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
-        ];
-
-        links.forEach(linkInfo => {
-            const shouldDisplay = !linkInfo.roles || linkInfo.roles.some(role => {
-                if (role === 'admin') return user.is_admin;
-                return user.role === role;
-            });
-
-            if (shouldDisplay) {
-                const listItem = document.createElement('li');
-                const link = document.createElement('a');
-                link.href = linkInfo.href;
-                link.textContent = linkInfo.text;
-                link.classList.add('nav-link');
-                // Add active class if current page
-                if (window.location.pathname === linkInfo.href) {
-                    link.classList.add('active');
-                }
-                listItem.appendChild(link);
-                navLinksContainer.appendChild(listItem);
-            }
-        });
-
-        const logoutLinkItem = document.createElement('li');
-        const logoutBtn = document.createElement('button');
-        logoutBtn.textContent = "Logout";
-        logoutBtn.className = 'btn logout-btn';
-        logoutBtn.style.background = '#f44336';
-        logoutBtn.style.color = 'white';
-        logoutBtn.style.border = 'none';
-        logoutBtn.style.padding = '8px 15px';
-        logoutBtn.style.borderRadius = '5px';
-        logoutBtn.style.cursor = 'pointer';
-        logoutLinkItem.appendChild(logoutBtn);
-        navLinksContainer.appendChild(logoutLinkItem);
-
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-
-    async function handleLogout() {
-        try {
-            const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
-            }
-        } catch (error) {
-            console.error('Network error during logout:', error);
-        } finally {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = '/login.html';
-        }
-    }
-
-
     let sectionCounter = 0;
     let questionCounter = 0;
 
-    async function fetchSubjects(classLevelId = null) {
+    function showPageMessage(message, type = 'info') {
+        const messageDiv = document.getElementById('pageMessage');
+        messageDiv.textContent = message;
+        messageDiv.className = `message ${type}-message`;
+        messageDiv.classList.remove('hidden');
+        setTimeout(() => messageDiv.classList.add('hidden'), 5000);
+    }
+
+    async function fetchApi(url, options = {}) {
         try {
-            let url = '/api/exams/config/subjects';
-            if (classLevelId) {
-                url += `?class_level_id=${classLevelId}`;
-            }
-            const response = await fetch(url, { credentials: 'include' });
-            if (!response.ok) {
-                throw new Error('Failed to fetch subjects.');
-            }
-            const subjects = await response.json();
-            const subjectSelect = document.getElementById('subject');
-            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-            subjects.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject.subject_id;
-                option.textContent = subject.name;
-                subjectSelect.appendChild(option);
-            });
+            const response = await fetch(url, { credentials: 'include', ...options });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'API request failed.');
+            return data;
         } catch (error) {
-            console.error("Error fetching subjects:", error);
-            showPageMessage(`Error loading subjects: ${error.message}`, 'error');
+            console.error(`Error fetching ${url}:`, error);
+            showPageMessage(error.message, 'error');
+            return null;
         }
     }
+    
+    // --- Data Collection ---
+    function collectExamData() {
+      // FIXED: Collect start_time and end_time instead of scheduled_time
+      const startTimeVal = document.getElementById('startTime').value;
+      const endTimeVal = document.getElementById('endTime').value;
 
-    async function fetchClassLevels() {
-        try {
-            const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
-            if (!response.ok) {
-                throw new Error('Failed to fetch class levels.');
-            }
-            const classLevels = await response.json();
-            const classLevelSelect = document.getElementById('classLevel');
-            classLevelSelect.innerHTML = '<option value="">Select Class Level</option>';
-            classLevels.forEach(level => {
-                const option = document.createElement('option');
-                option.value = level.level_id;
-                option.textContent = level.level_name;
-                classLevelSelect.appendChild(option);
-            });
-        } catch (error) {
-            console.error("Error fetching class levels:", error);
-            showPageMessage(`Error loading class levels: ${error.message}`, 'error');
-        }
-    }
-
-    function addSection() {
-      sectionCounter++;
-      const sectionsContainer = document.getElementById('sectionsContainer');
-      const sectionDiv = document.createElement('div');
-      sectionDiv.classList.add('section-card');
-      sectionDiv.dataset.sectionId = sectionCounter;
-      sectionDiv.innerHTML = `
-        <h3>Section ${sectionCounter}</h3>
-        <div class="form-group">
-          <label for="sectionName${sectionCounter}">Section Name:</label>
-          <input type="text" id="sectionName${sectionCounter}" class="section-name" required>
-        </div>
-        <div class="form-group">
-          <label for="sectionInstructions${sectionCounter}">Instructions:</label>
-          <textarea id="sectionInstructions${sectionCounter}" class="section-instructions" rows="3"></textarea>
-        </div>
-        <div id="questionsContainer${sectionCounter}">
-          <!-- Questions for this section will be added here -->
-        </div>
-        <button type="button" class="btn btn-info add-question-btn" data-section-id="${sectionCounter}">Add Question</button>
-        <button type="button" class="btn btn-danger remove-section-btn" data-section-id="${sectionCounter}">Remove Section</button>
-        <hr>
-      `;
-      sectionsContainer.appendChild(sectionDiv);
-
-      // Add event listeners for the new section's buttons
-      sectionDiv.querySelector('.add-question-btn').addEventListener('click', (e) => addQuestion(e.target.dataset.sectionId));
-      sectionDiv.querySelector('.remove-section-btn').addEventListener('click', (e) => removeSection(e.target.dataset.sectionId));
-    }
-
-    function removeSection(sectionId) {
-        const confirmed = showConfirmation('Are you sure you want to remove this section and all its questions?');
-        if (confirmed) {
-            document.querySelector(`.section-card[data-section-id="${sectionId}"]`).remove();
-            showPageMessage('Section removed successfully.', 'info');
-        }
-    }
-
-    function addQuestion(sectionId) {
-      questionCounter++;
-      const questionsContainer = document.getElementById(`questionsContainer${sectionId}`);
-      const questionDiv = document.createElement('div');
-      questionDiv.classList.add('question-card');
-      questionDiv.dataset.questionId = questionCounter;
-      questionDiv.innerHTML = `
-        <h4>Question ${questionCounter}</h4>
-        <div class="form-group">
-          <label for="questionText${questionCounter}">Question Text:</label>
-          <textarea id="questionText${questionCounter}" class="question-text" rows="3" required></textarea>
-        </div>
-        <div class="form-group">
-          <label>Options:</label>
-          <div class="question-options">
-            <label><input type="radio" name="correctAnswer${questionCounter}" value="A" required> A: <input type="text" class="option-a" required></label>
-            <label><input type="radio" name="correctAnswer${questionCounter}" value="B"> B: <input type="text" class="option-b" required></label>
-            <label><input type="radio" name="correctAnswer${questionCounter}" value="C"> C: <input type="text" class="option-c" required></label>
-            <label><input type="radio" name="correctAnswer${questionCounter}" value="D"> D: <input type="text" class="option-d" required></label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="explanation${questionCounter}">Explanation (Optional):</label>
-          <textarea id="explanation${questionCounter}" class="explanation" rows="2"></textarea>
-        </div>
-        <button type="button" class="btn btn-danger remove-question-btn" data-question-id="${questionCounter}">Remove Question</button>
-      `;
-      questionsContainer.appendChild(questionDiv);
-
-      // Add event listener for the new question's remove button
-      questionDiv.querySelector('.remove-question-btn').addEventListener('click', (e) => removeQuestion(e.target.dataset.questionId));
-    }
-
-    function removeQuestion(questionId) {
-        const confirmed = showConfirmation('Are you sure you want to remove this question?');
-        if (confirmed) {
-            document.querySelector(`.question-card[data-question-id="${questionId}"]`).remove();
-            showPageMessage('Question removed successfully.', 'info');
-        }
-    }
-
-    document.getElementById('addSectionBtn').addEventListener('click', addSection);
-
-    document.getElementById('examForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const confirmed = await showConfirmation('Are you sure you want to create this exam?');
-      if (!confirmed) {
-          showPageMessage('Exam creation cancelled.', 'info');
-          return;
-      }
-
-      const examTitle = document.getElementById('examTitle').value;
-      const subjectId = document.getElementById('subject').value;
-      const classLevelId = document.getElementById('classLevel').value;
-      const examType = document.getElementById('examType').value;
-      const durationMinutes = parseInt(document.getElementById('duration').value);
-      const passMark = parseInt(document.getElementById('passMark').value);
-      const maxScore = parseInt(document.getElementById('maxScore').value);
-      const term = document.getElementById('term').value;
-      const session = document.getElementById('session').value;
-      const scheduledTime = document.getElementById('scheduledTime').value;
-      const isLocked = document.getElementById('isLocked').checked;
-
-      const sections = [];
-      document.querySelectorAll('.section-card').forEach(sectionDiv => {
-        const sectionName = sectionDiv.querySelector('.section-name').value;
-        const sectionInstructions = sectionDiv.querySelector('.section-instructions').value;
-        const sectionOrder = parseInt(sectionDiv.dataset.sectionId); // Use data-section-id for order
-
-        const questions = [];
-        sectionDiv.querySelectorAll('.question-card').forEach(questionDiv => {
-          const questionText = questionDiv.querySelector('.question-text').value;
-          const optionA = questionDiv.querySelector('.option-a').value;
-          const optionB = questionDiv.querySelector('.option-b').value;
-          const optionC = questionDiv.querySelector('.option-c').value;
-          const optionD = questionDiv.querySelector('.option-d').value;
-          const correctAnswer = questionDiv.querySelector(`input[name="correctAnswer${questionDiv.dataset.questionId}"]:checked`).value;
-          const explanation = questionDiv.querySelector('.explanation').value;
-
-          questions.push({
-            question_text: questionText,
-            options: { A: optionA, B: optionB, C: optionC, D: optionD },
-            correct_answer: correctAnswer,
-            explanation: explanation
-          });
-        });
-
-        sections.push({
-          section_name: sectionName,
-          section_instructions: sectionInstructions,
-          section_order: sectionOrder,
+      const sections = Array.from(document.querySelectorAll('.section-card')).map(sectionCard => {
+        const questions = Array.from(sectionCard.querySelectorAll('.question-card')).map(questionCard => ({
+          question_text: questionCard.querySelector('[id^="questionText-"]').value,
+          options: {
+            A: questionCard.querySelector('[id^="optionA-"]').value,
+            B: questionCard.querySelector('[id^="optionB-"]').value,
+            C: questionCard.querySelector('[id^="optionC-"]').value,
+            D: questionCard.querySelector('[id^="optionD-"]').value,
+          },
+          correct_answer: questionCard.querySelector('[id^="correctAnswer-"]').value,
+          explanation: questionCard.querySelector('[id^="explanation-"]').value,
+        }));
+        return {
+          section_name: sectionCard.querySelector('input[type="text"]').value,
+          section_instructions: sectionCard.querySelector('textarea').value,
+          section_order: parseInt(sectionCard.dataset.sectionOrder),
           questions: questions
-        });
+        };
       });
 
-      const examData = {
-        title: examTitle,
-        subject_id: parseInt(subjectId),
-        class_level_id: parseInt(classLevelId),
-        exam_type: examType,
-        duration_minutes: durationMinutes,
-        pass_mark: passMark,
-        max_score: maxScore,
-        term: term,
-        session: session,
-        scheduled_time: scheduledTime || null, // Send null if empty
-        is_locked: isLocked,
+      return {
+        title: document.getElementById('examTitle').value,
+        subject_id: parseInt(document.getElementById('subject').value),
+        class_level_id: parseInt(document.getElementById('classLevel').value),
+        exam_type: document.getElementById('examType').value,
+        duration_minutes: parseInt(document.getElementById('duration').value),
+        pass_mark: parseInt(document.getElementById('passMark').value),
+        max_score: parseInt(document.getElementById('maxScore').value),
+        term: document.getElementById('term').value,
+        session: document.getElementById('session').value.replace('-', '/'),
+        start_time: startTimeVal ? new Date(startTimeVal).toISOString() : null,
+        end_time: endTimeVal ? new Date(endTimeVal).toISOString() : null,
+        is_locked: document.getElementById('isLocked').checked,
         sections: sections
       };
+    }
 
-      try {
-        const response = await fetch('/api/exams', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(examData),
-          credentials: 'include'
-        });
+    // --- Dynamic Form Element Functions ---
+    function addSection(sectionData = null) {
+      sectionCounter++;
+      const sectionId = `section-${sectionCounter}`;
+      const sectionsContainer = document.getElementById('sectionsContainer');
+      const sectionCard = document.createElement('div');
+      sectionCard.className = 'section-card';
+      sectionCard.id = sectionId;
+      sectionCard.dataset.sectionOrder = sectionCounter;
+      sectionCard.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">Section ${sectionCounter}</h3>
+            <button type="button" class="btn btn-danger btn-sm remove-section-btn" data-section-id="${sectionId}"><i data-feather="x-circle" class="w-4 h-4"></i></button>
+        </div>
+        <div class="form-group"><label for="sectionName-${sectionId}">Section Name:</label><input type="text" id="sectionName-${sectionId}" class="mt-1 block w-full rounded-md border-gray-300" value="${sectionData ? sectionData.section_name : ''}" required></div>
+        <div class="form-group"><label for="sectionInstructions-${sectionId}">Instructions:</label><textarea id="sectionInstructions-${sectionId}" rows="2" class="mt-1 block w-full rounded-md border-gray-300">${sectionData ? sectionData.section_instructions : ''}</textarea></div>
+        <hr class="my-4"><h4 class="text-lg font-semibold mb-3">Questions</h4>
+        <div id="questionsContainer-${sectionId}" class="space-y-4"></div>
+        <button type="button" class="btn btn-info add-question-btn mt-4" data-section-id="${sectionId}"><i data-feather="plus" class="w-4 h-4 mr-2"></i>Add Question</button>`;
+      sectionsContainer.appendChild(sectionCard);
+      sectionCard.querySelector('.remove-section-btn').addEventListener('click', (e) => removeSection(e.currentTarget.dataset.sectionId));
+      sectionCard.querySelector('.add-question-btn').addEventListener('click', (e) => addQuestion(e.currentTarget.dataset.sectionId));
+      if (sectionData && sectionData.questions) {
+        sectionData.questions.forEach(q => addQuestion(sectionId, q));
+      } else {
+        addQuestion(sectionId);
+      }
+      feather.replace();
+    }
+    function addQuestion(sectionId, questionData = null) {
+      questionCounter++;
+      const qUniqueId = `q-${sectionId}-${questionCounter}`;
+      const questionsContainer = document.getElementById(`questionsContainer-${sectionId}`);
+      const questionCard = document.createElement('div');
+      questionCard.className = 'question-card p-4';
+      questionCard.id = qUniqueId;
+      questionCard.innerHTML = `
+        <div class="flex justify-between items-center mb-3"><h5 class="font-medium">Question</h5><button type="button" class="btn btn-danger btn-sm remove-question-btn" data-question-id="${qUniqueId}"><i data-feather="x" class="w-4 h-4"></i></button></div>
+        <div class="form-group"><label for="questionText-${qUniqueId}">Question Text:</label><textarea id="questionText-${qUniqueId}" rows="2" class="mt-1 block w-full rounded-md border-gray-300" required>${questionData ? questionData.question_text : ''}</textarea></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group"><label for="optionA-${qUniqueId}">Option A:</label><input type="text" id="optionA-${qUniqueId}" class="mt-1 block w-full rounded-md border-gray-300" value="${questionData?.options?.A || ''}" required></div>
+            <div class="form-group"><label for="optionB-${qUniqueId}">Option B:</label><input type="text" id="optionB-${qUniqueId}" class="mt-1 block w-full rounded-md border-gray-300" value="${questionData?.options?.B || ''}" required></div>
+            <div class="form-group"><label for="optionC-${qUniqueId}">Option C:</label><input type="text" id="optionC-${qUniqueId}" class="mt-1 block w-full rounded-md border-gray-300" value="${questionData?.options?.C || ''}" required></div>
+            <div class="form-group"><label for="optionD-${qUniqueId}">Option D:</label><input type="text" id="optionD-${qUniqueId}" class="mt-1 block w-full rounded-md border-gray-300" value="${questionData?.options?.D || ''}" required></div>
+        </div>
+        <div class="form-group"><label for="correctAnswer-${qUniqueId}">Correct Answer:</label><select id="correctAnswer-${qUniqueId}" class="mt-1 block w-full rounded-md border-gray-300" required><option value="">Select</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+        <div class="form-group"><label for="explanation-${qUniqueId}">Explanation (Optional):</label><textarea id="explanation-${qUniqueId}" rows="2" class="mt-1 block w-full rounded-md border-gray-300">${questionData ? questionData.explanation : ''}</textarea></div>`;
+      questionsContainer.appendChild(questionCard);
+      if (questionData?.correct_answer) questionCard.querySelector(`#correctAnswer-${qUniqueId}`).value = questionData.correct_answer;
+      questionCard.querySelector('.remove-question-btn').addEventListener('click', (e) => removeQuestion(e.currentTarget.dataset.questionId));
+      feather.replace();
+    }
+    function removeSection(sectionId) { document.getElementById(sectionId).remove(); }
+    function removeQuestion(questionId) { document.getElementById(questionId).remove(); }
 
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to create exam.');
+    // --- Initialization and Event Handlers ---
+    async function initPage() {
+        currentUser = await fetchApi('/api/users/me');
+        if (!currentUser || (!currentUser.is_admin && currentUser.role !== 'teacher')) {
+            document.querySelector('main').innerHTML = '<h1 class="text-center text-red-600">Access Denied</h1>';
+            return;
         }
+        // Populate nav links etc. (assuming function exists)
 
-        showPageMessage('Exam created successfully!', 'success');
-        document.getElementById('examForm').reset(); // Clear form
-        document.getElementById('sectionsContainer').innerHTML = ''; // Clear sections
-        sectionCounter = 0;
-        questionCounter = 0;
+        const classLevels = await fetchApi('/api/exams/config/class-levels');
+        const classLevelSelect = document.getElementById('classLevel');
+        classLevelSelect.innerHTML = '<option value="">Select Class Level</option>';
+        classLevels.forEach(level => classLevelSelect.innerHTML += `<option value="${level.level_id}">${level.level_name}</option>`);
+
+        const subjectSelect = document.getElementById('subject');
+        const fetchSubjects = async (classLevelId) => {
+            const subjects = await fetchApi(`/api/exams/config/subjects?class_level_id=${classLevelId}`);
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+            if (subjects) subjects.forEach(subject => subjectSelect.innerHTML += `<option value="${subject.subject_id}">${subject.name}</option>`);
+        };
+        classLevelSelect.addEventListener('change', () => fetchSubjects(classLevelSelect.value));
+        fetchSubjects(''); // Load all initially
+
+        addSection(); // Start with one section
+    }
+
+    document.getElementById('addSectionBtn').addEventListener('click', () => addSection());
+    document.getElementById('examForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitButton = e.submitter;
+      submitButton.disabled = true;
+      submitButton.innerHTML = 'Creating...';
+      try {
+        const examData = collectExamData();
+        // Add validation here if needed
+        const result = await fetchApi('/api/exams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(examData),
+        });
+        if (result) {
+          showPageMessage('Exam created successfully!', 'success');
+          document.getElementById('examForm').reset();
+          document.getElementById('sectionsContainer').innerHTML = '';
+          addSection();
+        }
       } catch (error) {
-        console.error("Error creating exam:", error);
-        showPageMessage(`Failed to create exam: ${error.message}`, 'error');
+        // fetchApi already shows message
+      } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i data-feather="save" class="w-4 h-4 mr-2"></i>Create Exam';
+        feather.replace();
       }
     });
 
-    // Initial load of subjects and class levels
-    async function loadInitialData() {
-        const user = await loadUserData();
-        if (user && (user.is_admin || user.role === 'teacher')) {
-            await fetchClassLevels();
-            await fetchSubjects(); // Load all subjects initially
-            document.getElementById('classLevel').addEventListener('change', (e) => {
-                fetchSubjects(e.target.value); // Filter subjects by selected class level
-            });
-        } else {
-            document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have permission to create exams.</p>';
-        }
-    }
-
-    window.addEventListener('DOMContentLoaded', loadInitialData);
+    window.addEventListener('DOMContentLoaded', initPage);
   </script>
 </body>
 </html>

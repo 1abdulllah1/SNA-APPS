@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exam Results | CBT System</title>
-    <link rel="stylesheet" href="styles.css">
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for a clean, modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Feather Icons for a clean icon set -->
+    <script src="https://unpkg.com/feather-icons"></script>
     <style>
         /* General Styles */
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; margin: 0; padding: 0;}
@@ -94,9 +99,19 @@
             text-align: center;
             font-weight: 500;
         }
-        .info-message { background-color: #e0f7fa; color: #0c5460; border: 1px solid #00acc1; }
-        .error-message { background-color: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; }
-        .hidden { display: none; }
+        .info-message {
+            background-color: #e0f7fa;
+            color: #0c5460;
+            border: 1px solid #00acc1;
+        }
+        .error-message {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #d32f2f;
+        }
+        .hidden {
+            display: none;
+        }
 
         /* Student List for Summary View */
         .student-results-table {
@@ -121,354 +136,275 @@
             background-color: #f8f9fa;
         }
         .student-results-table .btn {
-            padding: 6px 12px;
+            padding: 8px 12px;
             font-size: 0.85rem;
+            border-radius: 6px;
         }
     </style>
 </head>
-<body>
-    <header>
-        <nav>
-            <a href="/dashboard.html" class="logo">SNA CBT System</a>
-            <ul class="nav-links" id="navLinks">
-                <!-- Navigation links will be dynamically inserted here by JS -->
-            </ul>
+<body class="antialiased text-gray-800">
+
+    <!-- Header/Navbar -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="/dashboard.html" class="text-2xl font-bold text-indigo-600">SNA CBT System</a>
+                </div>
+                <div class="hidden md:block">
+                    <ul class="ml-10 flex items-center space-x-4" id="navLinksContainer">
+                        <!-- Nav links will be dynamically inserted here -->
+                    </ul>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        <span class="sr-only">Open main menu</span>
+                        <i data-feather="menu"></i>
+                    </button>
+                </div>
+            </div>
         </nav>
+        <!-- Mobile menu, show/hide based on menu state. -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <ul class="px-2 pt-2 pb-3 space-y-1 sm:px-3" id="mobileNavLinksContainer">
+                <!-- Mobile nav links will be inserted here -->
+            </ul>
+        </div>
     </header>
 
-    <main>
-        <div class="results-container">
-            <div id="messageContainer" class="message hidden"></div>
-            <div id="loadingMessage" class="message info-message">Loading results...</div>
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="pageMessage" class="message hidden"></div>
 
-            <!-- Individual Result View -->
-            <div id="individualResult" class="hidden">
-                <div class="results-header">
-                    <h1 id="examTitle"></h1>
-                    <p>Subject: <span id="subjectName"></span> | Class: <span id="classLevelName"></span></p>
-                    <p>Student: <span id="studentName"></span> (<span id="admissionNumber"></span>)</p>
-                    <p>Submitted On: <span id="submissionDate"></span> | Time Taken: <span id="timeTaken"></span></p>
-                </div>
+        <div id="loadingMessage" class="info-message hidden">Loading results...</div>
 
-                <table class="summary-table">
-                    <thead>
-                        <tr>
-                            <th>Score</th>
-                            <th>Raw Score</th>
-                            <th>Total Possible Marks</th>
-                            <th>Pass Mark</th>
-                            <th>Result</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td id="percentageScore" class="score-percentage"></td>
-                            <td id="rawScore"></td>
-                            <td id="totalMarks"></td>
-                            <td id="passMarkDisplay"></td>
-                            <td id="resultStatus"></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h2 style="margin-top: 2rem; color: #1a237e;">Question Review</h2>
-                <div id="questionReviewContainer">
-                    <!-- Question review cards will be inserted here -->
-                </div>
+        <!-- Detailed Result View (for single resultId) -->
+        <div id="detailedResultView" class="results-container hidden">
+            <div class="results-header">
+                <h1 class="text-3xl font-bold">Exam Result: <span id="detailedExamTitle"></span></h1>
+                <p class="text-lg text-gray-600">Subject: <span id="detailedSubjectName"></span> | Class: <span id="detailedClassLevelName"></span></p>
+                <p class="text-lg text-gray-600">Student: <span id="detailedStudentName"></span> (<span id="detailedAdmissionNumber"></span>)</p>
+                <p class="text-lg text-gray-600">Score: <span id="detailedScore" class="font-bold"></span></p>
+                <p class="text-md text-gray-600">Submitted: <span id="detailedSubmissionDate"></span></p>
             </div>
 
-            <!-- Exam Results Summary View (for Teachers/Admins) -->
-            <div id="examSummary" class="hidden">
-                <div class="results-header">
-                    <h1 id="summaryExamTitle"></h1>
-                    <p>Subject: <span id="summarySubjectName"></span> | Class: <span id="summaryClassLevelName"></span></p>
-                    <p>Exam Type: <span id="summaryExamType"></span> | Term: <span id="summaryTerm"></span> | Session: <span id="summarySession"></span></p>
-                </div>
-                <table class="student-results-table">
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Admission No.</th>
-                            <th>Score (%)</th>
-                            <th>Raw Score</th>
-                            <th>Total Marks</th>
-                            <th>Submission Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summaryResultsBody">
-                        <!-- Student results summary will be populated here -->
-                    </tbody>
-                </table>
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Question Review</h2>
+            <div id="questionReviewContainer">
+                <!-- Question review cards will be loaded here -->
             </div>
+        </div>
+
+        <!-- Summary Results View (for examId or all results) -->
+        <div id="summaryResultsView" class="results-container hidden">
+            <div class="results-header">
+                <h1 class="text-3xl font-bold" id="summaryHeaderTitle">Exam Results Summary</h1>
+                <p class="text-lg text-gray-600" id="summaryHeaderSubtitle"></p>
+            </div>
+
+            <table class="student-results-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Admission No.</th>
+                        <th>Score</th>
+                        <th>Raw Score</th>
+                        <th>Total Marks</th>
+                        <th>Submission Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryResultsBody">
+                    <tr><td colspan="7" class="text-center text-gray-500">No results found.</td></tr>
+                </tbody>
+            </table>
         </div>
     </main>
 
-    <footer>
-        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
-    </footer>
-
     <script>
+        // --- Globals and Constants ---
         let currentUser = null;
 
+        // --- UI Update & Helper Functions ---
         function showMessage(message, type = 'info') {
-            const messageContainer = document.getElementById('messageContainer');
-            messageContainer.textContent = message;
-            messageContainer.className = `message ${type}-message`;
-            messageContainer.classList.remove('hidden');
-            document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('individualResult').classList.add('hidden');
-            document.getElementById('examSummary').classList.add('hidden');
+            const messageDiv = document.getElementById('pageMessage');
+            messageDiv.textContent = message;
+            const typeClasses = {
+                info: 'info-message',
+                success: 'success-message',
+                error: 'error-message'
+            };
+            messageDiv.className = `message ${typeClasses[type]}`;
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => messageDiv.classList.add('hidden'), 5000);
         }
 
-        async function loadUserData() {
+        async function fetchApi(url, options = {}) {
             try {
-                const response = await fetch('/api/users/me', { credentials: 'include' });
+                const response = await fetch(url, { credentials: 'include', ...options });
+                const data = await response.json();
                 if (!response.ok) {
-                    // If not authenticated, redirect to login
-                    window.location.href = '/login.html';
-                    return null;
+                    throw new Error(data.error || 'Something went wrong.');
                 }
-                currentUser = await response.json();
-                createNavigationLinks(currentUser);
-                return currentUser;
+                return data;
             } catch (error) {
-                console.error("Error loading user data:", error);
-                // If there's a network error or other issue, also redirect
-                window.location.href = '/login.html';
+                console.error(`Error fetching ${url}:`, error);
+                showMessage(`Error: ${error.message}`, 'error');
                 return null;
             }
         }
 
-        function createNavigationLinks(user) {
-            const navLinksContainer = document.getElementById('navLinks');
-            navLinksContainer.innerHTML = '';
-
-            const links = [
-                { href: "/dashboard.html", text: "Dashboard" },
-                { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
-                { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
-                { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
-                { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
-                { href: "/manage-class-levels.html", text: "Manage Levels", roles: ['admin'] },
-                { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
-            ];
-
-            links.forEach(linkInfo => {
-                // Determine if the link should be displayed based on user roles
-                const shouldDisplay = !linkInfo.roles || linkInfo.roles.some(role => {
-                    if (role === 'admin') return user.is_admin;
-                    return user.role === role;
-                });
-
-                if (shouldDisplay) {
-                    const listItem = document.createElement('li');
-                    const link = document.createElement('a');
-                    link.href = linkInfo.href;
-                    link.textContent = linkInfo.text;
-                    link.classList.add('nav-link');
-                    // Add active class if current page
-                    if (window.location.pathname === linkInfo.href) {
-                        link.classList.add('active');
-                    }
-                    listItem.appendChild(link);
-                    navLinksContainer.appendChild(listItem);
-                }
-            });
-
-            const logoutLinkItem = document.createElement('li');
-            const logoutBtn = document.createElement('button');
-            logoutBtn.textContent = "Logout";
-            logoutBtn.className = 'btn logout-btn';
-            logoutBtn.style.background = '#f44336';
-            logoutBtn.style.color = 'white';
-            logoutBtn.style.border = 'none';
-            logoutBtn.style.padding = '8px 15px';
-            logoutBtn.style.borderRadius = '5px';
-            logoutBtn.style.cursor = 'pointer';
-            logoutLinkItem.appendChild(logoutBtn);
-            navLinksContainer.appendChild(logoutLinkItem);
-
-            logoutBtn.addEventListener('click', async () => {
-                try {
-                    await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                } catch (error) {
-                    console.error('Network error during logout:', error);
-                } finally {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = '/login.html';
-                }
-            });
-        }
-
-        async function loadResults() {
-            document.getElementById('loadingMessage').classList.remove('hidden');
-            document.getElementById('messageContainer').classList.add('hidden');
-            document.getElementById('individualResult').classList.add('hidden');
-            document.getElementById('examSummary').classList.add('hidden');
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const resultId = urlParams.get('resultId');
-            const examId = urlParams.get('examId');
-            const viewMode = urlParams.get('viewMode'); // 'teacher' or 'admin'
-
+        async function loadUserData() {
             try {
-                if (resultId) {
-                    const response = await fetch(`/api/exam-results/${resultId}`, { credentials: 'include' });
-                     if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        // Display error message on the page instead of immediate redirect
-                        showMessage(`Error fetching individual result: ${errorData.error || response.statusText}`, 'error');
-                        return; // Stop execution here
-                    }
-                    const data = await response.json();
-                    displayIndividualResult(data);
-                } else if (examId && (viewMode === 'teacher' || viewMode === 'admin')) {
-                    if (!currentUser.is_admin && currentUser.role !== 'teacher') {
-                        showMessage("Access Denied: You do not have permission to view exam summaries.", 'error');
-                        return;
-                    }
-
-                    const response = await fetch(`/api/exam-results/exam/${examId}/all`, { credentials: 'include' });
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        // Display error message on the page instead of immediate redirect
-                        showMessage(`Error fetching exam summary: ${errorData.error || response.statusText}`, 'error');
-                        return; // Stop execution here
-                    }
-                    const data = await response.json();
-                    displayResultsSummary(data);
+                const user = await fetchApi('/api/users/me');
+                if (user) {
+                    currentUser = user;
+                    populateNavLinks(currentUser, 'navLinksContainer');
+                    populateNavLinks(currentUser, 'mobileNavLinksContainer');
+                    return currentUser;
                 } else {
-                    showMessage("No exam result or exam ID provided for display.", 'info');
+                    window.location.href = '/login.html';
+                    return null;
                 }
             } catch (error) {
-                console.error("Error loading results:", error);
-                showMessage(`Failed to load results: ${error.message}`, 'error');
-            } finally {
-                document.getElementById('loadingMessage').classList.add('hidden'); // Ensure loading message is hidden
+                console.error("Failed to load user data:", error);
+                window.location.href = '/login.html'; // Redirect on critical error
+                return null;
             }
         }
 
-        function displayIndividualResult(result) {
-            document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('individualResult').classList.remove('hidden');
+        function populateNavLinks(user, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear existing
 
-            document.getElementById('examTitle').textContent = result.exam_title || 'N/A';
-            document.getElementById('subjectName').textContent = result.subject_name || 'N/A';
-            document.getElementById('classLevelName').textContent = result.class_level_name || 'N/A';
-            document.getElementById('studentName').textContent = result.student_name || 'N/A';
-            document.getElementById('admissionNumber').textContent = result.admission_number || 'N/A';
-            document.getElementById('submissionDate').textContent = new Date(result.submission_date).toLocaleString() || 'N/A';
+            const navLinks = [
+                { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'], icon: 'home' },
+                { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'], icon: 'plus-square' },
+                { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'], icon: 'users' },
+                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin'], icon: 'bar-chart-2' },
+                { text: 'Register User', href: '/registration.html', roles: ['admin'], icon: 'user-plus' },
+                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'], icon: 'book-open' },
+                { text: 'Manage Levels', href: '/manage-class-levels.html', roles: ['admin'], icon: 'layers' },
+                { text: 'Manage Exams', href: '/manage-exams.html', roles: ['teacher', 'admin'], icon: 'edit' }
+            ];
 
-            const totalSeconds = result.time_taken_seconds || 0;
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            document.getElementById('timeTaken').textContent = `${minutes}m ${seconds}s`;
-
-            // Safely display score, raw score, total marks, and pass mark
-            document.getElementById('percentageScore').textContent = (typeof result.score === 'number' ? result.score.toFixed(1) : 'N/A') + '%';
-            document.getElementById('rawScore').textContent = typeof result.raw_score_obtained === 'number' ? result.raw_score_obtained : 'N/A';
-            document.getElementById('totalMarks').textContent = typeof result.total_possible_marks === 'number' ? result.total_possible_marks : 'N/A';
-            document.getElementById('passMarkDisplay').textContent = (typeof result.pass_mark === 'number' ? result.pass_mark : 'N/A') + '%';
-
-
-            const resultStatusElement = document.getElementById('resultStatus');
-            if (typeof result.score === 'number' && typeof result.pass_mark === 'number') {
-                if (result.score >= result.pass_mark) {
-                    resultStatusElement.textContent = 'PASS';
-                    resultStatusElement.className = 'pass';
-                } else {
-                    resultStatusElement.textContent = 'FAIL';
-                    resultStatusElement.className = 'fail';
+            navLinks.forEach(link => {
+                const shouldDisplay = link.roles.some(role => (role === 'admin' ? user.is_admin : user.role === role));
+                if (shouldDisplay) {
+                    const linkEl = document.createElement('li');
+                    linkEl.innerHTML = `<a href="${link.href}" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                            <i data-feather="${link.icon}" class="w-4 h-4 mr-2"></i> ${link.text}
+                                        </a>`;
+                    container.appendChild(linkEl);
                 }
-            } else {
-                resultStatusElement.textContent = 'N/A';
-                resultStatusElement.className = ''; // Clear any pass/fail classes
-            }
+            });
 
+            // Logout Button
+            const logoutBtn = document.createElement('li');
+            logoutBtn.innerHTML = `<button id="logoutBtn-${containerId}" class="w-full md:w-auto bg-red-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-600 flex items-center justify-center">
+                                        <i data-feather="log-out" class="w-4 h-4 mr-2"></i> Logout
+                                    </button>`;
+            container.appendChild(logoutBtn);
+            document.getElementById(`logoutBtn-${containerId}`).addEventListener('click', handleLogout);
+            feather.replace(); // Replace icons after adding them
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                } else {
+                    showMessage('Logout failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                showMessage('Network error during logout.', 'error');
+            }
+        }
+
+        function formatDateTime(isoString) {
+            if (!isoString) return 'N/A';
+            try {
+                return new Date(isoString).toLocaleString();
+            } catch (e) {
+                console.error("Error formatting date:", e);
+                return 'Invalid Date';
+            }
+        }
+
+        function renderDetailedResult(result) {
+            document.getElementById('loadingMessage').classList.add('hidden');
+            document.getElementById('summaryResultsView').classList.add('hidden');
+            document.getElementById('detailedResultView').classList.remove('hidden');
+
+            document.getElementById('detailedExamTitle').textContent = result.exam_title || 'N/A';
+            document.getElementById('detailedSubjectName').textContent = result.subject_name || 'N/A';
+            document.getElementById('detailedClassLevelName').textContent = result.class_level_name || 'N/A';
+            document.getElementById('detailedStudentName').textContent = result.student_name || 'N/A';
+            document.getElementById('detailedAdmissionNumber').textContent = result.admission_number || 'N/A';
+            document.getElementById('detailedScore').textContent = result.score !== null ? `${result.score.toFixed(1)}%` : 'N/A';
+            document.getElementById('detailedSubmissionDate').textContent = formatDateTime(result.submission_date);
 
             const questionReviewContainer = document.getElementById('questionReviewContainer');
             questionReviewContainer.innerHTML = '';
 
-            // Determine if detailed question review should be shown
-            // Backend already restricts student role from viewing detailed results for MAIN_EXAM,
-            // but this adds a client-side check for clarity and robustness.
-            const isMainExam = result.exam_type === 'MAIN_EXAM';
-            const canViewDetailedReview = (currentUser.is_admin || currentUser.role === 'teacher' || !isMainExam);
+            if (result.questions_attempted && result.questions_attempted.length > 0) {
+                result.questions_attempted.forEach(q => {
+                    const userAnswer = q.user_answer;
+                    const correctAnswer = q.correct_answer;
+                    const isCorrect = userAnswer === correctAnswer;
+                    const cardClass = isCorrect ? 'correct' : (userAnswer ? 'incorrect' : 'unanswered');
 
-            if (canViewDetailedReview && result.sections && result.sections.length > 0) {
-                result.sections.forEach(section => {
-                    const sectionHeader = document.createElement('h4');
-                    sectionHeader.textContent = `Section: ${section.section_name}`;
-                    questionReviewContainer.appendChild(sectionHeader);
-
-                    if (section.questions && section.questions.length > 0) {
-                        section.questions.forEach((question, index) => {
-                            const card = document.createElement('div');
-                            card.classList.add('question-review-card');
-
-                            let cardClass = 'unanswered';
-                            if (question.user_answer) {
-                                cardClass = question.is_correct ? 'correct' : 'incorrect';
+                    let optionsHtml = '';
+                    for (const key in q.options) {
+                        if (q.options.hasOwnProperty(key)) {
+                            let optionClass = '';
+                            if (key === correctAnswer) {
+                                optionClass = 'correct-option';
                             }
-                            card.classList.add(cardClass);
-
-                            let optionsHtml = '';
-                            ['A', 'B', 'C', 'D'].forEach(optionKey => {
-                                const optionText = question.options[optionKey];
-                                let optionClass = '';
-                                if (optionKey === question.correct_answer) {
-                                    optionClass += 'correct-option ';
-                                }
-                                if (optionKey === question.user_answer) {
-                                    optionClass += 'user-answer ';
-                                    if(!question.is_correct) optionClass += 'incorrect';
-                                }
-                                optionsHtml += `<span class="${optionClass}">${optionKey}: ${optionText || ''}</span>`;
-                            });
-
-                            card.innerHTML = `
-                                <h3>Question ${index + 1}: ${question.question_text}</h3>
-                                <div class="options">${optionsHtml}</div>
-                                <p><strong>Your Answer:</strong> ${question.user_answer || 'N/A'}</p>
-                                <p><strong>Correct Answer:</strong> ${question.correct_answer || 'N/A'}</p>
-                                ${question.explanation ? `<div class="explanation"><p><strong>Explanation:</strong> ${question.explanation}</p></div>` : ''}
-                            `;
-                            questionReviewContainer.appendChild(card);
-                        });
+                            if (key === userAnswer && !isCorrect) {
+                                optionClass += ' user-answer incorrect'; // User answered this, and it was wrong
+                            } else if (key === userAnswer && isCorrect) {
+                                optionClass += ' user-answer'; // User answered this, and it was correct
+                            }
+                            optionsHtml += `<span class="${optionClass}">${key}. ${q.options[key]}</span>`;
+                        }
                     }
+
+                    questionReviewContainer.innerHTML += `
+                        <div class="question-review-card ${cardClass}">
+                            <h3>${q.question_text || 'N/A'}</h3>
+                            <div class="options">
+                                ${optionsHtml}
+                            </div>
+                            <p class="mt-2">Your Answer: <span class="${userAnswer === correctAnswer ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">${userAnswer || 'N/A'}</span></p>
+                            <p>Correct Answer: <span class="text-green-600 font-bold">${correctAnswer || 'N/A'}</span></p>
+                            ${q.explanation ? `<div class="explanation"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
+                        </div>
+                    `;
                 });
             } else {
-                 questionReviewContainer.innerHTML = '<p class="info-message">Detailed question review is not available for this exam type or for your role.</p>';
+                questionReviewContainer.innerHTML = '<p class="text-center text-gray-500">No questions found for review.</p>';
             }
+            feather.replace(); // Re-render icons
         }
 
-        function displayResultsSummary(results) {
+        function renderSummaryResults(results, title, subtitle) {
             document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('examSummary').classList.remove('hidden');
+            document.getElementById('detailedResultView').classList.add('hidden');
+            document.getElementById('summaryResultsView').classList.remove('hidden');
 
-            if (results.length > 0) {
-                const firstResult = results[0];
-                document.getElementById('summaryExamTitle').textContent = firstResult.exam_title || 'N/A';
-                document.getElementById('summarySubjectName').textContent = firstResult.subject_name || 'N/A';
-                document.getElementById('summaryClassLevelName').textContent = firstResult.class_level_name || 'N/A';
-                document.getElementById('summaryExamType').textContent = firstResult.exam_type || 'N/A';
-                document.getElementById('summaryTerm').textContent = firstResult.term || 'N/A';
-                document.getElementById('summarySession').textContent = firstResult.session || 'N/A';
-            } else {
-                document.getElementById('summaryExamTitle').textContent = 'No Results Found';
-            }
+            document.getElementById('summaryHeaderTitle').textContent = title;
+            document.getElementById('summaryHeaderSubtitle').textContent = subtitle;
 
             const summaryResultsBody = document.getElementById('summaryResultsBody');
             summaryResultsBody.innerHTML = '';
 
             if (results && results.length > 0) {
                 results.forEach(result => {
-                    // Safely access score and other numeric properties
-                    const scoreDisplay = typeof result.score === 'number' ? result.score.toFixed(1) + '%' : 'N/A';
-                    const rawScoreDisplay = typeof result.raw_score_obtained === 'number' ? result.raw_score_obtained : 'N/A';
-                    const totalMarksDisplay = typeof result.total_possible_marks === 'number' ? result.total_possible_marks : 'N/A';
+                    const scoreDisplay = result.score !== null ? `${result.score.toFixed(1)}%` : 'N/A';
+                    const rawScoreDisplay = result.raw_score_obtained !== null ? result.raw_score_obtained : 'N/A';
+                    const totalMarksDisplay = result.total_possible_marks !== null ? result.total_possible_marks : 'N/A';
 
                     const row = `
                         <tr>
@@ -477,7 +413,7 @@
                             <td>${scoreDisplay}</td>
                             <td>${rawScoreDisplay}</td>
                             <td>${totalMarksDisplay}</td>
-                            <td>${new Date(result.submission_date).toLocaleString()}</td>
+                            <td>${formatDateTime(result.submission_date)}</td>
                             <td>
                                 <button class="btn btn-info" onclick="viewStudentResultDetails(${result.result_id})">View Details</button>
                             </td>
@@ -486,35 +422,96 @@
                     summaryResultsBody.innerHTML += row;
                 });
             } else {
-                summaryResultsBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No student results available for this exam.</td></tr>`;
+                summaryResultsBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No student results available.</td></tr>`;
+            }
+        }
+
+        async function loadResults() {
+            document.getElementById('loadingMessage').classList.remove('hidden');
+            const urlParams = new URLSearchParams(window.location.search);
+            const resultId = urlParams.get('resultId');
+            const examId = urlParams.get('examId');
+
+            if (resultId) {
+                // Case 1: Specific result ID is provided (e.g., from student's recent attempts)
+                try {
+                    const result = await fetchApi(`/api/exam-results/${resultId}`);
+                    if (result) {
+                        // Authorization check: Students can only view their own results. Teachers/Admins can view any.
+                        if (currentUser.role === 'student' && currentUser.id !== result.student_id) {
+                            showMessage("Access denied. You can only view your own results.", 'error');
+                            document.getElementById('loadingMessage').classList.add('hidden');
+                            return;
+                        }
+                        renderDetailedResult(result);
+                    } else {
+                        showMessage('Failed to load detailed result. It might not exist or you lack permission.', 'error');
+                        document.getElementById('loadingMessage').classList.add('hidden');
+                    }
+                } catch (error) {
+                    showMessage(`Error loading detailed result: ${error.message}`, 'error');
+                    document.getElementById('loadingMessage').classList.add('hidden');
+                }
+            } else if (examId) {
+                // Case 2: Exam ID is provided (e.g., from teacher/admin dashboard to see all results for an exam)
+                // Only teachers and admins are allowed to view exam summaries
+                if (!currentUser.is_admin && currentUser.role !== 'teacher') {
+                    showMessage("Access denied. Only teachers and administrators can view exam result summaries.", 'error');
+                    document.getElementById('loadingMessage').classList.add('hidden');
+                    return;
+                }
+                try {
+                    const results = await fetchApi(`/api/exam-results/exam/${examId}/summary`); // New backend endpoint needed
+                    if (results) {
+                        const examTitle = results.length > 0 ? results[0].exam_title : 'Unknown Exam';
+                        const subjectName = results.length > 0 ? results[0].subject_name : 'N/A';
+                        const classLevelName = results.length > 0 ? results[0].class_level_name : 'N/A';
+                        renderSummaryResults(results, `Results for: ${examTitle}`, `Subject: ${subjectName} | Class: ${classLevelName}`);
+                    } else {
+                        showMessage('No results found for this exam or failed to load.', 'info');
+                        document.getElementById('loadingMessage').classList.add('hidden');
+                    }
+                } catch (error) {
+                    showMessage(`Error loading exam summary: ${error.message}`, 'error');
+                    document.getElementById('loadingMessage').classList.add('hidden');
+                }
+            } else {
+                // Case 3: No specific ID, show all results (for admin)
+                if (!currentUser.is_admin) {
+                    showMessage("Access denied. Only administrators can view all exam results.", 'error');
+                    document.getElementById('loadingMessage').classList.add('hidden');
+                    return;
+                }
+                try {
+                    const allResults = await fetchApi('/api/exam-results/all'); // New backend endpoint needed
+                    if (allResults) {
+                        renderSummaryResults(allResults, "All Student Exam Results", "Overview of all submitted exams.");
+                    } else {
+                        showMessage('No exam results found in the system.', 'info');
+                        document.getElementById('loadingMessage').classList.add('hidden');
+                    }
+                } catch (error) {
+                    showMessage(`Error loading all results: ${error.message}`, 'error');
+                    document.getElementById('loadingMessage').classList.add('hidden');
+                }
             }
         }
 
         function viewStudentResultDetails(resultId) {
-            // Ensure that only teachers/admins can view detailed results for MAIN_EXAM types
-            // This client-side check complements the backend authorization.
-            // For other exam types, students can view their own details.
-            if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) {
-                 window.location.href = `results.html?resultId=${resultId}`;
-            } else {
-                // If it's a student, we need to check the exam type associated with this resultId
-                // This would require an additional API call or passing exam_type in the summary view.
-                // For now, we'll rely on the backend to enforce this strictly.
-                // If the backend allows it for non-MAIN_EXAM, the student will see it.
-                // If the backend denies for MAIN_EXAM, an error message will be shown.
-                window.location.href = `results.html?resultId=${resultId}`;
-            }
+            window.location.href = `results.html?resultId=${resultId}`;
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // Load user data first. If not authenticated, it will redirect to login.
             const user = await loadUserData();
             if (user) {
-                // Only proceed to load results if user data was successfully loaded (i.e., user is authenticated).
                 await loadResults();
             }
         });
 
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
     </script>
 </body>
 </html>

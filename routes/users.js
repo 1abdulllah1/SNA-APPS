@@ -8,10 +8,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-// For password reset - you'll need to install and configure an email sender
-// Example: const nodemailer = require('nodemailer');
-// Make sure to install it: npm install nodemailer dotenv
-// Add your email configuration in .env or directly here for testing (not recommended for prod)
+const nodemailer = require('nodemailer');
 
 // --- Cloudinary Configuration ---
 const cloudinary = require('cloudinary').v2;
@@ -54,9 +51,11 @@ const uploadToCloudinary = (fileBuffer) => {
 
 // =========================================================
 // EMAIL TRANSPORTER SETUP (FOR PASSWORD RESET)
-// You need to configure this to send actual emails.
-// Example with Nodemailer (install with npm install nodemailer):
-/*
+// This uses environment variables. Make sure your .env file is configured
+// with EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, and EMAIL_FROM.
+// For development, you might need to set EMAIL_SECURE to 'false' and
+// tls.rejectUnauthorized to false if using a local or self-signed SMTP server.
+// =========================================================
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
@@ -65,11 +64,15 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    tls: {
+        // WARNING: Setting rejectUnauthorized to false can be a security risk in production.
+        // Only use this in development or if you fully understand the implications
+        // and trust the SMTP server's certificate.
+        rejectUnauthorized: process.env.NODE_ENV === 'production' ? true : false
+    }
 });
-*/
-// =========================================================
 
-// *** FIX: Added missing isAdminOrTeacher middleware function ***
+// Middleware to ensure only admins or teachers can access certain routes
 const isAdminOrTeacher = (req, res, next) => {
   if (!req.user || (!req.user.is_admin && req.user.role !== 'teacher')) {
     return res.status(403).json({ error: "Access denied. Admin or Teacher privileges required." });
@@ -222,8 +225,9 @@ router.post("/login", async (req, res) => {
     }
 });
 
+
 // =========================================================
-// FORGET PASSWORD ROUTES (IMPROVEMENT)
+// FORGOT/RESET PASSWORD ROUTES
 // =========================================================
 
 // POST /api/users/forgot-password - Request password reset link
@@ -235,96 +239,110 @@ router.post("/forgot-password", async (req, res) => {
 
     try {
         const userResult = await pool.query('SELECT id, username, email FROM users WHERE email = $1', [email]);
+        
+        // Always respond with a success message to prevent email enumeration attacks
         if (userResult.rows.length === 0) {
-            // For security, always respond with a generic success message
-            // even if the email doesn't exist, to prevent enumeration attacks.
             return res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
         }
 
         const user = userResult.rows[0];
 
-        // Generate a unique, short-lived token for password reset
-        // Using user ID, secret, and a short expiry (e.g., 15 minutes)
+        // Create a short-lived JWT for password reset
         const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
 
-        // IMPORTANT: Store the reset token hash in the database to invalidate it after use
-        // You'll need to add a 'reset_password_token' column and 'reset_password_expires' column to your users table
+        // Store the reset token hash in the database.
+        // IMPORTANT: You must add these columns to your 'users' table. See guidance notes.
         await pool.query(
             'UPDATE users SET reset_password_token = $1, reset_password_expires = NOW() + INTERVAL \'15 minutes\' WHERE id = $2',
             [resetToken, user.id]
         );
 
-        // Construct the reset URL
-        // In production, replace localhost:3000 with your deployed domain (e.g., cbt-app.render.com)
-        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}`;
+        // Construct the reset URL using FRONTEND_BASE_URL environment variable
+        // This ensures the link works correctly on both local and hosted environments.
+        const resetUrl = `${process.env.FRONTEND_BASE_URL}/reset-password.html?token=${resetToken}`;
 
-        // =========================================================
-        // EMAIL SENDING LOGIC (YOU NEED TO IMPLEMENT THIS USING Nodemailer or similar)
-        // Ensure 'transporter' is configured above.
-        /*
+        // --- Email Sending Logic ---
         const mailOptions = {
-            from: process.env.EMAIL_FROM, // Your sender email address
+            from: `"SNA CBT System" <${process.env.EMAIL_FROM}>`,
             to: user.email,
-            subject: 'Password Reset Request for CBT System',
+            subject: 'Your Password Reset Request',
             html: `
-                <p>Hello ${user.username},</p>
-                <p>You have requested a password reset for your CBT System account.</p>
-                <p>Please click on the following link to reset your password:</p>
-                <p><a href="${resetUrl}">${resetUrl}</a></p>
-                <p>This link will expire in 15 minutes.</p>
-                <p>If you did not request this, please ignore this email.</p>
+                <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h2>Password Reset Request</h2>
+                    <p>Hello ${user.username},</p>
+                    <p>You requested a password reset. Please click the link below to create a new password:</p>
+                    <p style="text-align: center;">
+                        <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+                    </p>
+                    <p>This link is valid for 15 minutes. If you did not request this, please ignore this email.</p>
+                    <hr>
+                    <p style="font-size: 0.8em; color: #777;">If you're having trouble with the button, copy and paste this URL into your browser: ${resetUrl}</p>
+                </div>
             `,
         };
-        await transporter.sendMail(mailOptions);
-        */
-        // =========================================================
-
-        res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
+        
+        try {
+            await transporter.sendMail(mailOptions);
+            res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
+        } catch (emailError) {
+            console.error("Error sending password reset email:", emailError);
+            // Log the specific error details from Nodemailer
+            if (emailError.code) console.error("Nodemailer error code:", emailError.code);
+            if (emailError.response) console.error("Nodemailer response:", emailError.response);
+            if (emailError.responseCode) console.error("Nodemailer response code:", emailError.responseCode);
+            
+            // Revert the token update if email sending fails to prevent invalid tokens
+            await pool.query(
+                'UPDATE users SET reset_password_token = NULL, reset_password_expires = NULL WHERE id = $1',
+                [user.id]
+            );
+            // Still return a generic success message to the user for security reasons,
+            // but log the actual error for debugging.
+            res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
+        }
 
     } catch (error) {
-        console.error("Forgot password error:", error);
-        res.status(500).json({ error: "Failed to process password reset request." });
+        console.error("Forgot password processing error:", error);
+        res.status(500).json({ error: "Failed to process password reset request due to a server error." });
     }
 });
 
-// POST /api/users/reset-password - Reset password with token
+// POST /api/users/reset-password - Reset password using the token
 router.post("/reset-password", async (req, res) => {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
-        return res.status(400).json({ error: "Missing token or new password." });
+        return res.status(400).json({ error: "Token and new password are required." });
     }
 
     try {
-        // Verify the token and check expiry
+        // Verify the JWT token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userId = decoded.id;
 
+        // Check if the token is valid and still stored in the database
         const userResult = await pool.query(
-            'SELECT * FROM users WHERE id = $1 AND reset_password_token = $2 AND reset_password_expires > NOW()',
+            'SELECT id FROM users WHERE id = $1 AND reset_password_token = $2 AND reset_password_expires > NOW()',
             [userId, token]
         );
 
         if (userResult.rows.length === 0) {
-            return res.status(400).json({ error: "Invalid or expired password reset token." });
+            return res.status(400).json({ error: "Password reset token is invalid or has expired." });
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        // Update password and invalidate token
+        // Update password and invalidate the token
         await pool.query(
             'UPDATE users SET password = $1, reset_password_token = NULL, reset_password_expires = NULL WHERE id = $2',
             [hashedPassword, userId]
         );
 
-        res.status(200).json({ message: "Password has been reset successfully." });
+        res.status(200).json({ message: "Password has been reset successfully. You can now log in." });
 
     } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return res.status(400).json({ error: "Password reset token has expired." });
-        }
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(400).json({ error: "Invalid password reset token." });
+        if (error.name === 'TokenExpiredError' || error.name === 'JsonWebWebTokenError') {
+            return res.status(400).json({ error: "Password reset token is invalid or has expired." });
         }
         console.error("Reset password error:", error);
         res.status(500).json({ error: "Failed to reset password." });
@@ -532,7 +550,8 @@ router.delete("/:id", auth, async (req, res) => {
         }
         res.status(500).json({ error: "Failed to delete user. " + error.message });
     } finally {
-        if (client) { client.release(); }
+        // Removed client.release() from finally block as client is not defined here
+        // and pool.query handles connection pooling internally.
     }
 });
 

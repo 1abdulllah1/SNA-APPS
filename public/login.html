@@ -4,173 +4,82 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login | CBT System</title>
-  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Base styles are in styles.css */
-
-    .auth-container {
-      max-width: 450px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-    
-    .form-group {
-      margin-bottom: 1.2rem;
-    }
-    
-    .error-message {
-      color: #e74c3c;
-      margin: 10px 0;
-      display: block;
-      text-align: center;
-      padding: 8px; /* Added padding */
-      border-radius: 4px; /* Added border-radius */
-      background-color: #ffebee; /* Light red background */
-      border: 1px solid #e74c3c; /* Border */
-    }
-
-    .success-message-inline { /* Added for general success messages */
-        color: var(--success-green);
-        background-color: #e8f5e9;
-        border: 1px solid var(--success-green);
-        padding: 8px;
-        border-radius: 4px;
-        text-align: center;
-        margin: 10px 0;
-        display: block;
-    }
-    
-    .alternate-link {
-      text-align: center;
-      margin-top: 1.5rem;
-    }
-
-    .alternate-link a {
-        color: var(--primary-blue);
-        font-weight: 500;
-        text-decoration: none; /* Remove underline */
-    }
-
-    .alternate-link a:hover {
-        text-decoration: underline; /* Add underline on hover */
-    }
-
-    .login-hints {
-        font-size: 0.85em;
-        color: #666;
-        margin-bottom: 1rem;
-        text-align: center; /* Center hints */
-    }
-
-    /* Modal Styling */
-    .modal {
-      display: none; /* Hidden by default */
-      position: fixed; /* Stay in place */
-      z-index: 1000; /* Sit on top */
-      left: 0;
-      top: 0;
-      width: 100%; /* Full width */
-      height: 100%; /* Full height */
-      overflow: auto; /* Enable scroll if needed */
-      background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: auto;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      max-width: 400px;
-      text-align: center;
-      position: relative;
-    }
-
-    .modal-content h2 {
-      margin-top: 0;
-      color: var(--primary-blue);
-      font-size: 1.8rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .modal-content input[type="email"] {
-      width: calc(100% - 20px); /* Adjust width for padding */
-      padding: 12px 10px;
-      margin-bottom: 1.5rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-
-    .modal-content .btn {
-      width: 100%;
-      padding: 12px;
-      font-size: 1.1rem;
-      border-radius: 6px;
-    }
-
-    .modal-close-btn {
-      color: #aaa;
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .modal-close-btn:hover,
-    .modal-close-btn:focus {
-      color: #333;
-      text-decoration: none;
-      cursor: pointer;
-    }
+      body { font-family: 'Inter', sans-serif; }
   </style>
 </head>
-<body>
-  <header> <nav> <a href="dashboard.html" class="logo">CBT System</a> </nav> </header>
-  <main>
-    <div class="auth-container">
-      <h1 style="text-align: center; margin-bottom: 1.5rem;">Login to Your Account</h1>
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="identifier">Email, Username, or Admission No.</label>
-          <input type="text" id="identifier" name="identifier" required autocomplete="username" placeholder="e.g., user@example.com or SNA/23/001">
+<body class="bg-gray-100 flex flex-col min-h-screen">
+  <header>
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-6 py-4">
+            <a href="#" class="text-2xl font-bold text-indigo-600">SNA CBT System</a>
         </div>
-        <div class="login-hints">
-          <p><small>Teachers/Admins: Use your email or username.</small></p>
-          <p><small>Students: Use Admission No. (e.g., SNA/23/001 'in capital letters') or email.</small></p>
-        </div>
-        <div class="form-group"> <label for="password">Password</label> <input type="password" id="password" name="password" required autocomplete="current-password"> </div>
-        <div class="form-group"> <label> <input type="checkbox" name="remember"> Remember me </label> </div>
-        <span id="loginError" class="error-message hidden"></span>
-        <span id="loginSuccess" class="success-message-inline hidden"></span>
-        <button type="submit" class="btn primary-btn" style="width: 100%;">Login</button>
-        <div class="alternate-link"> <a href="#" id="forgotPassword">Forgot Password?</a> </div>
-      </form>
+    </nav>
+  </header>
+
+  <main class="flex-grow flex items-center justify-center">
+    <div class="w-full max-w-md">
+      <div class="bg-white shadow-xl rounded-2xl p-8 space-y-6">
+        <h1 class="text-3xl font-bold text-center text-gray-800">Welcome Back!</h1>
+        <p class="text-center text-gray-500">Login to access your dashboard.</p>
+        
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label for="identifier" class="text-sm font-medium text-gray-700">Email, Username, or Admission No.</label>
+            <input type="text" id="identifier" name="identifier" required autocomplete="username" placeholder="e.g., student@example.com" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          
+          <div>
+            <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+
+          <div id="loginError" class="hidden text-sm text-red-600 bg-red-100 p-3 rounded-md"></div>
+          <div id="loginSuccess" class="hidden text-sm text-green-600 bg-green-100 p-3 rounded-md"></div>
+
+          <div class="flex items-center justify-between">
+            <a href="#" id="forgotPasswordLink" class="text-sm text-indigo-600 hover:text-indigo-500 font-medium">Forgot Password?</a>
+          </div>
+
+          <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   </main>
-  <footer> <p>&copy; 2025 SNA CBT System. All rights reserved.</p> </footer>
+
+  <footer class="bg-white mt-8">
+      <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+          <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+      </div>
+  </footer>
 
   <!-- Forgot Password Modal -->
-  <div id="forgotPasswordModal" class="modal">
-    <div class="modal-content">
-      <span class="modal-close-btn">&times;</span>
-      <h2>Forgot Password</h2>
-      <p>Enter your email address and we'll send you a link to reset your password.</p>
-      <form id="forgotPasswordForm">
-        <div class="form-group">
-          <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
-        </div>
-        <span id="forgotPasswordError" class="error-message hidden"></span>
-        <span id="forgotPasswordSuccess" class="success-message-inline hidden"></span>
-        <button type="submit" class="btn primary-btn">Send Reset Link</button>
-      </form>
+  <div id="forgotPasswordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+    <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+      <div class="text-center">
+        <h3 class="text-2xl font-bold text-gray-800">Reset Password</h3>
+        <p class="text-sm text-gray-500 mt-2">Enter your email to receive a reset link.</p>
+        <form id="forgotPasswordForm" class="mt-6 space-y-4">
+          <div>
+            <label for="forgotEmail" class="sr-only">Email</label>
+            <input type="email" id="forgotEmail" name="email" placeholder="you@example.com" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <div id="forgotPasswordError" class="hidden text-sm text-red-600 bg-red-100 p-3 rounded-md"></div>
+          <div id="forgotPasswordSuccess" class="hidden text-sm text-green-600 bg-green-100 p-3 rounded-md"></div>
+          <div class="items-center gap-2">
+            <button type="submit" class="w-full px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              Send Reset Link
+            </button>
+            <button type="button" id="closeModalBtn" class="w-full mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -179,29 +88,25 @@
       const loginForm = document.getElementById('loginForm');
       const loginErrorElement = document.getElementById('loginError');
       const loginSuccessElement = document.getElementById('loginSuccess');
-      const forgotPasswordLink = document.getElementById('forgotPassword');
+      
+      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
       const forgotPasswordModal = document.getElementById('forgotPasswordModal');
-      const modalCloseBtn = forgotPasswordModal.querySelector('.modal-close-btn');
+      const closeModalBtn = document.getElementById('closeModalBtn');
       const forgotPasswordForm = document.getElementById('forgotPasswordForm');
       const forgotEmailInput = document.getElementById('forgotEmail');
       const forgotPasswordError = document.getElementById('forgotPasswordError');
       const forgotPasswordSuccess = document.getElementById('forgotPasswordSuccess');
 
-      // Helper to clear and hide messages
       function hideAllMessages() {
-          loginErrorElement.textContent = '';
           loginErrorElement.classList.add('hidden');
-          loginSuccessElement.textContent = '';
           loginSuccessElement.classList.add('hidden');
-          forgotPasswordError.textContent = '';
           forgotPasswordError.classList.add('hidden');
-          forgotPasswordSuccess.textContent = '';
           forgotPasswordSuccess.classList.add('hidden');
       }
 
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        hideAllMessages(); // Clear all messages before new attempt
+        hideAllMessages();
 
         const identifier = document.getElementById('identifier').value;
         const password = document.getElementById('password').value;
@@ -211,15 +116,13 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifier, password }),
-            credentials: 'include'
           });
 
-          const responseData = await response.json().catch(() => ({ error: "An unknown error occurred."}));
+          const responseData = await response.json();
 
           if (response.ok) {
-            loginSuccessElement.textContent = responseData.message || "Login successful! Redirecting...";
+            loginSuccessElement.textContent = "Login successful! Redirecting...";
             loginSuccessElement.classList.remove('hidden');
-            // Give a brief moment for user to see success message before redirect
             setTimeout(() => {
                 window.location.href = '/dashboard.html';
             }, 500); 
@@ -229,27 +132,26 @@
           }
         } catch (error) {
           console.error('Login error:', error);
-          loginErrorElement.textContent = "Connection error or server unavailable.";
+          loginErrorElement.textContent = "Connection error. Please try again.";
           loginErrorElement.classList.remove('hidden');
         }
       });
 
-      // Forgot Password Modal Logic
+      // --- Forgot Password Modal Logic ---
       forgotPasswordLink.addEventListener('click', (e) => {
         e.preventDefault();
-        forgotPasswordModal.style.display = 'flex'; // Show modal
-        hideAllMessages(); // Clear messages in both forms
-        forgotEmailInput.value = ''; // Clear previous email
+        forgotPasswordModal.classList.remove('hidden');
+        hideAllMessages();
+        forgotEmailInput.value = '';
       });
 
-      modalCloseBtn.addEventListener('click', () => {
-        forgotPasswordModal.style.display = 'none'; // Hide modal
+      closeModalBtn.addEventListener('click', () => {
+        forgotPasswordModal.classList.add('hidden');
       });
-
-      // Close modal if clicking outside the modal content
+      
       window.addEventListener('click', (e) => {
         if (e.target === forgotPasswordModal) {
-          forgotPasswordModal.style.display = 'none';
+          forgotPasswordModal.classList.add('hidden');
         }
       });
 
@@ -257,8 +159,6 @@
         e.preventDefault();
         forgotPasswordError.classList.add('hidden');
         forgotPasswordSuccess.classList.add('hidden');
-        forgotPasswordError.textContent = '';
-        forgotPasswordSuccess.textContent = '';
 
         const email = forgotEmailInput.value;
         const submitButton = forgotPasswordForm.querySelector('button[type="submit"]');
@@ -274,16 +174,14 @@
           const responseData = await response.json();
 
           if (response.ok) {
-            forgotPasswordSuccess.textContent = responseData.message || "Password reset link sent to your email!";
+            forgotPasswordSuccess.textContent = responseData.message;
             forgotPasswordSuccess.classList.remove('hidden');
-            // Optionally, close modal after a delay or upon user confirmation
-            // setTimeout(() => { forgotPasswordModal.style.display = 'none'; }, 3000);
           } else {
             forgotPasswordError.textContent = responseData.error || "Failed to send reset link.";
             forgotPasswordError.classList.remove('hidden');
           }
         } catch (error) {
-          console.error('Forgot password fetch error:', error);
+          console.error('Forgot password error:', error);
           forgotPasswordError.textContent = "Network error. Please try again.";
           forgotPasswordError.classList.remove('hidden');
         } finally {
@@ -291,76 +189,6 @@
           submitButton.textContent = 'Send Reset Link';
         }
       });
-
-      // New Reset Password Page (You'll need a separate reset-password.html file)
-      // This is conceptual for a new page, not part of login.html itself
-      // If you are creating a reset-password.html:
-      /*
-      // In reset-password.html script:
-      document.addEventListener('DOMContentLoaded', () => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const token = urlParams.get('token');
-          if (!token) {
-              // Redirect or show error if no token
-              document.getElementById('resetError').textContent = 'No reset token found. Please request a new link.';
-              return;
-          }
-
-          const resetPasswordForm = document.getElementById('resetPasswordForm');
-          const newPasswordInput = document.getElementById('newPassword');
-          const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
-          const resetError = document.getElementById('resetError');
-          const resetSuccess = document.getElementById('resetSuccess');
-
-          resetPasswordForm.addEventListener('submit', async (e) => {
-              e.preventDefault();
-              resetError.classList.add('hidden');
-              resetSuccess.classList.add('hidden');
-
-              if (newPasswordInput.value !== confirmNewPasswordInput.value) {
-                  resetError.textContent = 'Passwords do not match.';
-                  resetError.classList.remove('hidden');
-                  return;
-              }
-
-              // Basic password strength (optional, improve as needed)
-              if (newPasswordInput.value.length < 8) {
-                  resetError.textContent = 'New password must be at least 8 characters long.';
-                  resetError.classList.remove('hidden');
-                  return;
-              }
-
-              const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
-              submitButton.disabled = true;
-              submitButton.textContent = 'Resetting...';
-
-              try {
-                  const response = await fetch('/api/users/reset-password', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ token, newPassword: newPasswordInput.value })
-                  });
-                  const responseData = await response.json();
-
-                  if (response.ok) {
-                      resetSuccess.textContent = responseData.message || 'Password reset successfully! You can now log in.';
-                      resetSuccess.classList.remove('hidden');
-                      setTimeout(() => { window.location.href = '/login.html'; }, 2000);
-                  } else {
-                      resetError.textContent = responseData.error || 'Failed to reset password.';
-                      resetError.classList.remove('hidden');
-                  }
-              } catch (error) {
-                  console.error('Reset password fetch error:', error);
-                  resetError.textContent = 'Network error. Please try again.';
-                  resetError.classList.remove('hidden');
-              } finally {
-                  submitButton.disabled = false;
-                  submitButton.textContent = 'Reset Password';
-              }
-          });
-      });
-      */
     });
   </script>
 </body>

@@ -4,11 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Take Exam | CBT System</title>
-  <link rel="stylesheet" href="styles.css">
+  <!-- Tailwind CSS for modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for a clean, modern look -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Feather Icons for a clean icon set -->
+  <script src="https://unpkg.com/feather-icons"></script>
   <style>
-    /* General body styling for better centering and background */
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Inter', sans-serif;
       background-color: #f4f7f6; /* Light grey background */
       margin: 0;
       padding: 0;
@@ -17,37 +21,43 @@
       min-height: 100vh; /* Ensure full viewport height */
     }
 
+    /* Main content area styling */
     main {
-      flex-grow: 1; /* Allows main content to take available space */
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
-      align-items: center; /* Center horizontally */
-      justify-content: flex-start; /* Align content to the top */
-      padding-top: 2rem; /* Add some space from the header */
-      padding-bottom: 2rem;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 1rem; /* Added horizontal padding for small screens */
+      width: 100%;
     }
 
     /* Header Styling */
-    header nav {
+    header {
+      background-color: #1a237e; /* Deep blue, primary color */
+      padding: 1rem 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    }
+    nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 2.5rem; /* Increased padding for more space */
-      background-color: #007bff; /* Primary blue */
-      color: white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      flex-wrap: wrap; /* Allow wrapping on smaller screens */
+      padding: 0 2.5rem; /* Consistent padding */
+      max-width: 1200px; /* Max width for nav content */
+      margin: 0 auto;
     }
-
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: white;
+    }
     .nav-links {
       list-style: none;
       margin: 0;
       padding: 0;
       display: flex;
-      gap: 20px; /* Space between links */
-      flex-wrap: wrap;
+      gap: 20px;
     }
-
     .nav-links a {
       color: white;
       text-decoration: none;
@@ -56,27 +66,54 @@
       border-radius: 5px;
       transition: background-color 0.2s ease;
     }
-
     .nav-links a:hover {
       background-color: rgba(255, 255, 255, 0.2);
     }
-
-    .logo {
-      font-size: 1.8rem; /* Larger logo */
-      font-weight: 700;
-      color: white;
+    /* Mobile menu button */
+    .mobile-menu-button {
+      display: none; /* Hidden by default, shown on small screens */
     }
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none; /* Hide desktop nav links on small screens */
+      }
+      .mobile-menu-button {
+        display: block; /* Show mobile menu button */
+      }
+    }
+    /* Mobile menu dropdown */
+    .mobile-menu {
+      display: none; /* Hidden by default */
+      padding: 1rem;
+      background-color: #283593; /* Slightly lighter blue for mobile dropdown */
+      width: 100%;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .mobile-menu a {
+      display: block;
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 5px;
+      transition: background-color 0.2s ease;
+    }
+    .mobile-menu a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
 
     /* Exam Container Styling */
     .exam-container {
       background-color: #ffffff;
       border-radius: 12px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-      padding: 2.5rem; /* Increased padding */
+      padding: 2.5rem;
       width: 100%;
-      max-width: 850px; /* Max width for content */
+      max-width: 1000px; /* Increased max-width for a more spacious feel */
       margin-top: 2rem;
       border: 1px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
     }
 
     .exam-header {
@@ -87,17 +124,19 @@
     }
 
     .exam-header h1 {
-      color: var(--primary-blue);
+      color: #1a237e; /* Using deep blue */
       font-size: 2.2rem;
       margin-bottom: 0.5rem;
+      font-weight: 700;
     }
 
     .exam-header p {
-      color: var(--text-medium);
+      color: #555;
       font-size: 1.1em;
       margin: 0.3em 0;
     }
 
+    /* Question Navigation */
     .question-navigation {
       display: flex;
       flex-wrap: wrap;
@@ -106,6 +145,7 @@
       justify-content: center;
       padding: 1rem 0;
       border-bottom: 1px solid #eee;
+      border-top: 1px solid #eee; /* Added top border for separation */
     }
 
     .question-nav-btn {
@@ -116,16 +156,20 @@
       cursor: pointer;
       font-weight: 500;
       transition: all 0.2s ease;
+      min-width: 40px; /* Ensure buttons are not too small */
+      text-align: center;
     }
 
     .question-nav-btn:hover:not(.active) {
       background-color: #d1d8df;
+      transform: translateY(-1px);
     }
 
     .question-nav-btn.active {
-      background-color: var(--primary-blue);
+      background-color: #1a237e; /* Deep blue */
       color: white;
-      border-color: var(--primary-blue);
+      border-color: #1a237e;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     /* Style for answered questions */
     .question-nav-btn.answered {
@@ -139,20 +183,22 @@
     }
 
 
+    /* Question Card */
     .question-card {
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
+      background-color: #fdfdff; /* Slightly off-white */
+      border: 1px solid #e0e0e0;
       border-radius: 10px;
-      padding: 2rem;
+      padding: 2.5rem; /* Increased padding */
       margin-bottom: 2rem;
       box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
 
     .question-card h3 {
-      color: var(--text-dark);
+      color: #283593; /* Indigo shade */
       margin-top: 0;
       margin-bottom: 1.5rem;
       font-size: 1.4em;
+      font-weight: 600;
     }
 
     .options-list {
@@ -167,86 +213,127 @@
     .options-list label {
       display: flex;
       align-items: center;
-      padding: 12px 15px;
+      padding: 15px 20px; /* Increased padding */
       border: 1px solid #ced4da;
-      border-radius: 8px;
+      border-radius: 10px; /* More rounded corners */
       cursor: pointer;
       transition: all 0.2s ease;
       background-color: #fff;
+      font-size: 1.05em;
+      color: #333;
     }
 
     .options-list label:hover {
-      background-color: #e9f0f6;
-      border-color: var(--primary-blue);
+      background-color: #eaf3ff; /* Light blue hover */
+      border-color: #1a237e; /* Deep blue border on hover */
+      transform: translateY(-2px); /* Slight lift on hover */
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    .options-list input[type="radio"]:checked + span {
+        font-weight: 600;
+        color: #1a237e; /* Highlight text of selected option */
     }
 
     .options-list input[type="radio"] {
       margin-right: 15px;
       transform: scale(1.2); /* Slightly larger radio buttons */
+      accent-color: #1a237e; /* Custom accent color for radio button */
     }
 
+    /* Timer Display */
     .timer-display {
-      font-size: 1.5em;
+      font-size: 1.8em; /* Larger font */
       font-weight: 700;
-      color: var(--primary-blue);
+      color: #1a237e; /* Deep blue */
       text-align: center;
       margin-bottom: 1.5rem;
-      background-color: #eaf3ff;
-      padding: 10px 20px;
-      border-radius: 8px;
+      background-color: #eaf3ff; /* Light blue background */
+      padding: 15px 25px; /* More padding */
+      border-radius: 10px;
       border: 1px solid #cce0ff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .timer-display.warning {
-        color: var(--danger-red);
+        color: #dc3545; /* Red for warning */
         background-color: #ffebeb;
         border-color: #f5c6cb;
+    }
+    .timer-display.critical {
+        color: white;
+        background-color: #dc3545; /* Darker red for critical */
+        border-color: #c82333;
+        animation: pulse 1s infinite alternate; /* Pulsing animation */
+    }
+    @keyframes pulse {
+        from { transform: scale(1); opacity: 1; }
+        to { transform: scale(1.02); opacity: 0.9; }
     }
 
 
     .exam-actions-bottom {
       display: flex;
       justify-content: space-between;
+      gap: 1rem; /* Space between buttons */
       margin-top: 2rem;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
     }
 
     .btn {
-      padding: 10px 20px;
+      padding: 12px 25px; /* Larger buttons */
       border: none;
-      border-radius: var(--border-radius-sm);
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 1em;
-      transition: background-color 0.2s ease;
+      font-size: 1.05em;
+      font-weight: 600;
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: inline-flex; /* For icon alignment */
+      align-items: center;
+      justify-content: center;
     }
 
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
     .btn-primary {
-      background-color: var(--primary-blue);
+      background-color: #1a237e;
       color: white;
     }
-
     .btn-primary:hover {
-      background-color: #0056b3;
+      background-color: #283593;
     }
-
     .btn-secondary {
       background-color: #6c757d;
       color: white;
     }
-
     .btn-secondary:hover {
       background-color: #5a6268;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
     }
 
     .btn:disabled {
         background-color: #cccccc;
         cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
     }
 
+    /* Message styles */
     #examMessage {
         padding: 15px;
         margin-bottom: 20px;
         border-radius: 8px;
         text-align: center;
         font-weight: 500;
+        width: 100%;
+        max-width: 1000px;
     }
     #examMessage.info {
         background-color: #e0f7fa;
@@ -258,15 +345,22 @@
         color: #d32f2f;
         border: 1px solid #d32f2f;
     }
+    #examMessage.success {
+        background-color: #e8f5e9;
+        color: #388e3c;
+        border: 1px solid #388e3c;
+    }
+
     /* Section instructions styling */
     .section-instructions-display {
         background-color: #f0f8ff;
-        border-left: 5px solid #007bff;
+        border-left: 5px solid #1a237e; /* Deep blue border */
         padding: 15px;
         margin-bottom: 1.5rem;
         border-radius: 5px;
         font-style: italic;
         color: #333;
+        font-size: 0.95em;
     }
 
     footer {
@@ -306,7 +400,7 @@
     }
     .modal-header {
         padding: 15px 20px;
-        background-color: var(--primary-blue);
+        background-color: #1a237e; /* Deep blue */
         color: white;
         display: flex;
         justify-content: space-between;
@@ -347,48 +441,66 @@
 <body>
   <header>
     <nav>
-      <div class="logo">CBT System</div>
-      <ul class="nav-links">
+      <div class="logo">SNA CBT System</div>
+      <ul class="nav-links" id="navLinks">
         <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
         <li><a href="#" id="logoutLink" class="nav-link">Logout</a></li>
       </ul>
+      <button id="mobile-menu-button" class="mobile-menu-button text-white focus:outline-none">
+        <i data-feather="menu" class="w-6 h-6"></i>
+      </button>
     </nav>
+    <div id="mobile-menu" class="mobile-menu">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="#" id="mobileLogoutLink">Logout</a>
+    </div>
   </header>
 
   <main>
-    <div class="exam-container">
-        <div id="examMessage" class="hidden"></div>
-        <div id="loadingIndicator" style="text-align: center; padding: 20px;">Loading exam...</div>
+    <div id="examMessage" class="hidden"></div>
+    <div id="loadingIndicator" class="text-center py-8 text-lg text-gray-600">
+        <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Loading exam...
+    </div>
         
-        <div id="examContent" class="hidden">
-            <div class="exam-header">
-                <h1 id="examTitle"></h1>
-                <p>Subject: <span id="examSubject"></span></p>
-                <p>Total Questions: <span id="totalQuestions"></span></p>
-                <p>Duration: <span id="examDuration"></span> minutes</p>
-                <p id="examInstructions"></p>
-            </div>
+    <div id="examContent" class="exam-container hidden">
+        <div class="exam-header">
+            <h1 id="examTitle" class="text-3xl font-extrabold text-gray-900"></h1>
+            <p class="text-gray-600 text-lg">Subject: <span id="examSubject" class="font-semibold"></span></p>
+            <p class="text-gray-600 text-lg">Total Questions: <span id="totalQuestions" class="font-semibold"></span></p>
+            <p class="text-gray-600 text-lg">Duration: <span id="examDuration" class="font-semibold"></span> minutes</p>
+            <p id="examInstructions" class="text-sm text-gray-500 mt-2 italic"></p>
+        </div>
 
-            <div id="timerDisplay" class="timer-display"></div>
+        <div id="timerDisplay" class="timer-display"></div>
 
-            <div id="questionNavigation" class="question-navigation">
-                </div>
+        <div id="questionNavigation" class="question-navigation">
+            <!-- Question navigation buttons will be rendered here -->
+        </div>
 
-            <div id="sectionsContainer">
-                <!-- Sections and questions will be rendered here -->
-            </div>
+        <div id="sectionsContainer">
+            <!-- Sections and questions will be rendered here -->
+        </div>
 
-            <div class="exam-actions-bottom">
-                <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
-                <button id="nextQuestionBtn" class="btn btn-primary">Next</button>
-                <button id="submitExamBtn" class="btn btn-primary hidden">Submit Exam</button>
-            </div>
+        <div class="exam-actions-bottom">
+            <button id="prevQuestionBtn" class="btn btn-secondary flex-1 sm:flex-none">
+                <i data-feather="arrow-left" class="w-5 h-5 mr-2"></i> Previous
+            </button>
+            <button id="nextQuestionBtn" class="btn btn-primary flex-1 sm:flex-none">
+                Next <i data-feather="arrow-right" class="w-5 h-5 ml-2"></i>
+            </button>
+            <button id="submitExamBtn" class="btn btn-danger flex-1 sm:flex-none hidden">
+                Submit Exam <i data-feather="check-circle" class="w-5 h-5 ml-2"></i>
+            </button>
         </div>
     </div>
   </main>
 
-  <footer>
-    <p>&copy; 2025 CBT System</p>
+  <footer class="bg-gray-800 text-white py-4 text-center">
+    <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
   </footer>
 
   <script>
@@ -435,12 +547,12 @@
     const examContent = document.getElementById('examContent');
     const examTitle = document.getElementById('examTitle');
     const examSubject = document.getElementById('examSubject');
-    const totalQuestionsDisplay = document.getElementById('totalQuestions'); // Renamed to avoid conflict
-    const examDurationDisplay = document.getElementById('examDuration');     // Renamed to avoid conflict
-    const examInstructionsDisplay = document.getElementById('examInstructions'); // New element for instructions
+    const totalQuestionsDisplay = document.getElementById('totalQuestions');
+    const examDurationDisplay = document.getElementById('examDuration');
+    const examInstructionsDisplay = document.getElementById('examInstructions');
     const timerDisplay = document.getElementById('timerDisplay');
     const questionNavigation = document.getElementById('questionNavigation');
-    const sectionsContainer = document.getElementById('sectionsContainer'); // Main container for sections
+    const sectionsContainer = document.getElementById('sectionsContainer');
     const prevQuestionBtn = document.getElementById('prevQuestionBtn');
     const nextQuestionBtn = document.getElementById('nextQuestionBtn');
     const submitExamBtn = document.getElementById('submitExamBtn');
@@ -449,32 +561,28 @@
         examMessageElement.textContent = message;
         examMessageElement.className = `exam-message ${type}`;
         examMessageElement.classList.remove('hidden');
-        setTimeout(() => {
-            examMessageElement.classList.add('hidden');
-        }, 5000);
+        // Hide after 5 seconds, unless it's an error that needs user action
+        if (type !== 'error') {
+            setTimeout(() => {
+                examMessageElement.classList.add('hidden');
+            }, 5000);
+        }
     }
 
     async function loadUserData() {
         try {
             const response = await fetch('/api/users/me', { credentials: 'include' });
             if (!response.ok) {
-                // If not authenticated, redirect to login
                 window.location.href = '/login.html';
                 return null;
             }
-            const user = await response.json();
-            // Assuming you have a navUsername element in your layout
-            // document.getElementById('navUsername').textContent = user.username; // This element might not exist
-            // createNavigationLinks(user); // If you have this function for dynamic nav
-            return user;
+            return await response.json();
         } catch (error) {
             console.error("Error loading user data:", error);
-            // If there's a network error or other issue, also redirect
             window.location.href = '/login.html';
             return null;
         }
     }
-
 
     async function loadExam() {
         loadingIndicator.classList.remove('hidden');
@@ -485,13 +593,12 @@
         const examId = urlParams.get('examId');
 
         if (!examId) {
-            displayMessage('error', 'No exam ID provided.');
+            displayMessage('error', 'No exam ID provided. Please go back to the dashboard and select an exam.');
             loadingIndicator.classList.add('hidden');
             return;
         }
 
         try {
-            // Start exam session first to get exam details and potentially resume data
             const startSessionResponse = await fetch(`/api/exam-sessions/${examId}/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -499,14 +606,12 @@
             });
 
             if (!startSessionResponse.ok) {
-                // Attempt to read as JSON first, but if that fails, read as text.
                 let errorData;
                 let errorMessage = 'Failed to start exam session.';
                 try {
                     errorData = await startSessionResponse.json();
                     errorMessage = errorData.error || errorMessage;
                 } catch (jsonError) {
-                    // If response is not JSON (e.g., HTML error page), read as text
                     const textResponse = await startSessionResponse.text();
                     errorMessage = `Server responded with non-JSON: ${textResponse.substring(0, 100)}... (Status: ${startSessionResponse.status})`;
                 }
@@ -515,29 +620,26 @@
             const sessionData = await startSessionResponse.json();
             
             currentExam = sessionData.exam;
-            // Flatten all questions from sections for easier indexing
             allQuestions = [];
+            // Flatten all questions from sections for easy indexing, maintaining section info
             sessionData.sections.forEach(section => {
                 section.questions.forEach(q => {
-                    allQuestions.push({ ...q, section_id: section.section_id, section_name: section.section_name, section_instructions: section.section_instructions });
+                    allQuestions.push({
+                        ...q,
+                        section_id: section.section_id,
+                        section_name: section.section_name,
+                        section_instructions: section.section_instructions
+                    });
                 });
             });
 
             // Initialize user answers from session progress if available
             if (sessionData.session && sessionData.session.progress) {
-                // Safely parse the progress string back into an object if it's a string
-                // If it's already an object (due to database driver parsing JSONB), use it directly
-                if (typeof sessionData.session.progress === 'string') {
-                    try {
-                        userAnswers = JSON.parse(sessionData.session.progress);
-                    } catch (e) {
-                        console.error("Error parsing saved progress JSON:", e);
-                        userAnswers = {}; // Reset if parsing fails
-                    }
-                } else if (typeof sessionData.session.progress === 'object' && sessionData.session.progress !== null) {
-                    userAnswers = sessionData.session.progress;
-                } else {
-                    userAnswers = {}; // Default to empty object if progress is null or unexpected type
+                try {
+                    userAnswers = JSON.parse(sessionData.session.progress);
+                } catch (e) {
+                    console.error("Error parsing saved progress JSON:", e);
+                    userAnswers = {}; // Reset if parsing fails
                 }
             } else {
                 allQuestions.forEach(q => {
@@ -549,14 +651,13 @@
             examSubject.textContent = currentExam.subject_name;
             totalQuestionsDisplay.textContent = allQuestions.length;
             examDurationDisplay.textContent = currentExam.duration_minutes;
-            examInstructionsDisplay.textContent = currentExam.exam_instructions || 'No general instructions provided.';
+            examInstructionsDisplay.textContent = currentExam.exam_instructions || 'No general instructions provided for this exam.';
 
             renderQuestionNavigation();
             showQuestion(0); // Show the first question
             
             // Resume timer from saved time or start new
             timeRemaining = sessionData.session.timeRemaining || (currentExam.duration_minutes * 60);
-            // Ensure examStartTime is calculated correctly for resuming sessions
             examStartTime = Date.now() - (currentExam.duration_minutes * 60 - timeRemaining) * 1000; 
             startTimer(timeRemaining);
 
@@ -588,6 +689,7 @@
             }
             questionNavigation.appendChild(button);
         });
+        feather.replace(); // Re-render feather icons for newly added elements
     }
 
     function showQuestion(index) {
@@ -595,15 +697,28 @@
             return;
         }
 
+        // Before moving to a new question, save the current question's answer if any radio is selected
+        const currentQuestion = allQuestions[currentQuestionIndex];
+        const currentQuestionRadios = document.querySelectorAll(`input[name="question-${currentQuestion.question_id}"]`);
+        let currentAnswerSelected = false;
+        currentQuestionRadios.forEach(radio => {
+            if (radio.checked) {
+                userAnswers[currentQuestion.question_id] = radio.value;
+                currentAnswerSelected = true;
+            }
+        });
+        updateQuestionNavButton(currentQuestionIndex, currentAnswerSelected);
+
+
         currentQuestionIndex = index;
         const question = allQuestions[currentQuestionIndex];
         sectionsContainer.innerHTML = ''; // Clear previous content
 
         // Display section title and instructions if applicable
         const sectionCard = document.createElement('div');
-        sectionCard.classList.add('section-card-display'); // You might need to define this style
+        sectionCard.classList.add('section-card-display', 'mb-6');
         sectionCard.innerHTML = `
-            <h2>${question.section_name}</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">${question.section_name}</h2>
             ${question.section_instructions ? `<p class="section-instructions-display">${question.section_instructions}</p>` : ''}
         `;
         sectionsContainer.appendChild(sectionCard);
@@ -612,15 +727,16 @@
         const questionCard = document.createElement('div');
         questionCard.classList.add('question-card');
         questionCard.innerHTML = `
-            <h3>Question ${currentQuestionIndex + 1} of ${allQuestions.length}:</h3>
-            <p>${question.question_text}</p>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Question ${currentQuestionIndex + 1} of ${allQuestions.length}:</h3>
+            <p class="text-lg text-gray-800 mb-6">${question.question_text}</p>
             <ul class="options-list" id="optionsList-${question.question_id}">
                 ${question.options.map(option => `
                     <li>
-                        <label>
+                        <label class="flex items-center">
                             <input type="radio" name="question-${question.question_id}" value="${option.id}"
+                                class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded-full"
                                 ${userAnswers[question.question_id] === option.id ? 'checked' : ''}>
-                            ${option.text}
+                            <span class="ml-3 text-gray-700">${option.text}</span>
                         </label>
                     </li>
                 `).join('')}
@@ -696,8 +812,14 @@
             timeRemaining--;
             updateTimerDisplay();
 
-            if (timeRemaining <= 300 && !timerDisplay.classList.contains('warning')) { // 5 minutes warning
+            if (timeRemaining <= 300 && timeRemaining > 60) { // 5 minutes warning
                 timerDisplay.classList.add('warning');
+                timerDisplay.classList.remove('critical');
+            } else if (timeRemaining <= 60) { // 1 minute critical warning
+                timerDisplay.classList.add('critical');
+                timerDisplay.classList.remove('warning');
+            } else {
+                timerDisplay.classList.remove('warning', 'critical');
             }
 
             if (timeRemaining <= 0) {
@@ -742,13 +864,14 @@
 
     async function submitExam() {
         clearInterval(timerInterval); // Stop the timer
-        submitExamBtn.disabled = true;
-        submitExamBtn.textContent = 'Submitting...';
+        if (submitExamBtn) { // Check if element exists before accessing
+            submitExamBtn.disabled = true;
+            submitExamBtn.textContent = 'Submitting...';
+        }
 
         const timeTakenSeconds = Math.floor((Date.now() - examStartTime) / 1000);
 
         // Ensure userAnswers is an object with questionId as keys and selectedOptionId as values
-        // The backend expects answers as { "questionId": "selectedOptionId" }
         const submissionAnswers = {};
         allQuestions.forEach(q => {
             if (userAnswers[q.question_id]) {
@@ -776,8 +899,8 @@
                 throw new Error(result.error || 'Unknown error occurred.');
             }
 
-            if (result.examType === 'MAIN_EXAM') { // Assuming MAIN_EXAM means no immediate score display
-                displayMessage('info', `Exam submitted successfully! You will be redirected to the dashboard shortly.`);
+            if (result.examType === 'MAIN_EXAM') {
+                displayMessage('success', `Exam submitted successfully! You will be redirected to the dashboard shortly.`);
                 setTimeout(() => window.location.href = 'dashboard.html', 3000);
             } else {
                 displayMessage('success', `Test submitted successfully! Your score is ${result.score.toFixed(1)}%. Redirecting to results...`);
@@ -785,7 +908,7 @@
             }
 
         } catch (error) {
-            if(submitExamBtn) { // Re-enable button on failure to allow retry
+            if(submitExamBtn) {
                submitExamBtn.disabled = false;
                submitExamBtn.textContent = 'Submit Exam';
             }
@@ -793,6 +916,7 @@
         }
     }
 
+    // Handle logout for both desktop and mobile nav
     document.getElementById('logoutLink').addEventListener('click', async (e) => {
         e.preventDefault();
         try {
@@ -804,11 +928,29 @@
         }
     });
 
+    document.getElementById('mobileLogoutLink').addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            await fetch(`/api/users/logout`, { method: 'POST', credentials: 'include' });
+        } catch(err) {
+            console.error("Logout failed:", err);
+        } finally {
+            window.location.href = '/login.html';
+        }
+    });
+
+    // Mobile menu toggle
+    document.getElementById('mobile-menu-button').addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+
     window.addEventListener('DOMContentLoaded', async () => {
-        const user = await loadUserData(); // This will redirect if not authenticated
+        const user = await loadUserData();
         if (user) {
             loadExam();
         }
+        feather.replace(); // Initialize Feather icons
     });
   </script>
   <!-- Modals HTML (add these to the end of your body tag) -->
@@ -822,8 +964,8 @@
             <p id="confirmationMessage"></p>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
-            <button class="btn btn-primary" onclick="confirmAction(true)">Confirm</button>
+            <button class="btn bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" onclick="confirmAction(false)">Cancel</button>
+            <button class="btn bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700" onclick="confirmAction(true)">Confirm</button>
         </div>
     </div>
 </div>
@@ -838,7 +980,7 @@
             <p id="alertMessage"></p>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
+            <button class="btn bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700" onclick="closeModal('alertDialog')">OK</button>
         </div>
     </div>
 </div>

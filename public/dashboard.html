@@ -4,1007 +4,562 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | CBT System</title>
-    <link rel="stylesheet" href="styles.css">
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for a clean, modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for performance graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Feather Icons for a clean icon set -->
+    <!-- Moved this script to the end of body for better loading -->
     <style>
-        /* General layout for the dashboard content */
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; margin: 0; padding: 0; }
-        main { max-width: 1200px; margin: 30px auto; padding: 20px; }
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: 1fr 2fr; /* Left column (profile, quick actions) and Right column (stats, exams) */
-            gap: 2rem; /* Space between the two main columns */
-            margin-top: 2rem;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* A very light grey */
         }
-
-        /* Styling for individual cards/sections on the dashboard */
-        .profile-card, .stats-card, .quick-actions-card, .recent-exams-card, .available-exams-card, .admin-section {
-            background: #fff;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            margin-bottom: 1.5rem; /* Space between cards in a column */
+        /* Custom class for card hover effects */
+        .interactive-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
-
-        /* Headings within cards */
-        .profile-card h2, .stats-card h2, .quick-actions-card h2, .recent-exams-card h2, .available-exams-card h2, .admin-section h2 {
-            margin-top: 0;
-            color: #1a237e; /* Primary blue */
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
+        .interactive-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
         }
-
-        /* User profile information */
-        .profile-info p {
-            margin: 0.5rem 0;
-            font-size: 1.1em;
-        }
-        .profile-info p strong {
-            color: #333;
-        }
-
-        /* Grid for user statistics */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            text-align: center;
-        }
-        .stat-item {
-            background: #eef4ff; /* Light blue background */
-            padding: 1rem;
-            border-radius: 8px;
-        }
-        .stat-item h3 {
-            margin: 0 0 0.5rem 0;
-            color: #1a237e;
-        }
-        .stat-item p {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        /* Grid for quick action buttons */
-        .quick-actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-        .action-btn {
-            display: block;
-            padding: 1rem;
-            background: #42a5f5; /* Accent blue */
-            color: white;
-            text-align: center;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .action-btn:hover {
-            background: #2196f3; /* Darker accent blue */
-        }
-
-        /* Styling for exam lists */
-        .exam-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .exam-card { /* Changed from li to div for better styling control */
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .exam-card h3 {
-            margin: 0;
-            color: #1a237e;
-            font-size: 1.2em;
-        }
-        .exam-card p {
-            margin: 0;
-            font-size: 0.9em;
-            color: #555;
-        }
-        .exam-score {
-            font-weight: bold;
-            color: #4CAF50; /* Success green */
-            font-size: 1.2em;
-        }
-
-        /* Exam action buttons within the list items */
-        .exam-actions {
-            display: flex;
-            flex-wrap: wrap; /* Allow buttons to wrap */
-            gap: 8px; /* Space between buttons */
-            margin-top: 10px;
-        }
-        .exam-actions .btn {
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease;
-            box-shadow: none; /* Remove individual button shadow */
-        }
-
-        .exam-actions .btn-primary {
-            background-color: #1a237e;
-            color: white;
-            border: none;
-        }
-        .exam-actions .btn-primary:hover {
-            background-color: #0d47a1;
-        }
-
-        .exam-actions .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-        }
-        .exam-actions .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-
-        .exam-actions .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-        }
-        .exam-actions .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        .exam-actions .btn-info { /* New style for 'View Scores' */
-            background-color: #2196f3;
-            color: white;
-            border: none;
-        }
-        .exam-actions .btn-info:hover {
-            background-color: #0b7dda;
-        }
-
-
-        /* Error message styling */
-        .error-message, .info-message, .success-message {
-            padding: 10px;
+        .message {
+            padding: 10px 15px;
             border-radius: 8px;
             margin-bottom: 1rem;
-            text-align: center;
             font-weight: 500;
-            display: none; /* Hidden by default */
-        }
-        .error-message { background-color: #ffebeb; color: #e74c3c; border: 1px solid #e74c3c; }
-        .info-message { background-color: #e0f7fa; color: #007bb5; border: 1px solid #00acc1; }
-        .success-message { background-color: #e6ffed; color: #4CAF50; border: 1px solid #4CAF50; }
-        .hidden { display: none !important; } /* Use !important to ensure override */
-
-
-        /* Admin specific section styling */
-        .admin-section {
-            border: 1px dashed #1a237e;
-            margin-top: 2rem;
-        }
-        .admin-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        .admin-stat-item {
-            background: #eef4ff; /* Light blue background */
-            padding: 1rem;
-            border-radius: 8px;
             text-align: center;
         }
-        .admin-stat-item h3 {
-            margin: 0 0 0.5rem 0;
-            color: #1a237e;
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
-        .admin-stat-item p {
-            font-size: 1.6em;
-            font-weight: bold;
-            color: #333;
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
-
-        /* Filter controls styling */
-        .filter-controls {
-            margin-bottom: 1rem;
-            display: flex;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
-            gap: 1rem;
-            align-items: center;
-            background-color: #f0f4f8; /* Light background for filters */
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
+        .info-message {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
-        .filter-controls label {
-            font-weight: bold;
-            color: #333;
+        .hidden {
+            display: none;
         }
-        .filter-controls select, .filter-controls input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            flex-grow: 1; /* Allow inputs to grow */
-            max-width: 250px; /* Limit max width */
-            font-size: 0.95em;
-        }
-        .filter-controls button {
-            padding: 8px 15px;
-            background-color: #1a237e;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .filter-controls button:hover {
-            background-color: #0d47a1;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .dashboard-container {
-                grid-template-columns: 1fr; /* Stack columns on smaller screens */
-            }
-            .filter-controls {
-                flex-direction: column; /* Stack filters vertically */
-                align-items: stretch;
-            }
-            .filter-controls select, .filter-controls input {
-                max-width: 100%; /* Full width for inputs on small screens */
-            }
-        }
-
-        /* Professional Navbar Styles (Unified) */
-        header {
-            background-color: #2c3e50; /* Dark blue/grey */
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            color: #ecf0f1; /* Light grey text */
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .logo:hover {
-            color: #3498db; /* Primary blue on hover */
-        }
-
-        .nav-links {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 1.5rem; /* Space between nav items */
-        }
-
-        .nav-links li a, .nav-links li button {
-            color: #ecf0f1; /* Light grey text */
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.5rem 0.8rem;
-            border-radius: 5px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .nav-links li a:hover, .nav-links li button:hover {
-            background-color: #34495e; /* Slightly darker background on hover */
-            color: #ffffff;
-        }
-
-        .nav-links li button.btn {
-            background-color: #e74c3c; /* Red for logout */
-            border: none;
-            cursor: pointer;
-        }
-
-        .nav-links li button.btn:hover {
-            background-color: #c0392b; /* Darker red on hover */
-        }
-
-        @media (max-width: 768px) {
-            nav {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .nav-links {
-                flex-direction: column;
-                width: 100%;
-                margin-top: 1rem;
-            }
-            .nav-links li {
-                width: 100%;
-            }
-            .nav-links li a, .nav-links li button {
-                display: block;
-                width: 100%;
-                text-align: left;
-                padding: 0.8rem 1rem;
-            }
+        /* Added for Chart.js responsiveness */
+        #performanceChartContainer {
+            position: relative;
+            height: 40vh; /* Adjust as needed, but give it a fixed height */
+            width: 100%;
         }
     </style>
 </head>
-<body>
-    <header>
-        <nav>
-            <a href="/dashboard.html" class="logo">SNA CBT System</a>
-            <ul class="nav-links" id="navLinksContainer">
-                <!-- Navigation links will be dynamically inserted here by JS -->
-            </ul>
+<body class="min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="/dashboard.html" class="text-2xl font-bold text-indigo-600">SNA CBT System</a>
+                </div>
+                <div class="hidden md:block">
+                    <ul class="ml-10 flex items-center space-x-4" id="navLinks">
+                        <!-- Navigation links will be dynamically inserted here by JS -->
+                    </ul>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        <span class="sr-only">Open main menu</span>
+                        <i data-feather="menu"></i>
+                    </button>
+                </div>
+            </div>
         </nav>
+        <!-- Mobile menu, show/hide based on menu state. -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <ul class="px-2 pt-2 pb-3 space-y-1 sm:px-3" id="mobileNavLinks">
+                <!-- Mobile nav links will be inserted here -->
+            </ul>
+        </div>
     </header>
 
-    <main>
-        <h1>Dashboard</h1>
-        <div id="dashboardMessage" class="hidden"></div> <!-- Unified message display -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div id="pageMessage" class="message hidden"></div>
 
-        <div class="dashboard-container">
-            <!-- Left Column: User Profile and Quick Actions -->
-            <div class="left-column">
-                <div class="profile-card">
-                    <h2>Welcome, <span id="userName"></span>!</h2>
-                    <div class="profile-info">
-                        <p><strong>Email:</strong> <span id="userEmail"></span></p>
-                        <p><strong>Role:</strong> <span id="userRole"></span></p>
-                        <p id="userClassLevelContainer" class="hidden"><strong>Class Level:</strong> <span id="userClassLevel"></span></p>
-                        <p id="userAdmissionNumberContainer" class="hidden"><strong>Admission No.:</strong> <span id="userAdmissionNumber"></span></p>
-                        <p id="userGenderContainer" class="hidden"><strong>Gender:</strong> <span id="userGender"></span></p>
-                        <p id="userDOBContainer" class="hidden"><strong>Date of Birth:</strong> <span id="userDOB"></span></p>
-                    </div>
-                    <img id="userProfilePicture" src="" alt="Profile Picture" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-top: 1rem;">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
+
+        <!-- User Info and Quick Stats -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-md interactive-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Welcome, <span id="usernameDisplay"></span>!</h2>
+                <p class="text-gray-600">Role: <span id="userRoleDisplay"></span></p>
+                <p class="text-gray-600" id="userClassLevelDisplay"></p>
+                <p class="text-gray-600" id="userAdmissionNumberDisplay"></p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md interactive-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Your Performance Summary</h2>
+                <p class="text-gray-600">Exams Taken: <span id="totalExamsTaken">0</span></p>
+                <p class="text-gray-600">Exams Passed: <span id="examsPassed">0</span></p>
+                <p class="text-gray-600">Highest Score: <span id="highestScore">0%</span></p>
+                <p class="text-gray-600">Total Questions Answered: <span id="totalQuestionsAnswered">0</span></p>
+            </div>
+
+            <!-- Admin specific stats card -->
+            <div id="adminStatsCard" class="bg-white p-6 rounded-xl shadow-md interactive-card hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">System Overview</h2>
+                <p class="text-gray-600">Total Users: <span id="adminTotalUsers">0</span></p>
+                <p class="text-gray-600">Total Exams: <span id="adminTotalExams">0</span></p>
+                <p class="text-gray-600">Total Subjects: <span id="adminTotalSubjects">0</span></p>
+                <p class="text-gray-600">Total Class Levels: <span id="adminTotalClassLevels">0</span></p>
+                <p class="text-gray-600">Total Classes: <span id="adminTotalClasses">0</span></p>
+                <button id="viewAllStudentResultsBtn" class="mt-4 w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 transition duration-300">View All Student Results</button>
+            </div>
+        </section>
+
+        <!-- Performance Graph (for students) -->
+        <section id="performanceGraphSection" class="bg-white p-6 rounded-xl shadow-md mb-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Your Recent Exam Performance</h2>
+            <div id="performanceChartContainer">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Available Exams Section -->
+        <section class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Available Exams</h2>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="form-group">
+                    <label for="subjectFilter" class="block text-sm font-medium text-gray-700">Filter by Subject:</label>
+                    <select id="subjectFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">All Subjects</option>
+                    </select>
                 </div>
-
-                <div class="quick-actions-card">
-                    <h2>Quick Actions</h2>
-                    <div class="quick-actions-grid" id="quickActionsGrid">
-                        <!-- Quick action buttons will be dynamically inserted here based on user role -->
-                    </div>
+                <div class="form-group" id="classLevelFilterGroup">
+                    <label for="classLevelFilter" class="block text-sm font-medium text-gray-700">Filter by Class Level:</label>
+                    <select id="classLevelFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">All Class Levels</option>
+                    </select>
+                </div>
+                <div class="flex items-end space-x-2">
+                    <button id="applyExamFilterBtn" class="btn btn-primary w-full">Apply Filters</button>
                 </div>
             </div>
 
-            <!-- Right Column: User Stats and Exams -->
-            <div class="right-column">
-                <div class="stats-card hidden" id="studentStatsCard"> <!-- Renamed ID for clarity -->
-                    <h2>Your Performance Summary</h2>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <h3>Exams Taken</h3>
-                            <p id="totalExamsTaken">0</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>Exams Passed</h3>
-                            <p id="examsPassed">0</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>Highest Score</h3>
-                            <p id="highestScore">0%</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>Questions Answered</h3>
-                            <p id="totalQuestionsAnswered">0</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="available-exams-card">
-                    <h2>Available Exams</h2>
-                    <div class="filter-controls">
-                        <label for="subjectFilter">Subject:</label>
-                        <select id="subjectFilter">
-                            <option value="">All Subjects</option>
-                            <!-- Subject options will be loaded dynamically -->
-                        </select>
-                        <label for="classLevelFilter">Class Level:</label>
-                        <select id="classLevelFilter">
-                            <option value="">All Class Levels</option>
-                            <!-- Class Level options will be loaded dynamically -->
-                        </select>
-                        <button id="applyExamFilterBtn">Apply Filters</button>
-                    </div>
-                    <div id="availableExamsList">
-                        <p>Loading available exams...</p>
-                    </div>
-                </div>
-
-                <div class="recent-exams-card hidden" id="recentExamsCard">
-                    <h2>Recent Exam Attempts</h2>
-                    <div id="recentExamsList">
-                        <p>No recent exam attempts.</p>
-                    </div>
-                </div>
+            <div id="examsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Exam cards will be loaded here -->
+                <p id="noExamsMessage" class="col-span-full text-center text-gray-500 hidden">No exams available based on current filters.</p>
             </div>
-        </div>
-
-        <!-- Admin Specific Dashboard Section -->
-        <div id="adminDashboardSection" class="admin-section hidden">
-            <h2>Admin Overview</h2>
-            <div class="admin-stats-grid">
-                <div class="admin-stat-item">
-                    <h3>Total Users</h3>
-                    <p id="totalUsersCount">0</p>
-                </div>
-                <div class="admin-stat-item">
-                    <h3>Total Subjects</h3>
-                    <p id="totalSubjectsCount">0</p>
-                </div>
-                <div class="admin-stat-item">
-                    <h3>Total Exams</h3>
-                    <p id="totalExamsCount">0</p>
-                </div>
-                <div class="admin-stat-item">
-                    <h3>Total Class Levels</h3>
-                    <p id="totalClassLevelsCount">0</p>
-                </div>
-                <div class="admin-stat-item">
-                    <h3>Total Classes</h3>
-                    <p id="totalClassesCount">0</p>
-                </div>
-            </div>
-
-            <h3>Filter Users by Class Level (Admin Only)</h3>
-            <div class="filter-controls">
-                <label for="adminClassFilter">Class Level:</label>
-                <select id="adminClassFilter">
-                    <option value="">All Class Levels</option>
-                    <!-- Class Level options for admin filter will be loaded dynamically -->
-                </select>
-                <button id="applyAdminFilterBtn">Apply Filter</button>
-            </div>
-            <div id="filteredUsersList">
-                <!-- Filtered user list will be displayed here -->
-            </div>
-        </div>
+        </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
+        <p>&copy; 2024 SNA CBT System. All rights reserved.</p>
     </footer>
 
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
     <script>
-        let currentUser = null; // Stores current user data
-        const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';
+        // --- Utility Functions ---
+        let currentUser = null; // Global variable to store current user data
+        let performanceChartInstance = null; // To hold the Chart.js instance
 
-        /**
-         * Displays a message to the user (success, error, info).
-         * @param {string} message - The message text.
-         * @param {string} [type='info'] - The type of message ('success', 'error', 'info').
-         */
         function showMessage(message, type = 'info') {
-            const messageDiv = document.getElementById('dashboardMessage');
+            const messageDiv = document.getElementById('pageMessage');
             messageDiv.textContent = message;
-            messageDiv.className = `message ${type}-message`; // Apply the correct class
+            messageDiv.className = `message ${type}-message`;
             messageDiv.classList.remove('hidden');
-            setTimeout(() => {
-                messageDiv.classList.add('hidden');
-            }, 5000); // Message disappears after 5 seconds
+            setTimeout(() => messageDiv.classList.add('hidden'), 5000);
         }
 
-        /**
-         * Fetches authenticated user data from the backend.
-         * @returns {Promise<object|null>} The user object or null if not authenticated/error.
-         */
-        async function fetchUserData() {
+        async function fetchApi(url, options = {}) {
             try {
-                const response = await fetch('/api/users/me', { credentials: 'include' });
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = '/login.html'; // Redirect to login if not authenticated
-                        return null;
-                    }
-                    throw new Error('Failed to fetch user data.');
+                const response = await fetch(url, { credentials: 'include', ...options });
+                // If the response is not OK and it's a 401 Unauthorized, handle redirection
+                if (!response.ok && response.status === 401) {
+                    console.warn("Unauthorized access, redirecting to login.");
+                    window.location.href = '/login.html';
+                    return null; // Prevent further processing
                 }
-                currentUser = await response.json();
-                return currentUser;
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Something went wrong.');
+                }
+                return data;
             } catch (error) {
-                console.error("Error fetching user data:", error);
-                showMessage("Error fetching user data: " + error.message, 'error');
+                console.error(`Error fetching ${url}:`, error);
+                // Only show message if it's not the 401 redirect handled above
+                if (!error.message.includes("Unauthorized")) {
+                    showMessage(`Error: ${error.message}`, 'error');
+                }
                 return null;
             }
         }
 
-        /**
-         * Displays user's profile information on the dashboard.
-         * @param {object} user - The user object.
-         */
-        function displayUserProfile(user) {
-            document.getElementById('userName').textContent = user.username;
-            document.getElementById('userEmail').textContent = user.email;
-            document.getElementById('userRole').textContent = user.role;
-            document.getElementById('userProfilePicture').src = user.profile_picture_url || DEFAULT_AVATAR_URL;
+        async function loadUserData() {
+            try {
+                const user = await fetchApi('/api/users/me');
+                if (user) {
+                    currentUser = user;
+                    // Populate user info
+                    document.getElementById('usernameDisplay').textContent = user.username;
+                    document.getElementById('userRoleDisplay').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                    if (user.class_level_name) {
+                        document.getElementById('userClassLevelDisplay').textContent = `Class Level: ${user.class_level_name}`;
+                    } else {
+                        document.getElementById('userClassLevelDisplay').textContent = `Class Level: Not Assigned`;
+                    }
+                    if (user.admission_number) {
+                        document.getElementById('userAdmissionNumberDisplay').textContent = `Admission No.: ${user.admission_number}`;
+                    } else {
+                        document.getElementById('userAdmissionNumberDisplay').textContent = `Admission No.: N/A`;
+                    }
 
-            // Display student-specific info if role is student
-            if (user.role === 'student') {
-                document.getElementById('userClassLevelContainer').classList.remove('hidden');
-                document.getElementById('userAdmissionNumberContainer').classList.remove('hidden');
-                document.getElementById('userClassLevel').textContent = user.class_level_name || 'N/A';
-                document.getElementById('userAdmissionNumber').textContent = user.admission_number || 'N/A';
-            } else {
-                document.getElementById('userClassLevelContainer').classList.add('hidden');
-                document.getElementById('userAdmissionNumberContainer').classList.add('hidden');
-            }
+                    populateNavLinks(currentUser, 'navLinks');
+                    populateNavLinks(currentUser, 'mobileNavLinks');
 
-            // Display optional fields if available
-            if (user.gender) {
-                document.getElementById('userGenderContainer').classList.remove('hidden');
-                document.getElementById('userGender').textContent = user.gender;
-            } else {
-                document.getElementById('userGenderContainer').classList.add('hidden');
-            }
+                    // Show/hide admin stats card ONLY for admin
+                    if (currentUser.is_admin) { // Changed from (currentUser.is_admin || currentUser.role === 'teacher')
+                        document.getElementById('adminStatsCard').classList.remove('hidden');
+                        await loadAdminStats();
+                    } else {
+                        document.getElementById('adminStatsCard').classList.add('hidden');
+                    }
 
-            if (user.dob) {
-                document.getElementById('userDOBContainer').classList.remove('hidden');
-                document.getElementById('userDOB').textContent = new Date(user.dob).toLocaleDateString();
-            } else {
-                document.getElementById('userDOBContainer').classList.add('hidden');
+                    // Show/hide performance graph for students
+                    if (currentUser.role === 'student') {
+                        document.getElementById('performanceGraphSection').classList.remove('hidden');
+                        await loadUserPerformanceGraph();
+                    } else {
+                        document.getElementById('performanceGraphSection').classList.add('hidden');
+                    }
+
+                    // Hide class level filter for students
+                    if (currentUser.role === 'student') {
+                        document.getElementById('classLevelFilterGroup').classList.add('hidden');
+                    } else {
+                        document.getElementById('classLevelFilterGroup').classList.remove('hidden');
+                    }
+
+                    return currentUser;
+                } else {
+                    // If user data cannot be loaded (e.g., not authenticated), fetchApi already handled redirect
+                    return null;
+                }
+            } catch (error) {
+                console.error("Failed to load user data:", error);
+                // If there's a network error or other critical issue, redirect to login
+                // This catch block is for errors not caught by fetchApi's response.ok check (e.g., network down)
+                window.location.href = '/login.html';
+                return null;
             }
         }
 
-        /**
-         * Fetches and displays user's exam statistics.
-         * @param {string} userId - The ID of the user.
-         */
-        async function fetchUserStats() {
-            try {
-                // *** FIX: Corrected the API endpoint. The backend gets the user ID from the auth token, so no need to pass it in the URL.
-                const response = await fetch(`/api/exams/user-stats`, { credentials: 'include' });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Failed to fetch stats');
+        function populateNavLinks(user, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear existing
+
+            const navLinks = [
+                { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'], icon: 'home' },
+                { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'], icon: 'plus-square' },
+                { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'], icon: 'users' },
+                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin'], icon: 'bar-chart-2' },
+                { text: 'Register User', href: '/registration.html', roles: ['admin'], icon: 'user-plus' },
+                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'], icon: 'book-open' },
+                { text: 'Manage Levels', href: '/manage-class-levels.html', roles: ['admin'], icon: 'layers' },
+                { text: 'Manage Exams', href: '/manage-exams.html', roles: ['teacher', 'admin'], icon: 'edit' }
+            ];
+
+            navLinks.forEach(link => {
+                const shouldDisplay = link.roles.some(role => (role === 'admin' ? user.is_admin : user.role === role));
+                if (shouldDisplay) {
+                    const linkEl = document.createElement('li');
+                    linkEl.innerHTML = `<a href="${link.href}" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                            <i data-feather="${link.icon}" class="w-4 h-4 mr-2"></i> ${link.text}
+                                        </a>`;
+                    container.appendChild(linkEl);
                 }
-                const stats = await response.json();
+            });
+
+            // Logout Button
+            const logoutBtn = document.createElement('li');
+            logoutBtn.innerHTML = `<button id="logoutBtn-${containerId}" class="w-full md:w-auto bg-red-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-600 flex items-center justify-center">
+                                        <i data-feather="log-out" class="w-4 h-4 mr-2"></i> Logout
+                                    </button>`;
+            container.appendChild(logoutBtn);
+            document.getElementById(`logoutBtn-${containerId}`).addEventListener('click', handleLogout);
+            // Call feather.replace() after all icons are added to the DOM
+            if (typeof feather !== 'undefined') { // Check if feather is loaded
+                feather.replace();
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                } else {
+                    const errorData = await response.json();
+                    showMessage(errorData.error || 'Failed to logout.', 'error');
+                }
+            } catch (error) {
+                console.error("Logout error:", error);
+                showMessage('Network error during logout.', 'error');
+            }
+        }
+
+        async function loadUserStatistics() {
+            const stats = await fetchApi('/api/exams/user-stats');
+            if (stats) {
                 document.getElementById('totalExamsTaken').textContent = stats.totalExamsTaken;
                 document.getElementById('examsPassed').textContent = stats.examsPassed;
                 document.getElementById('highestScore').textContent = `${stats.highestScore}%`;
                 document.getElementById('totalQuestionsAnswered').textContent = stats.totalQuestionsAnswered;
-            } catch (error) {
-                console.error('Error fetching user stats:', error);
-                showMessage('Could not load your exam statistics.', 'info');
             }
         }
 
-        /**
-         * Fetches and displays recent exam attempts for the current user.
-         * @param {string} userId - The ID of the user.
-         */
-        async function fetchRecentExams(userId) {
-            try {
-                // *** FIX: This now calls the new, correct endpoint in examResults.js
-                const response = await fetch(`/api/exam-results/student/${userId}/recent`, { credentials: 'include' });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Failed to fetch recent exam attempts.');
-                }
-                const recentExams = await response.json();
-                const recentExamsList = document.getElementById('recentExamsList');
-                recentExamsList.innerHTML = ''; // Clear previous content
-
-                if (recentExams.length === 0) {
-                    recentExamsList.innerHTML = '<p>No recent exam attempts found.</p>';
-                    return;
-                }
-
-                recentExams.forEach(exam => {
-                    const li = document.createElement('div'); // Use div for better styling
-                    li.className = 'exam-card'; // Reuse exam-card styling
-                    li.innerHTML = `
-                        <h3>${exam.examTitle || 'N/A'}</h3>
-                        <p><strong>Type:</strong> ${exam.examType || 'N/A'}</p>
-                        <p><strong>Score:</strong> <span class="exam-score">${exam.score !== null && typeof exam.score === 'number' ? exam.score.toFixed(1) : 'N/A'}%</span></p>
-                        <p><strong>Date:</strong> ${new Date(exam.submissionDate).toLocaleDateString()}</p>
-                        <div class="exam-actions">
-                            <button class="btn btn-info view-my-result-btn" data-result-id="${exam.resultId}">View Details</button>
-                        </div>
-                    `;
-                    recentExamsList.appendChild(li);
-                });
-            } catch (error) {
-                console.error('Error fetching recent exams:', error);
-                showMessage('Error fetching recent exams: ' + error.message, 'error');
-                document.getElementById('recentExamsList').innerHTML = '<p>Error loading recent exams.</p>';
+        async function loadAdminStats() {
+            // This function should only be called if currentUser.is_admin is true
+            if (!currentUser || !currentUser.is_admin) {
+                console.warn("Attempted to load admin stats without admin privileges.");
+                return; // Prevent API call and errors
+            }
+            const stats = await fetchApi('/api/admin/stats');
+            if (stats) {
+                document.getElementById('adminTotalUsers').textContent = stats.totalUsers;
+                document.getElementById('adminTotalExams').textContent = stats.totalExams;
+                document.getElementById('adminTotalSubjects').textContent = stats.totalSubjects;
+                document.getElementById('adminTotalClassLevels').textContent = stats.totalClassLevels;
+                document.getElementById('adminTotalClasses').textContent = stats.totalClasses;
             }
         }
 
-        /**
-         * Fetches and displays available exams based on user role and filters.
-         * @param {string} [subjectId=''] - Optional subject ID to filter by.
-         * @param {string} [classLevelId=''] - Optional class level ID to filter by.
-         */
-        async function fetchAvailableExams(subjectId = '', classLevelId = '') {
-            const availableExamsList = document.getElementById('availableExamsList');
-            availableExamsList.innerHTML = '<p>Loading available exams...</p>'; // Show loading indicator
-            try {
-                let url = new URL(window.location.origin + '/api/exams');
-                if (subjectId) {
-                    url.searchParams.append('subject_id', subjectId);
-                }
-                // For students, always filter by their class level, overriding any filter selection
-                if (currentUser.role === 'student' && currentUser.class_level_id) {
-                    url.searchParams.append('class_level_id', currentUser.class_level_id);
-                } else if (classLevelId) { // For teachers/admins, use selected filter
-                    url.searchParams.append('class_level_id', classLevelId);
-                }
-                
-                const response = await fetch(url, { credentials: 'include' });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
-                }
-                const exams = await response.json();
-                renderAvailableExams(exams);
-            } catch (error) {
-                console.error('Error fetching available exams:', error);
-                showMessage(`Error fetching available exams: ${error.message}`, 'error');
-                availableExamsList.innerHTML = '<p>Error loading available exams. Please try again.</p>';
-            }
-        }
-
-        /**
-         * Renders the list of available exams with role-specific buttons.
-         * @param {Array<object>} exams - Array of exam objects.
-         */
-        function renderAvailableExams(exams) {
-            const availableExamsList = document.getElementById('availableExamsList');
-            availableExamsList.innerHTML = ''; // Clear previous content
-            if (!exams || exams.length === 0) {
-                availableExamsList.innerHTML = '<p>No exams available based on current filters.</p>';
-                return;
-            }
-            exams.forEach(exam => {
-                const examCard = document.createElement('div');
-                examCard.className = 'exam-card';
-                examCard.innerHTML = `
-                    <h3>${exam.title || 'N/A'}</h3>
-                    <p><strong>Subject:</strong> ${exam.subject_name || 'N/A'}</p>
-                    <p><strong>Class Level:</strong> ${exam.class_level_name || 'N/A'}</p>
-                    <p><strong>Duration:</strong> ${exam.duration_minutes || 'N/A'} minutes</p>
-                    ${exam.max_score ? `<p><strong>Total Marks:</strong> ${exam.max_score}</p>` : ''}
-                    <p><strong>Type:</strong> ${exam.exam_type || 'N/A'}</p>
-                    <p><strong>Availability:</strong> ${new Date(exam.start_time).toLocaleString()} - ${new Date(exam.end_time).toLocaleString()}</p>
-                    <div class="exam-actions">
-                        ${getExamActionButtons(exam)}
-                    </div>
-                `;
-                availableExamsList.appendChild(examCard);
-            });
-        }
-
-        /**
-         * Generates HTML for action buttons based on user role and exam ownership.
-         * @param {object} exam - The exam object.
-         * @returns {string} HTML string of buttons.
-         */
-        function getExamActionButtons(exam) {
-            if (!currentUser) return '';
-            let buttonsHtml = '';
-            const now = new Date();
-            const startTime = new Date(exam.start_time);
-            const endTime = new Date(exam.end_time);
-            const isAvailable = now >= startTime && now <= endTime;
-            const isLocked = exam.is_locked;
-
-            if (currentUser.role === 'student') {
-                if (exam.result_id) {
-                    buttonsHtml += `<button class="btn btn-info view-my-result-btn" data-result-id="${exam.result_id}">View Score</button>`;
-                } else if (isAvailable && !isLocked) {
-                    buttonsHtml += `<button class="btn btn-primary" onclick="window.location.href='/exam.html?examId=${exam.exam_id}'">Take Exam</button>`;
-                } else if (isLocked) {
-                    buttonsHtml += `<button class="btn btn-secondary" disabled>Locked</button>`;
-                } else if (now < startTime) {
-                    buttonsHtml += `<button class="btn btn-secondary" disabled>Starts ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString()}</button>`;
-                } else if (now > endTime) {
-                    buttonsHtml += `<button class="btn btn-secondary" disabled>Ended</button>`;
-                }
-            } else if (currentUser.role === 'teacher' || currentUser.is_admin) {
-                const isCreator = (exam.created_by === currentUser.id);
-                const isAdmin = currentUser.is_admin;
-
-                if (isCreator || isAdmin) {
-                    buttonsHtml += `<button class="btn btn-secondary" onclick="window.location.href='/edit-exam.html?examId=${exam.exam_id}'">Edit Exam</button>`;
-                    buttonsHtml += `<button class="btn btn-danger delete-exam-btn" data-exam-id="${exam.exam_id}">Delete Exam</button>`;
-                }
-                buttonsHtml += `<button class="btn btn-info view-all-scores-btn" data-exam-id="${exam.exam_id}">View All Scores</button>`;
-            }
-            return buttonsHtml;
-        }
-
-        // Event listener for dynamically added buttons (delegation)
-        document.addEventListener('click', async (event) => {
-            // Delete Exam Button (Admin/Teacher who created it)
-            if (event.target.classList.contains('delete-exam-btn')) {
-                const examIdToDelete = event.target.dataset.examId;
-                const confirmed = confirm(`Are you sure you want to delete this exam (ID: ${examIdToDelete})? This action cannot be undone.`);
-                if (confirmed) {
-                    try {
-                        const response = await fetch(`/api/exams/${examIdToDelete}`, {
-                            method: 'DELETE',
-                            credentials: 'include',
-                        });
-                        const result = await response.json();
-                        if (response.ok) {
-                            showMessage(result.message, 'success');
-                            fetchAvailableExams(subjectFilter.value, classLevelFilter.value);
-                        } else {
-                            throw new Error(result.error || 'Unknown error occurred during deletion.');
-                        }
-                    } catch (error) {
-                        console.error("Error deleting exam:", error);
-                        showMessage(`Failed to delete exam: ${error.message}`, 'error');
-                    }
-                }
-            }
-
-            // View My Score Button (Student)
-            if (event.target.classList.contains('view-my-result-btn')) {
-                const resultId = event.target.dataset.resultId;
-                if (resultId) {
-                    window.location.href = `/results.html?resultId=${resultId}`;
-                } else {
-                    showMessage("Cannot view score: Result ID not available.", 'error');
-                }
-            }
-
-            // View All Scores Button (Teacher/Admin)
-            if (event.target.classList.contains('view-all-scores-btn')) {
-                const examIdToView = event.target.dataset.examId;
-                // *** FIX: Changed 'view' to 'viewMode' to match what results.html expects
-                window.location.href = `/results.html?examId=${examIdToView}&viewMode=teacher`;
-            }
-        });
-
-
-        // Initial data loading and setup
-        async function initDashboard() {
-            const user = await fetchUserData();
-            if (user) {
-                displayUserProfile(user);
-                createNavigationLinks(user); // Ensure navigation is created after user data
-
-                // Student specific sections
-                if (user.role === 'student') {
-                    document.getElementById('studentStatsCard').classList.remove('hidden');
-                    document.getElementById('recentExamsCard').classList.remove('hidden');
-                    fetchUserStats();
-                    fetchRecentExams(user.id);
-                } else {
-                    document.getElementById('studentStatsCard').classList.add('hidden');
-                    document.getElementById('recentExamsCard').classList.add('hidden');
-                }
-
-                // Admin/Teacher specific sections
-                if (user.is_admin || user.role === 'teacher') {
-                    document.getElementById('adminDashboardSection').classList.remove('hidden');
-                    fetchAdminStats();
-                    const roleFilter = user.role === 'teacher' && !user.is_admin ? 'student' : '';
-                    fetchAdminUsers(document.getElementById('adminClassFilter').value, roleFilter);
-                    populateAdminClassFilter();
-                } else {
-                    document.getElementById('adminDashboardSection').classList.add('hidden');
-                }
-
-                // Populate filters and fetch available exams for all roles
-                await fetchSubjectsForFilter();
-                await fetchClassLevelsForFilter();
-                fetchAvailableExams(subjectFilter.value, classLevelFilter.value);
-            }
-        }
-
-        // --- Navigation Links ---
-        function createNavigationLinks(user) {
-            const navLinksContainer = document.getElementById('navLinksContainer');
-            if (navLinksContainer) {
-                navLinksContainer.innerHTML = ''; // Clear existing links
-
-                const navLinks = [
-                    { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'] },
-                    { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'] },
-                    { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'] },
-                    { text: 'Register User', href: '/registration.html', roles: ['admin'] },
-                    { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'] },
-                    { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'] },
-                    { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'] },
-                    { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin', 'teacher'] }
-                ];
-
-                navLinks.forEach(link => {
-                    const shouldDisplay = link.roles.some(role => {
-                        if (role === 'admin') return user.is_admin;
-                        return user.role === role;
-                    });
-
-                    if (shouldDisplay) {
-                        const navLi = document.createElement('li');
-                        const navA = document.createElement('a');
-                        navA.href = link.href;
-                        navA.textContent = link.text;
-                        navA.classList.add('nav-link');
-                        if (window.location.pathname === link.href) {
-                            navA.classList.add('active');
-                        }
-                        navLi.appendChild(navA);
-                        navLinksContainer.appendChild(navLi);
-                    }
-                });
-
-                const logoutLi = document.createElement('li');
-                const logoutBtn = document.createElement('button');
-                logoutBtn.textContent = 'Logout';
-                logoutBtn.classList.add('btn', 'logout-btn');
-                logoutBtn.onclick = async () => {
-                    try {
-                        await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                    } catch (error) {
-                        console.error('Network error during logout:', error);
-                    } finally {
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        window.location.href = '/login.html';
-                    }
-                };
-                logoutLi.appendChild(logoutBtn);
-                navLinksContainer.appendChild(logoutLi);
-            }
-        }
-        
-        // --- Admin Specific Functions ---
-        async function fetchAdminStats() {
-            try {
-                const response = await fetch('/api/users/admin-stats', { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to fetch admin statistics.');
-                const stats = await response.json();
-                document.getElementById('totalUsersCount').textContent = stats.totalUsers;
-                document.getElementById('totalSubjectsCount').textContent = stats.totalSubjects;
-                document.getElementById('totalExamsCount').textContent = stats.totalExams;
-                document.getElementById('totalClassLevelsCount').textContent = stats.totalClassLevels;
-                document.getElementById('totalClassesCount').textContent = stats.totalClasses;
-            } catch (error) {
-                console.error("Error fetching admin stats:", error);
-                showMessage("Error fetching admin stats: " + error.message, 'error');
-            }
-        }
-
-        async function populateAdminClassFilter() {
-            const adminClassFilter = document.getElementById('adminClassFilter');
-            try {
-                const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to fetch class levels for admin filter.');
-                const classLevels = await response.json();
-                adminClassFilter.innerHTML = '<option value="">All Class Levels</option>';
-                classLevels.forEach(level => {
-                    const option = document.createElement('option');
-                    option.value = level.level_id;
-                    option.textContent = level.level_name;
-                    adminClassFilter.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error populating admin class filter:", error);
-            }
-        }
-
-        async function fetchAdminUsers(classLevelId = '', roleFilter = '') {
-            const filteredUsersList = document.getElementById('filteredUsersList');
-            filteredUsersList.innerHTML = '<p>Loading users...</p>';
-            try {
-                let url = new URL(window.location.origin + '/api/users');
-                if (classLevelId) url.searchParams.append('class_level_id', classLevelId);
-                if (roleFilter) url.searchParams.append('role', roleFilter);
-                
-                const response = await fetch(url, { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to fetch users for admin view.');
-                const users = await response.json();
-                renderAdminUsers(users);
-            } catch (error) {
-                console.error("Error fetching admin users:", error);
-                filteredUsersList.innerHTML = '<p>Error loading users.</p>';
-            }
-        }
-
-        function renderAdminUsers(users) {
-            const filteredUsersList = document.getElementById('filteredUsersList');
-            if (users.length === 0) {
-                filteredUsersList.innerHTML = '<p>No users found for the selected filter.</p>';
+        async function loadUserPerformanceGraph() {
+            // Ensure currentUser is available and is a student before attempting to fetch results
+            if (!currentUser || currentUser.role !== 'student') {
+                document.getElementById('performanceGraphSection').innerHTML = '<p class="text-center text-gray-500">Performance graph is available for students only.</p>';
                 return;
             }
 
-            const table = document.createElement('table');
-            table.className = 'student-table'; 
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>Username</th><th>Email</th><th>Role</th><th>Class Level</th><th>Admission No.</th><th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            `;
-            const tbody = table.querySelector('tbody');
+            const results = await fetchApi('/api/exam-results/my-results'); // Assuming an endpoint for student's own results
+            if (results && results.length > 0) {
+                const examTitles = results.map(r => r.exam_title);
+                const scores = results.map(r => r.score);
 
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${user.username}</td><td>${user.email}</td><td>${user.role}</td>
-                    <td>${user.class_level_name || 'N/A'}</td><td>${user.admission_number || 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-secondary edit-user-btn" data-user-id="${user.id}">Edit</button>
-                        <button class="btn btn-danger delete-user-btn" data-user-id="${user.id}">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            filteredUsersList.innerHTML = '';
-            filteredUsersList.appendChild(table);
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+
+                if (performanceChartInstance) {
+                    performanceChartInstance.destroy(); // Destroy existing chart if it exists
+                }
+
+                performanceChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: examTitles,
+                        datasets: [{
+                            label: 'Score (%)',
+                            data: scores,
+                            borderColor: '#1a237e',
+                            backgroundColor: 'rgba(26, 35, 126, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('performanceGraphSection').innerHTML = '<p class="text-center text-gray-500">No exam results to display performance graph.</p>';
+            }
         }
-
-        document.getElementById('applyAdminFilterBtn').addEventListener('click', () => {
-            const roleFilter = currentUser.role === 'teacher' && !currentUser.is_admin ? 'student' : '';
-            fetchAdminUsers(document.getElementById('adminClassFilter').value, roleFilter);
-        });
-
-        // --- Exam Filter Functions ---
-        const subjectFilter = document.getElementById('subjectFilter');
-        const classLevelFilter = document.getElementById('classLevelFilter');
-        const applyExamFilterBtn = document.getElementById('applyExamFilterBtn');
 
         async function fetchSubjectsForFilter() {
+            const subjectFilterSelect = document.getElementById('subjectFilter');
+            subjectFilterSelect.innerHTML = '<option value="">All Subjects</option>';
             try {
-                const response = await fetch('/api/exams/config/subjects', { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to fetch subjects for filter.');
-                const subjects = await response.json();
-                subjectFilter.innerHTML = '<option value="">All Subjects</option>';
-                subjects.forEach(subject => {
-                    const option = document.createElement('option');
-                    option.value = subject.subject_id;
-                    option.textContent = subject.name;
-                    subjectFilter.appendChild(option);
-                });
+                const subjects = await fetchApi('/api/exams/config/subjects');
+                if (subjects) {
+                    subjects.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.subject_id;
+                        option.textContent = subject.name;
+                        subjectFilterSelect.appendChild(option);
+                    });
+                }
             } catch (error) {
                 console.error("Error fetching subjects for filter:", error);
             }
         }
 
         async function fetchClassLevelsForFilter() {
+            const classLevelFilterSelect = document.getElementById('classLevelFilter');
+            classLevelFilterSelect.innerHTML = '<option value="">All Class Levels</option>';
             try {
-                const response = await fetch('/api/exams/config/class-levels', { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to fetch class levels for filter.');
-                const classLevels = await response.json();
-                classLevelFilter.innerHTML = '<option value="">All Class Levels</option>';
-                classLevels.forEach(level => {
-                    const option = document.createElement('option');
-                    option.value = level.level_id;
-                    option.textContent = level.level_name;
-                    classLevelFilter.appendChild(option);
-                });
+                const classLevels = await fetchApi('/api/exams/config/class-levels');
+                if (classLevels) {
+                    classLevels.forEach(level => {
+                        const option = document.createElement('option');
+                        option.value = level.level_id;
+                        option.textContent = level.level_name;
+                        classLevelFilterSelect.appendChild(option);
+                    });
+                }
             } catch (error) {
                 console.error("Error fetching class levels for filter:", error);
             }
         }
 
-        applyExamFilterBtn.addEventListener('click', () => {
-            fetchAvailableExams(subjectFilter.value, classLevelFilter.value);
-        });
+        async function loadAvailableExams() {
+            const examsListContainer = document.getElementById('examsList');
+            const noExamsMessage = document.getElementById('noExamsMessage');
+            examsListContainer.innerHTML = ''; // Clear previous exams
+            noExamsMessage.classList.add('hidden'); // Hide message initially
+
+            const subjectId = document.getElementById('subjectFilter').value;
+            let classLevelId = document.getElementById('classLevelFilter').value;
+
+            // For students, always filter by their own class
+            if (currentUser && currentUser.role === 'student') {
+                if (currentUser.class_level_id) {
+                    classLevelId = currentUser.class_level_id;
+                } else {
+                    // If student's class_level_id is not set, prevent fetching exams
+                    showMessage("Cannot load exams: your class level is not set.", 'info');
+                    // Render an empty list of exams if the student's class level is not set
+                    return; 
+                }
+            }
+
+            let url = '/api/exams?';
+            if (subjectId) url += `subject_id=${subjectId}&`;
+            if (classLevelId) url += `class_level_id=${classLevelId}&`;
+            
+            const exams = await fetchApi(url);
+            if (exams && exams.length > 0) {
+                exams.forEach(exam => {
+                    const examCard = document.createElement('div');
+                    examCard.className = 'bg-gray-50 p-5 rounded-lg shadow interactive-card flex flex-col justify-between';
+                    examCard.innerHTML = `
+                        <div>
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-2">${exam.title}</h3>
+                            <p class="text-sm text-gray-600">Subject: ${exam.subject_name}</p>
+                            <p class="text-sm text-gray-600">Class Level: ${exam.class_level_name}</p>
+                            <p class="text-sm text-gray-600">Type: ${exam.exam_type}</p>
+                            <p class="text-sm text-gray-600">Duration: ${exam.duration_minutes} mins</p>
+                            <p class="text-sm text-gray-600">Term: ${exam.term}</p>
+                            <p class="text-sm text-gray-600">Session: ${exam.session}</p>
+                            ${exam.is_locked ? '<p class="text-sm text-red-500 font-medium mt-2">Locked: Students cannot take this exam.</p>' : ''}
+                        </div>
+                        <div class="mt-4 flex flex-col space-y-2">
+                            ${currentUser && currentUser.role === 'student' && !exam.is_locked ? `<button onclick="startExam(${exam.exam_id})" class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition duration-300">Take Exam</button>` : ''}
+                            ${currentUser && currentUser.role === 'student' ? `<button onclick="viewMyResult(${exam.exam_id})" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300">View My Result</button>` : ''}
+                            ${currentUser && (currentUser.is_admin || currentUser.role === 'teacher') ? `
+                                <button onclick="editExam(${exam.exam_id})" class="w-full bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition duration-300">Edit Exam</button>
+                                <button data-exam-id="${exam.exam_id}" class="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-300 delete-exam-btn">Delete Exam</button>
+                            ` : ''}
+                        </div>
+                    `;
+                    examsListContainer.appendChild(examCard);
+                });
+            } else {
+                noExamsMessage.classList.remove('hidden');
+            }
+        }
+
+        function startExam(examId) {
+            window.location.href = `/exam.html?examId=${examId}`;
+        }
+
+        function viewMyResult(examId) {
+            // This will navigate to the results page, which will then fetch the specific result for the current user and exam.
+            window.location.href = `/results.html?examId=${examId}`;
+        }
+
+        function editExam(examId) {
+            window.location.href = `/edit-exam.html?examId=${examId}`;
+        }
+
+        async function handleDeleteExam(examId) {
+            if (confirm('Are you sure you want to delete this exam? This action cannot be undone.')) {
+                try {
+                    const response = await fetchApi(`/api/exams/${examId}`, { method: 'DELETE' });
+                    if (response) {
+                        showMessage('Exam deleted successfully!', 'success');
+                        loadAvailableExams(); // Reload exams list
+                    }
+                } catch (error) {
+                    console.error("Error deleting exam:", error);
+                    showMessage(`Failed to delete exam: ${error.message}`, 'error');
+                }
+            }
+        }
 
         // --- Page Initialization ---
+        async function initDashboard() {
+            const user = await loadUserData(); // This will handle redirection if not authenticated
+            if (user) {
+                await loadUserStatistics(); // Load user-specific stats
+                await fetchSubjectsForFilter(); // Load subjects for filter
+                if (user.role !== 'student') { // Only load class levels for filter if not a student
+                    await fetchClassLevelsForFilter(); // Load class levels for filter
+                }
+
+                await loadAvailableExams(); // Load exams based on initial filters and user role
+
+                document.getElementById('applyExamFilterBtn').addEventListener('click', async () => {
+                    await loadAvailableExams();
+                });
+
+                document.getElementById('subjectFilter').addEventListener('change', async () => {
+                    await loadAvailableExams();
+                });
+
+                document.getElementById('classLevelFilter').addEventListener('change', async () => {
+                    await loadAvailableExams();
+                });
+
+                // Event listener for the "View All Student Results" button (for Admin/Teacher)
+                document.getElementById('viewAllStudentResultsBtn').addEventListener('click', () => {
+                    window.location.href = '/results.html'; // Navigate to results.html without specific ID to show all
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (event.target.closest('.delete-exam-btn')) {
+                        handleDeleteExam(event.target.closest('.delete-exam-btn').dataset.examId);
+                    }
+                });
+                
+                // Mobile menu toggle
+                document.getElementById('mobile-menu-button').addEventListener('click', () => {
+                    document.getElementById('mobile-menu').classList.toggle('hidden');
+                });
+
+                // Replace all feather icons
+                // Ensure feather.replace() is called after all dynamic content that might contain icons is added
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', initDashboard);
+
     </script>
 </body>
 </html>
