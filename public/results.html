@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exam Results | CBT System</title>
-    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for a clean, modern look -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Feather Icons for a clean icon set -->
     <script src="https://unpkg.com/feather-icons"></script>
@@ -17,500 +15,716 @@
         .results-container { padding: 2.5rem; background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
         .results-header { text-align: center; margin-bottom: 2rem; color: #1a237e; }
 
-        /* Question Review Card */
-        .question-review-card { border-left: 5px solid; margin-bottom: 1.5rem; padding: 1.5rem; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-radius: 8px;}
-        .question-review-card.correct { border-left-color: #4CAF50; } /* Success green */
-        .question-review-card.incorrect { border-left-color: #f44336; } /* Danger red */
-        .question-review-card.unanswered { border-left-color: #ff9800; } /* Warning orange */
-
-        .question-review-card h3 {
-            color: #333;
-            margin-top: 0;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
+        /* Question Review */
+        .question-review-card {
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e0e0e0;
         }
-
+        .question-review-card h3 {
+            color: #1a237e;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+        }
         .question-review-card p {
             margin-bottom: 0.5rem;
         }
-
-        .question-review-card .options span {
-            display: block;
-            padding: 5px 0;
-            font-size: 0.95rem;
+        .question-review-card .options div {
+            padding: 0.5rem;
+            margin-bottom: 0.25rem;
+            border-radius: 4px;
+            background-color: #fff;
+            border: 1px solid #eee;
         }
-        .question-review-card .options .correct-option {
-            font-weight: bold;
-            color: #28a745; /* Green for correct answer */
-        }
-        .question-review-card .options .user-answer {
-            font-weight: bold;
-            color: #17a2b8; /* Info blue for user's answer */
-        }
-        .question-review-card .options .user-answer.incorrect {
-            color: #dc3545; /* Red for incorrect user answer */
-        }
-
-        .explanation {
-            background-color: #e8f5e9; /* Light green background for explanation */
-            border-left: 3px solid #4CAF50;
-            padding: 10px 15px;
-            margin-top: 1rem;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            color: #388e3c;
-        }
-
-        /* Summary Table */
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 2rem;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .summary-table th, .summary-table td {
-            border: 1px solid #e0e0e0;
-            padding: 12px 15px;
-            text-align: left;
-        }
-        .summary-table th {
-            background-color: #e8eaf6;
-            color: #1a237e;
-            font-weight: 600;
-        }
-        .summary-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        .summary-table .score-percentage {
-            font-weight: bold;
-            color: #1a237e;
-            font-size: 1.1rem;
-        }
-        .summary-table .pass { color: #28a745; }
-        .summary-table .fail { color: #dc3545; }
-
-        /* General Message Styles */
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
+        .question-review-card .options .correct {
+            background-color: #d4edda;
+            border-color: #28a745;
             font-weight: 500;
         }
-        .info-message {
-            background-color: #e0f7fa;
-            color: #0c5460;
-            border: 1px solid #00acc1;
+        .question-review-card .options .incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            font-weight: 500;
         }
-        .error-message {
-            background-color: #ffebee;
-            color: #d32f2f;
-            border: 1px solid #d32f2f;
-        }
-        .hidden {
-            display: none;
+        .question-review-card .options .chosen {
+            border: 2px solid #007bff;
         }
 
-        /* Student List for Summary View */
-        .student-results-table {
+        /* Results Table */
+        .results-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 2rem;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-radius: 10px;
+            overflow: hidden; /* Ensures rounded corners apply to table */
         }
-        .student-results-table th, .student-results-table td {
-            border: 1px solid #e0e0e0;
-            padding: 12px 15px;
+        .results-table th, .results-table td {
+            padding: 1rem 1.25rem;
             text-align: left;
+            border-bottom: 1px solid #e0e0e0;
         }
-        .student-results-table th {
-            background-color: #e8eaf6;
-            color: #1a237e;
+        .results-table thead th {
+            background-color: #1a237e;
+            color: white;
             font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
-        .student-results-table tr:nth-child(even) {
-            background-color: #f8f9fa;
+        .results-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
-        .student-results-table .btn {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 6px;
+        .results-table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        .results-table td a {
+            color: #1a237e;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .results-table td a:hover {
+            text-decoration: underline;
+        }
+
+        /* Utility classes */
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .hidden { display: none; }
+        .text-center { text-align: center; }
+        .text-green-600 { color: #28a745; }
+        .text-red-600 { color: #dc3545; }
+        .text-orange-600 { color: #fd7e14; }
+        .font-semibold { font-weight: 600; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1a237e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 50px auto;
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Professional Navbar Styles (Unified) */
+        header {
+            background-color: #2c3e50; /* Dark blue/grey */
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            color: #ecf0f1; /* Light grey text */
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .logo:hover {
+            color: #3498db; /* Primary blue on hover */
+        }
+
+        .nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 1.5rem; /* Space between nav items */
+        }
+
+        .nav-links li a, .nav-links li button {
+            color: #ecf0f1; /* Light grey text */
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0.8rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .nav-links li a:hover, .nav-links li button:hover {
+            background-color: #34495e; /* Slightly darker background on hover */
+            color: #ffffff;
+        }
+
+        .nav-links li button.btn {
+            background-color: #e74c3c; /* Red for logout */
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-links li button.btn:hover {
+            background-color: #c0392b; /* Darker red on hover */
+        }
+
+        /* Mobile menu button and dropdown */
+        .mobile-menu-button {
+            display: none; /* Hidden on desktop */
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+
+        .mobile-menu {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            background-color: #2c3e50;
+            padding: 1rem;
+            position: absolute;
+            top: 60px; /* Adjust based on header height */
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-menu.open {
+            display: flex;
+        }
+
+        .mobile-menu a {
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .mobile-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-menu a:hover {
+            background-color: #34495e;
+        }
+
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none; /* Hide desktop nav links on mobile */
+            }
+
+            .mobile-menu-button {
+                display: block; /* Show mobile menu button */
+            }
+            nav {
+                flex-direction: row; /* Keep logo and button on one line */
+                justify-content: space-between;
+                align-items: center;
+            }
         }
     </style>
 </head>
-<body class="antialiased text-gray-800">
-
-    <!-- Header/Navbar -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex-shrink-0">
-                    <a href="/dashboard.html" class="text-2xl font-bold text-indigo-600">SNA CBT System</a>
-                </div>
-                <div class="hidden md:block">
-                    <ul class="ml-10 flex items-center space-x-4" id="navLinksContainer">
-                        <!-- Nav links will be dynamically inserted here -->
-                    </ul>
-                </div>
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        <span class="sr-only">Open main menu</span>
-                        <i data-feather="menu"></i>
-                    </button>
-                </div>
-            </div>
+<body>
+    <header>
+        <nav>
+            <a href="/dashboard.html" class="logo">SNA CBT System</a>
+            <button class="mobile-menu-button" id="mobile-menu-button" aria-label="Toggle mobile menu">
+                <i data-feather="menu"></i> </button>
+            <ul class="nav-links" id="navLinksContainer">
+                </ul>
         </nav>
-        <!-- Mobile menu, show/hide based on menu state. -->
-        <div class="md:hidden hidden" id="mobile-menu">
-            <ul class="px-2 pt-2 pb-3 space-y-1 sm:px-3" id="mobileNavLinksContainer">
-                <!-- Mobile nav links will be inserted here -->
-            </ul>
-        </div>
+        <div class="mobile-menu" id="mobile-menu">
+            </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div id="pageMessage" class="message hidden"></div>
+    <main>
+        <div class="results-container">
+            <h1 class="results-header">Exam Results</h1>
+            <div id="messageContainer" class="hidden p-4 mb-4 text-center rounded-lg"></div>
+            <div id="loader" class="loader"></div>
 
-        <div id="loadingMessage" class="info-message hidden">Loading results...</div>
-
-        <!-- Detailed Result View (for single resultId) -->
-        <div id="detailedResultView" class="results-container hidden">
-            <div class="results-header">
-                <h1 class="text-3xl font-bold">Exam Result: <span id="detailedExamTitle"></span></h1>
-                <p class="text-lg text-gray-600">Subject: <span id="detailedSubjectName"></span> | Class: <span id="detailedClassLevelName"></span></p>
-                <p class="text-lg text-gray-600">Student: <span id="detailedStudentName"></span> (<span id="detailedAdmissionNumber"></span>)</p>
-                <p class="text-lg text-gray-600">Score: <span id="detailedScore" class="font-bold"></span></p>
-                <p class="text-md text-gray-600">Submitted: <span id="detailedSubmissionDate"></span></p>
+            <div id="individualResultDetails" class="hidden">
+                <button id="backToListBtn" class="btn bg-gray-200 text-gray-800 py-2 px-4 rounded-md mb-4 hover:bg-gray-300">
+                    <i data-feather="arrow-left" class="inline-block mr-2"></i> Back to Results List
+                </button>
+                <div id="questionsReviewContainer">
+                    </div>
             </div>
 
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Question Review</h2>
-            <div id="questionReviewContainer">
-                <!-- Question review cards will be loaded here -->
+            <div id="resultsList">
+                <div class="filters mt-4 mb-4 flex gap-4 flex-wrap">
+                    <input type="text" id="examNameFilter" placeholder="Filter by Exam Name" class="p-2 border rounded-md flex-grow">
+                    <select id="classLevelFilter" class="p-2 border rounded-md">
+                        <option value="">All Class Levels</option>
+                    </select>
+                    <select id="subjectFilter" class="p-2 border rounded-md">
+                        <option value="">All Subjects</option>
+                    </select>
+                    <select id="studentFilter" class="p-2 border rounded-md hidden"> <!-- New student filter -->
+                        <option value="">All Students</option>
+                    </select>
+                    <button id="applyFilterBtn" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Apply Filters</button>
+                </div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th id="studentNameHeader" class="hidden">Student Name</th> <!-- New header for student name -->
+                            <th>Exam Name</th>
+                            <th>Subject</th>
+                            <th>Class Level</th>
+                            <th>Score (%)</th>
+                            <th>Date Taken</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        </tbody>
+                </table>
             </div>
-        </div>
-
-        <!-- Summary Results View (for examId or all results) -->
-        <div id="summaryResultsView" class="results-container hidden">
-            <div class="results-header">
-                <h1 class="text-3xl font-bold" id="summaryHeaderTitle">Exam Results Summary</h1>
-                <p class="text-lg text-gray-600" id="summaryHeaderSubtitle"></p>
-            </div>
-
-            <table class="student-results-table">
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Admission No.</th>
-                        <th>Score</th>
-                        <th>Raw Score</th>
-                        <th>Total Marks</th>
-                        <th>Submission Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="summaryResultsBody">
-                    <tr><td colspan="7" class="text-center text-gray-500">No results found.</td></tr>
-                </tbody>
-            </table>
         </div>
     </main>
 
     <script>
-        // --- Globals and Constants ---
         let currentUser = null;
+        let allResults = []; // Store all fetched results for filtering
 
-        // --- UI Update & Helper Functions ---
-        function showMessage(message, type = 'info') {
-            const messageDiv = document.getElementById('pageMessage');
-            messageDiv.textContent = message;
-            const typeClasses = {
-                info: 'info-message',
-                success: 'success-message',
-                error: 'error-message'
-            };
-            messageDiv.className = `message ${typeClasses[type]}`;
-            messageDiv.classList.remove('hidden');
-            setTimeout(() => messageDiv.classList.add('hidden'), 5000);
-        }
-
-        async function fetchApi(url, options = {}) {
-            try {
-                const response = await fetch(url, { credentials: 'include', ...options });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Something went wrong.');
-                }
-                return data;
-            } catch (error) {
-                console.error(`Error fetching ${url}:`, error);
-                showMessage(`Error: ${error.message}`, 'error');
-                return null;
-            }
-        }
-
+        // Function to load user data (copied for self-containment)
         async function loadUserData() {
             try {
-                const user = await fetchApi('/api/users/me');
-                if (user) {
-                    currentUser = user;
-                    populateNavLinks(currentUser, 'navLinksContainer');
-                    populateNavLinks(currentUser, 'mobileNavLinksContainer');
-                    return currentUser;
-                } else {
+                const response = await fetch('/api/users/me', { credentials: 'include' });
+                if (!response.ok) {
                     window.location.href = '/login.html';
                     return null;
                 }
+                currentUser = await response.json();
+                createNavigationLinks(currentUser); // Call navigation function
+                return currentUser;
             } catch (error) {
-                console.error("Failed to load user data:", error);
-                window.location.href = '/login.html'; // Redirect on critical error
+                console.error("Error loading user data:", error);
+                window.location.href = '/login.html';
                 return null;
             }
         }
 
-        function populateNavLinks(user, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = ''; // Clear existing
+        // Dynamically creates navigation links based on user roles
+        function createNavigationLinks(user) {
+            const navLinksContainer = document.getElementById('navLinksContainer');
+            const mobileMenu = document.getElementById('mobile-menu');
+            navLinksContainer.innerHTML = ''; // Clear existing links
+            mobileMenu.innerHTML = ''; // Clear existing mobile links
 
             const navLinks = [
-                { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'], icon: 'home' },
-                { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'], icon: 'plus-square' },
-                { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'], icon: 'users' },
-                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin'], icon: 'bar-chart-2' },
-                { text: 'Register User', href: '/registration.html', roles: ['admin'], icon: 'user-plus' },
-                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'], icon: 'book-open' },
-                { text: 'Manage Levels', href: '/manage-class-levels.html', roles: ['admin'], icon: 'layers' },
-                { text: 'Manage Exams', href: '/manage-exams.html', roles: ['teacher', 'admin'], icon: 'edit' }
+                { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'] },
+                { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'] },
+                { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'] },
+                { text: 'Register User', href: '/registration.html', roles: ['admin'] },
+                { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'] },
+                { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'] },
+                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'] },
+                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin', 'teacher'] },
+                { text: 'Exam Results', href: '/results.html', roles: ['student', 'teacher', 'admin'] },
             ];
 
             navLinks.forEach(link => {
-                const shouldDisplay = link.roles.some(role => (role === 'admin' ? user.is_admin : user.role === role));
+                const shouldDisplay = link.roles.some(role => {
+                    if (role === 'admin') return user.is_admin;
+                    return user.role === role;
+                });
+
                 if (shouldDisplay) {
-                    const linkEl = document.createElement('li');
-                    linkEl.innerHTML = `<a href="${link.href}" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                                            <i data-feather="${link.icon}" class="w-4 h-4 mr-2"></i> ${link.text}
-                                        </a>`;
-                    container.appendChild(linkEl);
+                    const navLi = document.createElement('li');
+                    const navA = document.createElement('a');
+                    navA.href = link.href;
+                    navA.textContent = link.text;
+                    navA.classList.add('nav-link');
+                    if (window.location.pathname === link.href) {
+                        navA.classList.add('active');
+                    }
+                    navLi.appendChild(navA);
+                    navLinksContainer.appendChild(navLi);
+
+                    const mobileA = document.createElement('a');
+                    mobileA.href = link.href;
+                    mobileA.textContent = link.text;
+                    mobileMenu.appendChild(mobileA);
                 }
             });
 
-            // Logout Button
-            const logoutBtn = document.createElement('li');
-            logoutBtn.innerHTML = `<button id="logoutBtn-${containerId}" class="w-full md:w-auto bg-red-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-600 flex items-center justify-center">
-                                        <i data-feather="log-out" class="w-4 h-4 mr-2"></i> Logout
-                                    </button>`;
-            container.appendChild(logoutBtn);
-            document.getElementById(`logoutBtn-${containerId}`).addEventListener('click', handleLogout);
-            feather.replace(); // Replace icons after adding them
+            // Add logout link for both desktop and mobile
+            const logoutDesktopLi = document.createElement('li');
+            const logoutDesktopBtn = document.createElement('button');
+            logoutDesktopBtn.textContent = 'Logout';
+            logoutDesktopBtn.classList.add('btn', 'logout-btn');
+            logoutDesktopBtn.onclick = async () => {
+                try {
+                    await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                } finally {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/login.html';
+                }
+            };
+            logoutDesktopLi.appendChild(logoutDesktopBtn);
+            navLinksContainer.appendChild(logoutDesktopLi);
+
+            const logoutMobileA = document.createElement('a');
+            logoutMobileA.href = '#'; // Use # as it will be handled by JS
+            logoutMobileA.textContent = 'Logout';
+            logoutMobileA.onclick = async (e) => {
+                e.preventDefault();
+                try {
+                    await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                } finally {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/login.html';
+                }
+            };
+            mobileMenu.appendChild(logoutMobileA);
+            // Ensure feather icons are replaced after dynamic content is added
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
         }
 
-        async function handleLogout() {
+        // Fetch API wrapper
+        async function fetchApi(url, options = {}) {
             try {
-                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                if (response.ok) {
-                    window.location.href = '/login.html';
-                } else {
-                    showMessage('Logout failed. Please try again.', 'error');
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch(url, { ...options, headers });
+
+                if (response.status === 401 && window.location.pathname !== '/login.html') {
+                    showMessage('Session expired or unauthorized. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+                    return null;
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `API Error: ${response.statusText}`);
+                }
+                return data;
+            } catch (error) {
+                console.error("Fetch API error:", error);
+                showMessage(error.message, 'error');
+                return null;
+            }
+        }
+
+        // Display messages
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messageContainer');
+            container.textContent = message;
+            container.className = `p-4 mb-4 text-center rounded-lg ${type === 'error' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+            container.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Fetch class levels for filter dropdown
+        async function fetchClassLevels() {
+            try {
+                const classLevels = await fetchApi('/api/exams/config/class-levels');
+                const classLevelFilter = document.getElementById('classLevelFilter');
+                classLevelFilter.innerHTML = '<option value="">All Class Levels</option>';
+                if (classLevels) {
+                    classLevels.forEach(level => {
+                        const option = document.createElement('option');
+                        option.value = level.level_id;
+                        option.textContent = level.level_name;
+                        classLevelFilter.appendChild(option);
+                    });
                 }
             } catch (error) {
-                console.error('Logout error:', error);
-                showMessage('Network error during logout.', 'error');
+                console.error("Error fetching class levels:", error);
+                showMessage("Failed to load class levels: " + error.message, 'error');
             }
         }
 
-        function formatDateTime(isoString) {
-            if (!isoString) return 'N/A';
+        // Fetch subjects for filter dropdown
+        async function fetchSubjects() {
             try {
-                return new Date(isoString).toLocaleString();
-            } catch (e) {
-                console.error("Error formatting date:", e);
-                return 'Invalid Date';
+                const subjects = await fetchApi('/api/exams/config/subjects');
+                const subjectFilter = document.getElementById('subjectFilter');
+                subjectFilter.innerHTML = '<option value="">All Subjects</option>';
+                if (subjects) {
+                    subjects.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.subject_id;
+                        option.textContent = subject.name;
+                        subjectFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+                showMessage("Failed to load subjects: " + error.message, 'error');
             }
         }
 
-        function renderDetailedResult(result) {
-            document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('summaryResultsView').classList.add('hidden');
-            document.getElementById('detailedResultView').classList.remove('hidden');
+        // Fetch students for filter dropdown (for Admin/Teacher)
+        async function fetchStudentsForFilter() {
+            const studentFilter = document.getElementById('studentFilter');
+            const studentNameHeader = document.getElementById('studentNameHeader');
 
-            document.getElementById('detailedExamTitle').textContent = result.exam_title || 'N/A';
-            document.getElementById('detailedSubjectName').textContent = result.subject_name || 'N/A';
-            document.getElementById('detailedClassLevelName').textContent = result.class_level_name || 'N/A';
-            document.getElementById('detailedStudentName').textContent = result.student_name || 'N/A';
-            document.getElementById('detailedAdmissionNumber').textContent = result.admission_number || 'N/A';
-            document.getElementById('detailedScore').textContent = result.score !== null ? `${result.score.toFixed(1)}%` : 'N/A';
-            document.getElementById('detailedSubmissionDate').textContent = formatDateTime(result.submission_date);
-
-            const questionReviewContainer = document.getElementById('questionReviewContainer');
-            questionReviewContainer.innerHTML = '';
-
-            if (result.questions_attempted && result.questions_attempted.length > 0) {
-                result.questions_attempted.forEach(q => {
-                    const userAnswer = q.user_answer;
-                    const correctAnswer = q.correct_answer;
-                    const isCorrect = userAnswer === correctAnswer;
-                    const cardClass = isCorrect ? 'correct' : (userAnswer ? 'incorrect' : 'unanswered');
-
-                    let optionsHtml = '';
-                    for (const key in q.options) {
-                        if (q.options.hasOwnProperty(key)) {
-                            let optionClass = '';
-                            if (key === correctAnswer) {
-                                optionClass = 'correct-option';
-                            }
-                            if (key === userAnswer && !isCorrect) {
-                                optionClass += ' user-answer incorrect'; // User answered this, and it was wrong
-                            } else if (key === userAnswer && isCorrect) {
-                                optionClass += ' user-answer'; // User answered this, and it was correct
-                            }
-                            optionsHtml += `<span class="${optionClass}">${key}. ${q.options[key]}</span>`;
-                        }
+            if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) {
+                studentFilter.classList.remove('hidden');
+                studentNameHeader.classList.remove('hidden');
+                try {
+                    const students = await fetchApi('/api/users?role=student'); // Fetch only students
+                    studentFilter.innerHTML = '<option value="">All Students</option>';
+                    if (students) {
+                        students.forEach(student => {
+                            const option = document.createElement('option');
+                            option.value = student.id;
+                            option.textContent = student.full_name || student.username;
+                            studentFilter.appendChild(option);
+                        });
                     }
-
-                    questionReviewContainer.innerHTML += `
-                        <div class="question-review-card ${cardClass}">
-                            <h3>${q.question_text || 'N/A'}</h3>
-                            <div class="options">
-                                ${optionsHtml}
-                            </div>
-                            <p class="mt-2">Your Answer: <span class="${userAnswer === correctAnswer ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">${userAnswer || 'N/A'}</span></p>
-                            <p>Correct Answer: <span class="text-green-600 font-bold">${correctAnswer || 'N/A'}</span></p>
-                            ${q.explanation ? `<div class="explanation"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
-                        </div>
-                    `;
-                });
+                } catch (error) {
+                    console.error("Error fetching students for filter:", error);
+                    showMessage("Failed to load students for filter: " + error.message, 'error');
+                }
             } else {
-                questionReviewContainer.innerHTML = '<p class="text-center text-gray-500">No questions found for review.</p>';
-            }
-            feather.replace(); // Re-render icons
-        }
-
-        function renderSummaryResults(results, title, subtitle) {
-            document.getElementById('loadingMessage').classList.add('hidden');
-            document.getElementById('detailedResultView').classList.add('hidden');
-            document.getElementById('summaryResultsView').classList.remove('hidden');
-
-            document.getElementById('summaryHeaderTitle').textContent = title;
-            document.getElementById('summaryHeaderSubtitle').textContent = subtitle;
-
-            const summaryResultsBody = document.getElementById('summaryResultsBody');
-            summaryResultsBody.innerHTML = '';
-
-            if (results && results.length > 0) {
-                results.forEach(result => {
-                    const scoreDisplay = result.score !== null ? `${result.score.toFixed(1)}%` : 'N/A';
-                    const rawScoreDisplay = result.raw_score_obtained !== null ? result.raw_score_obtained : 'N/A';
-                    const totalMarksDisplay = result.total_possible_marks !== null ? result.total_possible_marks : 'N/A';
-
-                    const row = `
-                        <tr>
-                            <td>${result.student_name || 'N/A'}</td>
-                            <td>${result.admission_number || 'N/A'}</td>
-                            <td>${scoreDisplay}</td>
-                            <td>${rawScoreDisplay}</td>
-                            <td>${totalMarksDisplay}</td>
-                            <td>${formatDateTime(result.submission_date)}</td>
-                            <td>
-                                <button class="btn btn-info" onclick="viewStudentResultDetails(${result.result_id})">View Details</button>
-                            </td>
-                        </tr>
-                    `;
-                    summaryResultsBody.innerHTML += row;
-                });
-            } else {
-                summaryResultsBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No student results available.</td></tr>`;
+                studentFilter.classList.add('hidden');
+                studentNameHeader.classList.add('hidden');
             }
         }
 
+
+        // Load results based on user role and filters
         async function loadResults() {
-            document.getElementById('loadingMessage').classList.remove('hidden');
-            const urlParams = new URLSearchParams(window.location.search);
-            const resultId = urlParams.get('resultId');
-            const examId = urlParams.get('examId');
+            const loader = document.getElementById('loader');
+            const resultsList = document.getElementById('resultsList');
+            const individualResultDetails = document.getElementById('individualResultDetails');
 
-            if (resultId) {
-                // Case 1: Specific result ID is provided (e.g., from student's recent attempts)
-                try {
-                    const result = await fetchApi(`/api/exam-results/${resultId}`);
-                    if (result) {
-                        // Authorization check: Students can only view their own results. Teachers/Admins can view any.
-                        if (currentUser.role === 'student' && currentUser.id !== result.student_id) {
-                            showMessage("Access denied. You can only view your own results.", 'error');
-                            document.getElementById('loadingMessage').classList.add('hidden');
-                            return;
-                        }
-                        renderDetailedResult(result);
-                    } else {
-                        showMessage('Failed to load detailed result. It might not exist or you lack permission.', 'error');
-                        document.getElementById('loadingMessage').classList.add('hidden');
+            loader.classList.remove('hidden');
+            resultsList.classList.add('hidden');
+            individualResultDetails.classList.add('hidden');
+            document.getElementById('messageContainer').classList.add('hidden'); // Clear any previous messages
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const resultIdFromUrl = urlParams.get('resultId');
+            const examIdFromUrl = urlParams.get('examId'); // Get examId if present
+
+            try {
+                let resultDetails = null;
+
+                if (resultIdFromUrl) {
+                    // Scenario 1: Direct link to a specific result by resultId
+                    resultDetails = await fetchApi(`/api/exam-results/${resultIdFromUrl}`);
+                } else if (examIdFromUrl && currentUser && currentUser.id) {
+                    // Scenario 2: View result for a specific exam for the current student
+                    resultDetails = await fetchApi(`/api/exam-results/student/${currentUser.id}/exam/${examIdFromUrl}`);
+                }
+
+                if (resultDetails) {
+                    renderQuestionsReview(resultDetails);
+                    individualResultDetails.classList.remove('hidden');
+                } else {
+                    // Scenario 3: Load list of results (either all or current user's)
+                    let endpoint = '/api/exam-results/my-results'; // Default for students
+
+                    // Admins/Teachers can view all student results
+                    if (currentUser && (currentUser.is_admin || currentUser.role === 'teacher')) {
+                        endpoint = '/api/exam-results/all'; // Corrected endpoint for all results
                     }
-                } catch (error) {
-                    showMessage(`Error loading detailed result: ${error.message}`, 'error');
-                    document.getElementById('loadingMessage').classList.add('hidden');
-                }
-            } else if (examId) {
-                // Case 2: Exam ID is provided (e.g., from teacher/admin dashboard to see all results for an exam)
-                // Only teachers and admins are allowed to view exam summaries
-                if (!currentUser.is_admin && currentUser.role !== 'teacher') {
-                    showMessage("Access denied. Only teachers and administrators can view exam result summaries.", 'error');
-                    document.getElementById('loadingMessage').classList.add('hidden');
-                    return;
-                }
-                try {
-                    const results = await fetchApi(`/api/exam-results/exam/${examId}/summary`); // New backend endpoint needed
+
+                    const examNameFilter = document.getElementById('examNameFilter').value;
+                    const classLevelFilter = document.getElementById('classLevelFilter').value;
+                    const subjectFilter = document.getElementById('subjectFilter').value;
+                    const studentFilter = document.getElementById('studentFilter').value; // Get student filter value
+
+                    let queryParams = new URLSearchParams();
+                    if (examNameFilter) queryParams.append('exam_name', examNameFilter);
+                    if (classLevelFilter) queryParams.append('class_level_id', classLevelFilter);
+                    if (subjectFilter) queryParams.append('subject_id', subjectFilter);
+                    if (studentFilter) queryParams.append('student_id', studentFilter); // Add student filter to query
+
+                    const url = `${endpoint}?${queryParams.toString()}`;
+                    const results = await fetchApi(url);
+
                     if (results) {
-                        const examTitle = results.length > 0 ? results[0].exam_title : 'Unknown Exam';
-                        const subjectName = results.length > 0 ? results[0].subject_name : 'N/A';
-                        const classLevelName = results.length > 0 ? results[0].class_level_name : 'N/A';
-                        renderSummaryResults(results, `Results for: ${examTitle}`, `Subject: ${subjectName} | Class: ${classLevelName}`);
+                        allResults = results; // Store all results for client-side filtering if needed
+                        renderResultsTable(results);
+                        resultsList.classList.remove('hidden');
                     } else {
-                        showMessage('No results found for this exam or failed to load.', 'info');
-                        document.getElementById('loadingMessage').classList.add('hidden');
+                        showMessage("No exam results found.", 'info');
                     }
-                } catch (error) {
-                    showMessage(`Error loading exam summary: ${error.message}`, 'error');
-                    document.getElementById('loadingMessage').classList.add('hidden');
                 }
-            } else {
-                // Case 3: No specific ID, show all results (for admin)
-                if (!currentUser.is_admin) {
-                    showMessage("Access denied. Only administrators can view all exam results.", 'error');
-                    document.getElementById('loadingMessage').classList.add('hidden');
-                    return;
-                }
-                try {
-                    const allResults = await fetchApi('/api/exam-results/all'); // New backend endpoint needed
-                    if (allResults) {
-                        renderSummaryResults(allResults, "All Student Exam Results", "Overview of all submitted exams.");
-                    } else {
-                        showMessage('No exam results found in the system.', 'info');
-                        document.getElementById('loadingMessage').classList.add('hidden');
-                    }
-                } catch (error) {
-                    showMessage(`Error loading all results: ${error.message}`, 'error');
-                    document.getElementById('loadingMessage').classList.add('hidden');
-                }
+            } catch (error) {
+                console.error("Error loading results:", error);
+                showMessage(`Failed to load results: ${error.message}`, 'error');
+            } finally {
+                loader.classList.add('hidden');
             }
+        }
+
+        function renderResultsTable(results) {
+            const resultsTableBody = document.getElementById('resultsTableBody');
+            resultsTableBody.innerHTML = '';
+
+            if (results.length === 0) {
+                resultsTableBody.innerHTML = '<tr><td colspan="7" class="text-center">No results found matching your criteria.</td></tr>'; // Adjusted colspan
+                return;
+            }
+
+            const studentNameHeader = document.getElementById('studentNameHeader');
+            const isTeacherOrAdmin = currentUser && (currentUser.is_admin || currentUser.role === 'teacher');
+            if (isTeacherOrAdmin) {
+                studentNameHeader.classList.remove('hidden');
+            } else {
+                studentNameHeader.classList.add('hidden');
+            }
+
+            results.forEach(result => {
+                const row = document.createElement('tr');
+                const scoreDisplay = typeof result.score === 'number' ? `${result.score.toFixed(2)}%` : 'N/A';
+                
+                let studentNameCell = '';
+                if (isTeacherOrAdmin) {
+                    studentNameCell = `<td>${result.student_full_name || result.student_username || 'N/A'}</td>`;
+                }
+
+                row.innerHTML = `
+                    ${studentNameCell}
+                    <td>${result.exam_title || 'N/A'}</td>
+                    <td>${result.subject_name || 'N/A'}</td>
+                    <td>${result.class_level_name || 'N/A'}</td>
+                    <td>${scoreDisplay}</td>
+                    <td>${result.submission_date ? new Date(result.submission_date).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                        <button onclick="viewStudentResultDetails(${result.result_id})"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                resultsTableBody.appendChild(row);
+            });
+        }
+
+
+        function renderQuestionsReview(resultDetails) {
+            const questionsReviewContainer = document.getElementById('questionsReviewContainer');
+            questionsReviewContainer.innerHTML = '';
+
+            console.log("Rendering questions review for:", resultDetails); // Debugging: inspect incoming data
+
+            if (!resultDetails || !resultDetails.questions || resultDetails.questions.length === 0) {
+                questionsReviewContainer.innerHTML = '<p class="text-center">No question details available for this result.</p>';
+                return;
+            }
+
+            // Display overall score for the single result being viewed
+            questionsReviewContainer.innerHTML += `
+                <div class="bg-blue-50 p-4 rounded-lg shadow-md mb-6 text-center">
+                    <h2 class="text-xl font-bold text-blue-800 mb-2">${resultDetails.exam_title} Result</h2>
+                    <p class="text-lg text-blue-700">Your Score: <span class="font-bold">${resultDetails.score !== undefined && resultDetails.score !== null ? resultDetails.score.toFixed(2) : 'N/A'}%</span></p>
+                    <p class="text-md text-blue-600">Raw Score: ${resultDetails.raw_score_obtained !== undefined && resultDetails.raw_score_obtained !== null ? resultDetails.raw_score_obtained : 'N/A'} / ${resultDetails.total_possible_marks !== undefined && resultDetails.total_possible_marks !== null ? resultDetails.total_possible_marks : 'N/A'}</p>
+                    <p class="text-sm text-gray-500">Submitted on: ${resultDetails.submission_date ? new Date(resultDetails.submission_date).toLocaleString() : 'N/A'}</p>
+                </div>
+            `;
+
+            resultDetails.questions.forEach((q, index) => {
+                // Ensure q.options is an object, if it's an array, convert it
+                let options = q.options;
+                if (Array.isArray(options)) {
+                    options = options.reduce((acc, opt, idx) => {
+                        acc[String.fromCharCode(65 + idx)] = opt;
+                        return acc;
+                    }, {});
+                }
+
+                const chosenAnswerKey = resultDetails.student_answers[q.question_id];
+                const correctAnswerKey = q.correct_answer;
+                const isCorrect = chosenAnswerKey === correctAnswerKey;
+
+                const cardClass = isCorrect ? 'border-green-600' : 'border-red-600'; // Tailwind class for border color
+
+                let optionsHtml = '';
+                // Iterate over the object keys (A, B, C, D)
+                Object.keys(options).forEach(key => {
+                    const optionText = options[key];
+                    let optionClass = '';
+                    if (key === correctAnswerKey) {
+                        optionClass += ' correct';
+                    }
+                    if (key === chosenAnswerKey && !isCorrect) {
+                        optionClass += ' incorrect';
+                    } else if (key === chosenAnswerKey && isCorrect) {
+                        optionClass += ' chosen'; // Mark chosen, even if correct
+                    }
+                    optionsHtml += `<div class="${optionClass}">${key}. ${optionText}</div>`;
+                });
+
+
+                questionsReviewContainer.innerHTML += `
+                    <div class="question-review-card ${cardClass}">
+                        <h3>Question ${index + 1}:</h3>
+                        <p>${q.question_text}</p>
+                        <div class="options">
+                            ${optionsHtml}
+                        </div>
+                        <p class="mt-2"><strong>Your Answer:</strong> ${chosenAnswerKey !== undefined ? chosenAnswerKey : 'N/A'}</p>
+                        <p><strong>Correct Answer:</strong> ${correctAnswerKey !== undefined ? correctAnswerKey : 'N/A'}</p>
+                        <p><strong>Marks:</strong> ${q.marks !== undefined ? q.marks : 'N/A'}</p>
+                        ${q.explanation ? `<p><strong>Explanation:</strong> ${q.explanation}</p>` : ''}
+                    </div>
+                `;
+            });
         }
 
         function viewStudentResultDetails(resultId) {
             window.location.href = `results.html?resultId=${resultId}`;
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const user = await loadUserData();
-            if (user) {
-                await loadResults();
-            }
+        document.getElementById('backToListBtn').addEventListener('click', () => {
+            window.location.href = '/results.html'; // Remove resultId param to show list
         });
+
+        document.getElementById('applyFilterBtn').addEventListener('click', loadResults);
 
         // Mobile menu toggle
         document.getElementById('mobile-menu-button').addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('open');
+        });
+
+        // Initialize Feather Icons after DOM content is loaded and after dynamic content is added
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData(); // This will call createNavigationLinks which includes feather.replace()
+            if (currentUser) {
+                await fetchClassLevels();
+                await fetchSubjects();
+                await fetchStudentsForFilter(); // Fetch students for the new filter
+                await loadResults();
+            }
         });
     </script>
 </body>

@@ -245,6 +245,16 @@
         </div>
         
         <div id="studentFields" class="hidden">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="first_name">First Name (Optional)</label>
+              <input type="text" id="first_name" name="first_name">
+            </div>
+            <div class="form-group">
+              <label for="last_name">Last Name (Optional)</label>
+              <input type="text" id="last_name" name="last_name">
+            </div>
+          </div>
           <div class="form-group">
             <label for="admission_number">Admission Number *</label>
             <input type="text" id="admission_number" name="admission_number" placeholder="SNA/YY/001 (e.g. SNA/23/001)">
@@ -252,12 +262,21 @@
           </div>
           <div class="form-group">
             <label for="class_level_id">Class Level *</label>
-            <select id="class_level_id" name="class_level_id" required>
+            <select id="class_level_id" name="class_level_id" required onchange="toggleDepartmentField()">
               <option value="">Loading Class Levels...</option>
               <!-- Class levels will be dynamically loaded here -->
             </select>
             <span id="classLevelError" class="error-message hidden"></span>
             <span id="classLevelStatusMessage"></span> <!-- New element for status -->
+          </div>
+          <div class="form-group" id="departmentGroup" style="display: none;">
+            <label for="department">Department (Optional)</label>
+            <select id="department" name="department">
+              <option value="">Select Department...</option>
+              <option value="Science">Science</option>
+              <option value="Commercial">Commercial</option>
+              <option value="Arts">Arts</option>
+            </select>
           </div>
           <div class="form-group profile-picture-group">
             <label for="profile_picture">Student Profile Picture (Optional)</label>
@@ -292,8 +311,12 @@
   <script>
     let currentUser; // Stores current user data, needed for buildNavigation
     const studentFieldsDiv = document.getElementById('studentFields');
+    const firstNameInput = document.getElementById('first_name');
+    const lastNameInput = document.getElementById('last_name');
     const admissionNumberInput = document.getElementById('admission_number');
     const classLevelSelect = document.getElementById('class_level_id'); // Changed ID to match backend
+    const departmentGroup = document.getElementById('departmentGroup');
+    const departmentSelect = document.getElementById('department');
     const profilePictureInput = document.getElementById('profile_picture');
     const profilePicturePreview = document.getElementById('profile_picture_preview');
     const profilePictureFilename = document.getElementById('profile_picture_filename');
@@ -311,8 +334,14 @@
       const isStudent = role === 'student';
       studentFieldsDiv.classList.toggle('hidden', !isStudent);
       
+      // First Name and Last Name are always optional
+      firstNameInput.required = false;
+      lastNameInput.required = false;
+
       admissionNumberInput.required = isStudent;
       classLevelSelect.required = isStudent;
+      // Department is optional and conditionally shown later
+
       // Note: profile_picture is optional, so its 'required' state doesn't change
 
       const formTitle = document.getElementById('formTitle');
@@ -320,16 +349,66 @@
       if (isStudent) {
         formTitle.textContent = 'Register New Student';
         formSubtitle.textContent = 'Enter student details below.';
+        toggleDepartmentField(); // Call to check department visibility on role change
       } else {
         formTitle.textContent = `Register New ${role.charAt(0).toUpperCase() + role.slice(1)}`;
         formSubtitle.textContent = `Enter ${role} details below.`;
         // Clear student-specific fields when not registering a student
+        firstNameInput.value = '';
+        lastNameInput.value = '';
         admissionNumberInput.value = '';
         classLevelSelect.value = ''; // Clear selected value
+        departmentSelect.value = ''; // Clear selected department
+        departmentGroup.style.display = 'none'; // Hide department for non-students
         if(profilePictureInput) profilePictureInput.value = ''; // Clear file input
         profilePicturePreview.classList.add('hidden');
         profilePictureFilename.textContent = '';
       }
+    }
+
+    /**
+     * Toggles the visibility of the department field based on the selected class level.
+     * Only visible for SS1, SS2, SS3 (assuming level_name contains these).
+     */
+    async function toggleDepartmentField() {
+        const selectedClassLevelId = classLevelSelect.value;
+        if (!selectedClassLevelId) {
+            departmentGroup.style.display = 'none';
+            departmentSelect.required = false;
+            return;
+        }
+
+        // Fetch class levels to get the level_name for the selected ID
+        // This assumes populateClassLevels has already loaded them into an accessible structure
+        // Or you can re-fetch just the selected one if performance is not an issue
+        try {
+            const response = await fetch('/api/class-levels', { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error('Failed to fetch class levels for department check.');
+            }
+            const classLevels = await response.json();
+            const selectedClassLevel = classLevels.find(level => level.level_id == selectedClassLevelId);
+
+            if (selectedClassLevel) {
+                const levelName = selectedClassLevel.level_name.toLowerCase();
+                // Check if the class level is SS1, SS2, or SS3
+                if (levelName.includes('ss1') || levelName.includes('ss2') || levelName.includes('ss3')) {
+                    departmentGroup.style.display = 'block';
+                    departmentSelect.required = false; // Department remains optional
+                } else {
+                    departmentGroup.style.display = 'none';
+                    departmentSelect.required = false;
+                    departmentSelect.value = ''; // Clear department if not applicable
+                }
+            } else {
+                departmentGroup.style.display = 'none';
+                departmentSelect.required = false;
+            }
+        } catch (error) {
+            console.error("Error checking class level for department:", error);
+            departmentGroup.style.display = 'none'; // Hide on error
+            departmentSelect.required = false;
+        }
     }
 
     /**
@@ -346,7 +425,6 @@
       
       const width = strength * 25; // Each criterion adds 25% width
       strengthBar.style.width = `${width}%`;
-      
       if (strength <= 1) strengthBar.style.background = '#e74c3c'; // Weak (red)
       else if (strength === 2) strengthBar.style.background = '#f39c12'; // Medium (orange)
       else if (strength === 3) strengthBar.style.background = '#f1c40f'; // Good (yellow)
@@ -357,41 +435,39 @@
      * Handles previewing the selected profile picture.
      */
     profilePictureInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        pictureError.classList.add('hidden');
-        pictureError.textContent = '';
-
-        if (file) {
-            // Validate file size (5MB limit)
-            if (file.size > 5 * 1024 * 1024) {
-                pictureError.textContent = 'File is too large. Maximum 5MB allowed.';
-                pictureError.classList.remove('hidden');
-                profilePicturePreview.classList.add('hidden');
-                profilePictureFilename.textContent = '';
-                this.value = ''; // Clear the input
-                return;
-            }
-            // Validate file type
-            if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-                pictureError.textContent = 'Invalid file type. Only JPG, PNG, GIF allowed.';
-                pictureError.classList.remove('hidden');
-                profilePicturePreview.classList.add('hidden');
-                this.value = ''; // Clear the input
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                profilePicturePreview.src = e.target.result;
-                profilePicturePreview.classList.remove('hidden');
-            }
-            reader.readAsDataURL(file);
-            profilePictureFilename.textContent = file.name;
-        } else {
-            profilePicturePreview.removeAttribute('src'); // Clear src
-            profilePicturePreview.classList.add('hidden');
-            profilePictureFilename.textContent = '';
+      const file = event.target.files[0];
+      pictureError.classList.add('hidden');
+      pictureError.textContent = '';
+      if (file) {
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+          pictureError.textContent = 'File is too large. Maximum 5MB allowed.';
+          pictureError.classList.remove('hidden');
+          profilePicturePreview.classList.add('hidden');
+          profilePictureFilename.textContent = '';
+          this.value = ''; // Clear the input
+          return;
         }
+        // Validate file type
+        if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+          pictureError.textContent = 'Invalid file type. Only JPG, PNG, GIF allowed.';
+          pictureError.classList.remove('hidden');
+          profilePicturePreview.classList.add('hidden');
+          this.value = ''; // Clear the input
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          profilePicturePreview.src = e.target.result;
+          profilePicturePreview.classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+        profilePictureFilename.textContent = file.name;
+      } else {
+        profilePicturePreview.removeAttribute('src'); // Clear src
+        profilePicturePreview.classList.add('hidden');
+        profilePictureFilename.textContent = '';
+      }
     });
 
     /**
@@ -399,28 +475,28 @@
      * @param {string} message - The success message to display.
      */
     function showGlobalSuccessMessage(message) {
-        let successModal = document.getElementById('globalSuccessModal');
-        if (!successModal) {
-            successModal = document.createElement('div');
-            successModal.id = 'globalSuccessModal';
-            successModal.className = 'success-message-modal';
-            successModal.innerHTML = `
-                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" stroke="#fff" stroke-width="2"/>
-                    <path class="checkmark-check" fill="none" stroke="#fff" stroke-width="2" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                </svg>
-                <span id="globalSuccessText"></span>`;
-            document.body.appendChild(successModal);
+      let successModal = document.getElementById('globalSuccessModal');
+      if (!successModal) {
+        successModal = document.createElement('div');
+        successModal.id = 'globalSuccessModal';
+        successModal.className = 'success-message-modal';
+        successModal.innerHTML = `
+          <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" stroke="#fff" stroke-width="2"/>
+            <path class="checkmark-check" fill="none" stroke="#fff" stroke-width="2" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+          <span id="globalSuccessText"></span>`;
+        document.body.appendChild(successModal);
+      }
+      document.getElementById('globalSuccessText').textContent = message;
+      successModal.classList.add('show');
+      setTimeout(() => {
+        successModal.classList.remove('show');
+        // Remove the modal from DOM after it's hidden to clean up
+        if (successModal.parentNode) {
+          successModal.parentNode.removeChild(successModal);
         }
-        document.getElementById('globalSuccessText').textContent = message;
-        successModal.classList.add('show');
-        setTimeout(() => {
-            successModal.classList.remove('show');
-            // Remove the modal from DOM after it's hidden to clean up
-            if (successModal.parentNode) {
-                successModal.parentNode.removeChild(successModal);
-            }
-        }, 4000); // Hide after 4 seconds
+      }, 4000); // Hide after 4 seconds
     }
 
     /**
@@ -429,283 +505,251 @@
      * @param {object} user - The current authenticated user object.
      */
     function buildNavigation(user) {
-        const navLinksContainer = document.getElementById('navLinksContainer');
-        // Clear existing links to avoid duplicates on re-render if any
-        navLinksContainer.innerHTML = '';
+      const navLinksContainer = document.getElementById('navLinksContainer');
+      // Clear existing links to avoid duplicates on re-render if any
+      navLinksContainer.innerHTML = '';
 
-        // Define all possible links
-        const links = [
-            { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'] },
-            { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'] },
-            { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'] },
-            { text: 'Register User', href: '/registration.html', roles: ['admin'] },
-            { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'] },
-            { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'] },
-            { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'] },
-            { text: 'Admin Reports', href: '/admin-reports.html', roles: ['admin'] }
-        ];
+      // Define all possible links
+      const links = [
+        { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'] },
+        { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'] },
+        { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'] },
+        { text: 'Register User', href: '/registration.html', roles: ['admin'] },
+        { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'] },
+        { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'] },
+        { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'] },
+        { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin', 'teacher'] },
+        { text: 'Exam Results', href: '/results.html', roles: ['student', 'teacher', 'admin'] },
+      ];
 
-        links.forEach(link => {
-            // Check if the user has the required role OR is an admin if the link is for an admin-specific role
-            const isAuthorized = link.roles.includes(user.role) || (link.roles.includes('admin') && user.is_admin);
-
-            if (isAuthorized) {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = link.href;
-                a.textContent = link.text;
-                li.appendChild(a);
-                navLinksContainer.appendChild(li);
-            }
+      links.forEach(link => {
+        const shouldDisplay = link.roles.some(role => {
+          if (role === 'admin') return user.is_admin;
+          return user.role === role;
         });
 
-        // Add logout button
-        const logoutLi = document.createElement('li');
-        const logoutBtn = document.createElement('button');
-        logoutBtn.textContent = 'Logout';
-        logoutBtn.className = 'btn'; // Apply a class for styling
-        logoutBtn.onclick = async () => {
-            try {
-                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                if (response.ok) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = '/login.html';
-                } else {
-                    const errorMsg = ((await response.json().catch(()=>({}))).error || 'Please try again.');
-                    console.error('Logout failed:', errorMsg);
-                    alert('Logout failed: ' + errorMsg); // Fallback alert
-                }
-            } catch (error) {
-                console.error('Logout error:', error);
-                alert('Logout failed due to a network error.'); // Fallback alert
-            }
-        };
-        logoutLi.appendChild(logoutBtn);
-        navLinksContainer.appendChild(logoutLi);
+        if (shouldDisplay) {
+          const listItem = document.createElement('li');
+          const anchor = document.createElement('a');
+          anchor.href = link.href;
+          anchor.textContent = link.text;
+          anchor.classList.add('nav-link');
+          if (window.location.pathname === link.href) {
+            anchor.classList.add('active');
+          }
+          listItem.appendChild(anchor);
+          navLinksContainer.appendChild(listItem);
+        }
+      });
+
+      // Add logout link
+      const logoutListItem = document.createElement('li');
+      const logoutLink = document.createElement('a');
+      logoutLink.href = '#'; // Prevent actual navigation
+      logoutLink.textContent = 'Logout';
+      logoutLink.classList.add('nav-link');
+      logoutLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
+        } catch (error) {
+          console.error('Logout failed:', error);
+        } finally {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '/login.html';
+        }
+      });
+      logoutListItem.appendChild(logoutLink);
+      navLinksContainer.appendChild(logoutListItem);
     }
 
-
     /**
-     * Fetches authenticated user data and builds navigation.
-     * This function is also used by other pages like dashboard to get user info.
+     * Fetches current user data from the backend.
+     * Used for authentication and to determine navigation links.
      */
-    async function fetchUserDataAndBuildNav() {
-        try {
-            const response = await fetch('/api/users/me', {credentials: 'include'});
-            if (!response.ok) {
-                 // If not authorized or any other error, redirect to login
-                 window.location.href = '/login.html';
-                 return;
-            }
-            currentUser = await response.json();
-            // Call the now-local buildNavigation function
-            buildNavigation(currentUser);
-            // Check if admin, otherwise redirect
-            if (!currentUser.is_admin) {
-                document.querySelector('main').innerHTML = '<h1>Access Denied</h1><p>You do not have administrative privileges to access this page.</p>';
-            }
-        } catch(e) {
-            console.error("Error fetching user data or building navigation:", e);
-            // On network error or other client-side issue, default to Login link
-            const navLinksContainer = document.getElementById('navLinksContainer');
-            navLinksContainer.innerHTML = '<li><a href="/login.html">Login</a></li>';
-            document.querySelector('main').innerHTML = '<h1 style="color:red;">Error: Failed to load page content. Please try again.</h1>';
+    async function loadUserData() {
+      try {
+        const response = await fetch('/api/users/me', { credentials: 'include' });
+        if (!response.ok) {
+          // If not authenticated, redirect to login
+          window.location.href = '/login.html';
+          return null;
         }
+        currentUser = await response.json();
+        buildNavigation(currentUser); // Build navigation based on fetched user data
+        return currentUser;
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        window.location.href = '/login.html'; // Redirect on network error
+        return null;
+      }
     }
 
     /**
      * Fetches class levels from the backend and populates the dropdown.
-     * Sets classLevelsLoaded flag to true on success.
      */
     async function populateClassLevels() {
-        classLevelStatusMessage.textContent = 'Loading class levels...';
-        classLevelStatusMessage.classList.add('loading');
-        classLevelSelect.disabled = true; // Disable until loaded
+      classLevelStatusMessage.textContent = 'Loading class levels...';
+      classLevelStatusMessage.className = 'classLevelStatusMessage loading';
+      classLevelSelect.innerHTML = '<option value="">Loading Class Levels...</option>'; // Keep loading message
 
-        try {
-            const response = await fetch('/api/class-levels', { credentials: 'include' });
-            if (!response.ok) {
-                throw new Error('Failed to fetch class levels.');
-            }
-            const classLevels = await response.json();
-            // Clear current options and add default
-            classLevelSelect.innerHTML = '<option value="">Select Class Level...</option>'; 
-            if (classLevels.length === 0) {
-                classLevelStatusMessage.textContent = 'No class levels found. Please add them in "Manage Class Levels".';
-                classLevelStatusMessage.classList.remove('loading');
-                classLevelStatusMessage.classList.add('error');
-                classLevelsLoaded = false;
-            } else {
-                classLevels.forEach(level => {
-                    const option = document.createElement('option');
-                    option.value = level.level_id; // IMPORTANT: Use level_id for backend
-                    option.textContent = level.level_name;
-                    classLevelSelect.appendChild(option);
-                });
-                classLevelsLoaded = true;
-                classLevelStatusMessage.classList.remove('loading', 'error');
-                classLevelStatusMessage.textContent = ''; // Clear status on successful load
-            }
-        } catch (error) {
-            console.error("Error populating class levels:", error);
-            displayError(classLevelError, "Failed to load class levels. Please ensure class levels are configured.");
-            classLevelStatusMessage.textContent = 'Failed to load class levels.';
-            classLevelStatusMessage.classList.remove('loading');
-            classLevelStatusMessage.classList.add('error');
-            classLevelsLoaded = false;
-        } finally {
-            classLevelSelect.disabled = false; // Re-enable select whether success or failure
+      try {
+        const response = await fetch('/api/class-levels', { credentials: 'include' });
+        if (!response.ok) {
+          throw new Error('Failed to fetch class levels.');
         }
+        const classLevels = await response.json();
+        classLevelSelect.innerHTML = '<option value="">Select Class Level...</option>'; // Default option
+        classLevels.forEach(level => {
+          const option = document.createElement('option');
+          option.value = level.level_id;
+          option.textContent = level.level_name;
+          classLevelSelect.appendChild(option);
+        });
+        classLevelsLoaded = true;
+        classLevelStatusMessage.classList.add('hidden'); // Hide status message on success
+      } catch (error) {
+        console.error("Error populating class levels:", error);
+        classLevelStatusMessage.textContent = "Failed to load class levels. Please ensure class levels are configured.";
+        classLevelStatusMessage.className = 'classLevelStatusMessage error';
+        classLevelSelect.innerHTML = '<option value="">Error loading levels</option>'; // Indicate error
+      }
     }
 
-    // --- Main DOMContentLoaded Listener ---
+    /**
+     * Displays an error message in a specific span.
+     * @param {HTMLElement} element - The span element to display the error.
+     * @param {string} message - The error message.
+     */
+    function displayError(element, message) {
+      element.textContent = message;
+      element.classList.remove('hidden');
+    }
+
+    /**
+     * Hides an error message in a specific span.
+     * @param {HTMLElement} element - The span element to hide the error.
+     */
+    function hideError(element) {
+      element.classList.add('hidden');
+      element.textContent = '';
+    }
+
+    // --- Event Listeners ---
     document.addEventListener('DOMContentLoaded', async () => {
-      // Initialize toggling of student fields
-      toggleStudentFields();
-      
-      // Load user data and build navigation (also checks admin access)
-      await fetchUserDataAndBuildNav();
-
-      // Populate class levels dropdown only after user data and nav are handled
-      // and it's confirmed this user is an admin who needs to register students.
-      if (currentUser && currentUser.is_admin) {
-        // Await populateClassLevels to ensure dropdown is ready before form submission
-        await populateClassLevels(); 
+      await loadUserData(); // Load user data and build navigation first
+      if (currentUser && currentUser.is_admin) { // Only admins can register users
+        await populateClassLevels();
+        toggleStudentFields(); // Initialize fields based on default role (teacher)
+      } else {
+        // Redirect non-admins
+        window.location.href = '/dashboard.html';
       }
-
-      const form = document.getElementById('registrationForm');
-      const emailError = document.getElementById('emailError');
-      const admissionError = document.getElementById('admissionError');
-      const classLevelError = document.getElementById('classLevelError');
-      const passwordInput = document.getElementById('password');
-      const passwordConfirmInput = document.getElementById('password_confirm');
-      const passwordConfirmError = document.getElementById('passwordConfirmError');
-      const roleSelect = document.getElementById('role'); // Get role select element
-
-      // Helper functions for error display
-      function clearErrors() {
-          globalFormError.classList.add('hidden'); globalFormError.textContent = '';
-          emailError.classList.add('hidden'); emailError.textContent = '';
-          admissionError.classList.add('hidden'); admissionError.textContent = '';
-          classLevelError.classList.add('hidden'); classLevelError.textContent = '';
-          pictureError.classList.add('hidden'); pictureError.textContent = '';
-          passwordConfirmError.classList.add('hidden'); passwordConfirmError.textContent = '';
-          classLevelSelect.style.border = ''; // Clear border from class level select
-      }
-      function displayError(element, message) {
-          element.textContent = message;
-          element.classList.remove('hidden');
-      }
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        clearErrors();
-
-        // Client-side validation
-        if (passwordInput.value !== passwordConfirmInput.value) {
-            displayError(passwordConfirmError, "Passwords do not match.");
-            return;
-        }
-        if (passwordInput.value.length < 8 || !(/[A-Z]/.test(passwordInput.value)) || !(/[0-9]/.test(passwordInput.value)) || !(/[^A-Za-z0-9]/.test(passwordInput.value))) {
-            displayError(globalFormError, "Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one symbol.");
-            return;
-        }
-
-        const formData = new FormData(form);
-        const role = roleSelect.value; // Get the selected role
-
-        // Conditional validation and formData manipulation for students
-        if (role === 'student') {
-            if (!admissionNumberInput.value.trim()) { displayError(admissionError, 'Admission number required.'); return; }
-            const admissionRegex = /^SNA\/\d{2}\/\d{3}$/i; 
-            if (!admissionRegex.test(admissionNumberInput.value.trim())) {
-                displayError(admissionError, 'Invalid admission number format. Use SNA/YY/001 (e.g. SNA/23/001)'); return;
-            }
-            
-            // --- START of added logging and final check ---
-            console.log('--- Submitting Student Form ---');
-            console.log('classLevelSelect.value (raw):', classLevelSelect.value);
-            console.log('classLevelsLoaded:', classLevelsLoaded);
-
-            // Explicitly check classLevelSelect.value for an empty string
-            if (classLevelSelect.value === "") { 
-                console.error('Validation Error: Class level is empty at submission.');
-                displayError(classLevelError, 'Class level is required for students. Please select one.'); 
-                // Add a visual highlight for the dropdown to draw attention
-                classLevelSelect.style.border = '2px solid var(--danger-red)';
-                classLevelSelect.focus();
-                setTimeout(() => classLevelSelect.style.border = '', 2000); // Remove highlight after 2s
-                return;
-            }
-            // If class levels haven't loaded and the value is still empty, show an error.
-            if (!classLevelsLoaded && classLevelSelect.value === "") { 
-                 console.error('Validation Error: Class levels not loaded and value is empty.');
-                 displayError(classLevelError, "Class levels are not loaded. Please try refreshing the page or contact support.");
-                 return;
-            }
-            // Additional check for invalid numeric value (e.g., if option.value was corrupted)
-            const parsedClassLevelId = parseInt(classLevelSelect.value);
-            console.log('classLevelSelect.value (parsed int):', parsedClassLevelId);
-
-            if (classLevelSelect.value !== "" && isNaN(parsedClassLevelId)) {
-                console.error('Validation Error: Class level is not a valid number.');
-                displayError(classLevelError, 'Invalid class level selected. Please choose a valid class level from the list.');
-                classLevelSelect.style.border = '2px solid var(--danger-red)';
-                classLevelSelect.focus();
-                setTimeout(() => classLevelSelect.style.border = '', 2000);
-                return;
-            }
-            // --- END of added logging and final check ---
-
-        } else {
-            // For non-student roles, remove student-specific fields from formData
-            formData.delete('admission_number'); 
-            formData.delete('class_level_id'); 
-            formData.delete('dob');
-            formData.delete('gender');
-            formData.delete('profile_picture'); // Also remove profile picture if not a student
-        }
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true; submitButton.textContent = 'Creating Account...';
-
-        try {
-          const response = await fetch('/api/users/register', { method: 'POST', body: formData, credentials: 'include' });
-          const responseData = await response.json();
-
-          if (response.ok) {
-            form.reset(); // Clear all form fields
-            toggleStudentFields(); // Reset student fields visibility and requirements
-            checkPasswordStrength(''); // Reset password strength indicator
-            // Clear profile picture preview
-            if(profilePicturePreview) { profilePicturePreview.removeAttribute('src'); profilePicturePreview.classList.add('hidden');}
-            if(profilePictureFilename) profilePictureFilename.textContent = '';
-
-            showGlobalSuccessMessage(`${role.charAt(0).toUpperCase() + role.slice(1)} account created successfully!`);
-          } else {
-            const errField = responseData.field; // Assuming backend sends a 'field' for specific errors
-            const errMsg = responseData.error || 'Registration failed.';
-            if (errField === 'email') displayError(emailError, errMsg);
-            else if (errField === 'admission_number') displayError(admissionError, errMsg);
-            else if (errField === 'class_level_id') displayError(classLevelError, errMsg); // Adjusted for class_level_id
-            else if (errField === 'profile_picture') displayError(pictureError, errMsg);
-            else { 
-                globalFormError.textContent = errMsg; 
-                globalFormError.classList.remove('hidden');
-            }
-          }
-        } catch (error) {
-          console.error("Registration fetch error:", error);
-          globalFormError.textContent = 'A network error occurred. Please try again.'; 
-          globalFormError.classList.remove('hidden');
-        } finally {
-            submitButton.disabled = false; 
-            submitButton.textContent = 'Create Account';
-        }
-      });
     });
-    // Removed <script src="/js/xxx.js"><script> as buildNavigation is now inline
+
+    // Form submission handler
+    document.getElementById('registrationForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      hideError(globalFormError);
+      hideError(document.getElementById('emailError'));
+      hideError(document.getElementById('admissionError'));
+      hideError(document.getElementById('classLevelError'));
+      hideError(document.getElementById('passwordConfirmError'));
+      hideError(document.getElementById('pictureError'));
+
+
+      const submitButton = event.submitter;
+      submitButton.disabled = true;
+      submitButton.textContent = 'Creating Account...';
+
+      const password = document.getElementById('password').value;
+      const passwordConfirm = document.getElementById('password_confirm').value;
+      if (password !== passwordConfirm) {
+        displayError(document.getElementById('passwordConfirmError'), 'Passwords do not match.');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Create Account';
+        return;
+      }
+
+      const formData = new FormData(event.target);
+      const role = formData.get('role');
+      const classLevelId = formData.get('class_level_id');
+      const admissionNumber = formData.get('admission_number');
+      const profilePicture = formData.get('profile_picture');
+
+      // Client-side validation for student fields if role is student
+      if (role === 'student') {
+        if (!admissionNumber) {
+          displayError(document.getElementById('admissionError'), 'Admission number is required for students.');
+          submitButton.disabled = false;
+          submitButton.textContent = 'Create Account';
+          return;
+        }
+        if (!classLevelId) {
+          displayError(document.getElementById('classLevelError'), 'Class level is required for students.');
+          submitButton.disabled = false;
+          submitButton.textContent = 'Create Account';
+          return;
+        }
+        // If profile picture is selected, ensure it's valid (size/type checked by change listener)
+        if (profilePicture && profilePicture.size === 0) { // Check if file input is empty
+             formData.delete('profile_picture'); // Remove if no file was actually selected
+        }
+      } else {
+        // For non-students, remove student-specific fields from formData
+        formData.delete('admission_number');
+        formData.delete('class_level_id');
+        formData.delete('profile_picture');
+        formData.delete('dob');
+        formData.delete('gender');
+        formData.delete('first_name');
+        formData.delete('last_name');
+        formData.delete('department'); // Ensure department is removed for non-students
+      }
+
+      try {
+        const response = await fetch('/api/users/register', {
+          method: 'POST',
+          body: formData, // FormData automatically sets Content-Type to multipart/form-data
+          credentials: 'include'
+        });
+
+        const responseData = await response.json();
+
+        if (response.ok) {
+          showGlobalSuccessMessage(`${role.charAt(0).toUpperCase() + role.slice(1)} account created successfully!`);
+          // Clear form fields after successful registration
+          document.getElementById('registrationForm').reset();
+          toggleStudentFields(); // Reset visibility based on default role
+          profilePicturePreview.classList.add('hidden');
+          profilePictureFilename.textContent = '';
+        } else {
+          const errField = responseData.field; // Assuming backend sends a 'field' for specific errors
+          const errMsg = responseData.error || 'Registration failed.';
+          if (errField === 'email') displayError(document.getElementById('emailError'), errMsg);
+          else if (errField === 'username') displayError(document.getElementById('usernameError'), errMsg); // Add usernameError span if needed
+          else if (errField === 'admission_number') displayError(document.getElementById('admissionError'), errMsg);
+          else if (errField === 'class_level_id') displayError(document.getElementById('classLevelError'), errMsg);
+          else if (errField === 'profile_picture') displayError(document.getElementById('pictureError'), errMsg);
+          else { 
+              globalFormError.textContent = errMsg; 
+              globalFormError.classList.remove('hidden');
+          }
+        }
+      } catch (error) {
+        console.error("Registration fetch error:", error);
+        globalFormError.textContent = 'A network error occurred. Please try again.'; 
+        globalFormError.classList.remove('hidden');
+      } finally {
+          submitButton.disabled = false; 
+          submitButton.textContent = 'Create Account';
+      }
+    });
+
+    // Initial call to set up fields correctly
+    // This is now called after loadUserData and populateClassLevels in DOMContentLoaded
   </script>
 </body>
 </html>

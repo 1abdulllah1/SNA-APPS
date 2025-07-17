@@ -5,17 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Progress Report | SNA CBT System</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Link to your main stylesheet -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Base styles from styles.css are assumed */
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; }
-        main { max-width: 1000px; margin: 30px auto; padding: 20px; }
-
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7ff;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+            width: 100%;
+        }
 
         /* Professional Navbar Styling */
         header {
-            background-color: #1a237e; /* Deep blue, primary color */
+            background-color: #1a237e;
             padding: 1rem 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
             font-family: 'Inter', sans-serif;
@@ -27,455 +41,510 @@
             align-items: center;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 1.5rem;
         }
 
-        nav .logo {
-            color: #e8eaf6; /* Light grey-blue for contrast */
+        .nav-brand {
+            color: #ffffff;
             font-size: 1.8rem;
             font-weight: 700;
             text-decoration: none;
-            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
-        nav .logo:hover {
-            color: #ffffff;
+        .nav-brand i {
+            font-size: 1.5rem;
         }
 
         .nav-links {
-            list-style: none;
-            margin: 0;
-            padding: 0;
             display: flex;
-            gap: 25px; /* Spacing between links */
+            gap: 1.5rem;
         }
 
-        .nav-links li {
-            position: relative;
-        }
-
-        .nav-links .nav-link {
-            color: #c5cae9; /* Lighter blue for links */
-            text-decoration: none;
-            font-size: 1.05rem;
-            font-weight: 500;
-            padding: 8px 0;
-            transition: color 0.3s ease, transform 0.2s ease;
-            position: relative;
-            white-space: nowrap; /* Prevent wrapping for nav items */
-        }
-
-        .nav-links .nav-link::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 0;
-            height: 2px;
-            background-color: #ffffff; /* Underline color */
-            transition: width 0.3s ease;
-        }
-
-        .nav-links .nav-link:hover {
+        .nav-links a {
             color: #ffffff;
-            transform: translateY(-2px);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
         }
 
-        .nav-links .nav-link:hover::after,
-        .nav-links .nav-link.active::after {
-            width: 100%;
+        .nav-links a:hover {
+            background-color: #3f51b5;
         }
 
-        /* Responsive Navbar (for smaller screens) */
-        @media (max-width: 768px) {
-            nav {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .nav-links {
-                flex-direction: column;
-                width: 100%;
-                gap: 5px;
-                margin-top: 15px;
-            }
-            .nav-links .nav-link {
-                padding: 10px 15px;
-                width: calc(100% - 30px); /* Adjust for padding */
-                border-radius: 6px;
-            }
-            .nav-links .nav-link:hover::after,
-            .nav-links .nav-link.active::after {
-                width: 0; /* Hide underline on small screens */
-            }
-            .nav-links .nav-link:hover {
-                 background-color: rgba(255, 255, 255, 0.1);
-                 transform: none;
-            }
+        .mobile-menu-button {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            background-color: #1a237e;
+            padding: 1rem;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-menu.open {
+            display: flex;
+        }
+
+        .mobile-menu a {
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            border-bottom: 1px solid #3f51b5;
+        }
+
+        .mobile-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-menu a:hover {
+            background-color: #3f51b5;
         }
 
 
-        /* Report Card Container Professional Enhancements */
-        .report-card-container {
-            font-family: 'Roboto', sans-serif;
+        /* Report Card Container */
+        .report-card {
             background-color: #ffffff;
-            border-radius: 12px; /* Softer corners */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Deeper shadow */
-            padding: 30px 40px; /* Increased padding */
-            line-height: 1.6;
-            color: #34495e; /* Darker text for readability */
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            margin: 30px auto;
+            border: 1px solid #e0e0e0;
+            position: relative;
         }
 
-        .report-header {
-            border-bottom: 5px solid #283593; /* Darker, richer blue border */
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+        .school-header {
             text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #1a237e;
         }
-
-        .school-logo {
-            max-width: 100px; /* Slightly larger logo */
-            height: auto;
-            border-radius: 8px; /* Slightly rounded logo */
-        }
-
-        .school-name {
-            font-size: 2.2rem; /* Larger school name */
-            color: #1a237e; /* Primary school color */
-            margin-bottom: 8px;
-        }
-
-        .school-address {
-            font-size: 0.95rem;
-            color: #546e7a; /* Muted grey for address */
-        }
-
-        .report-title {
-            font-size: 2.0rem;
+        .school-header h1 {
             color: #1a237e;
-            margin-top: 30px;
-            margin-bottom: 15px;
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+        }
+        .school-header p {
+            font-size: 1.1rem;
+            color: #555;
+            margin: 3px 0;
+        }
+        .school-header .contact-info {
+            font-size: 0.95rem;
+            color: #777;
+            margin-top: 10px;
+        }
+        .school-logo {
+            max-width: 150px; /* Adjust size as needed */
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .report-title-section {
             text-align: center;
+            margin-bottom: 30px;
+        }
+        .report-title-section h2 {
+            font-size: 2.2rem;
+            color: #1a237e;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .report-title-section p {
+            font-size: 1.1rem;
+            color: #555;
+            margin: 5px 0;
         }
 
-        .section-title {
-            font-size: 1.5rem; /* Larger section titles */
-            color: #283593;
+
+        .section-card {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+        }
+
+        .section-card h2 {
+            color: #1a237e;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
             border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 8px;
-            margin-bottom: 20px;
-            margin-top: 2rem;
+            padding-bottom: 10px;
         }
 
-        .info-item strong {
-            color: #283593; /* Consistent blue for labels */
-        }
-        .info-item p {
-            font-size: 1.05rem;
-            margin: 7px 0;
-        }
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
+            align-items: center;
         }
 
-        /* Table Styling */
-        .scores-table, .summary-table {
+        .info-item p {
+            margin: 5px 0;
+            font-size: 1rem;
+        }
+
+        .info-item strong {
+            color: #333;
+        }
+
+        .profile-picture {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1a237e;
+            margin: 0 auto 15px auto;
+            display: block;
+        }
+
+        .subject-results table {
             width: 100%;
             border-collapse: collapse;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow: hidden; /* Ensures rounded corners on tables */
-            font-size: 0.9rem;
+            margin-top: 20px;
         }
 
-        .scores-table th {
-            background-color: #e8eaf6; /* Light blue header */
-            color: #283593;
-            padding: 12px 15px;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-align: left;
-        }
-
-        .scores-table td {
-            padding: 10px 15px;
-            color: #455a64;
-            text-align: left;
-        }
-
-        .scores-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        .summary-table td {
-             padding: 12px 15px;
-             font-weight: 500;
-        }
-        .summary-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-
-
-        /* Comments section */
-        .comments-section textarea {
-            width: 100%;
-            border: 1px solid #c5cae9; /* Light blue border */
-            border-radius: 6px;
+        .subject-results th, .subject-results td {
+            border: 1px solid #ddd;
             padding: 12px;
+            text-align: left;
+        }
+
+        .subject-results th {
+            background-color: #1a237e;
+            color: white;
+            font-weight: 600;
+        }
+
+        .subject-results tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .subject-results tr:hover {
+            background-color: #e9e9e9;
+        }
+
+        .overall-performance .summary-item {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .overall-performance .summary-item strong {
+            color: #1a237e;
+        }
+
+        .comments-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a237e;
+        }
+        .comments-section textarea, .comments-section input[type="date"], .comments-section input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            min-height: 100px;
+            font-family: 'Inter', sans-serif;
             font-size: 1rem;
-            color: #34495e;
-            background-color: #fcfdff; /* Slightly off-white background */
             resize: vertical;
+            transition: border-color 0.3s;
         }
-        .comments-section textarea:disabled {
-            background-color: #eceff1; /* Disabled background */
-            cursor: not-allowed;
+        .comments-section input[type="date"], .comments-section input[type="text"] {
+            min-height: auto;
+            height: 45px; /* Adjust height for date input */
         }
-
-        /* Next Term Begins input styling */
-        .next-term-input {
-            width: auto; /* Allow it to size based on content */
-            padding: 8px 12px;
-            border: 1px solid #c5cae9;
-            border-radius: 6px;
-            font-size: 1rem;
-            color: #34495e;
-            background-color: #fcfdff;
-        }
-        .next-term-input:disabled {
-            background-color: #eceff1;
-            cursor: not-allowed;
+        .comments-section textarea:focus, .comments-section input[type="date"]:focus, .comments-section input[type="text"]:focus {
+            border-color: #1a237e;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.2);
         }
 
+        .assessment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .assessment-table th, .assessment-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .assessment-table th {
+            background-color: #1a237e;
+            color: white;
+            font-weight: 600;
+        }
+        .assessment-table input[type="number"] {
+            width: 70px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
 
-        /* Signature Section */
         .signature-section {
             display: flex;
             justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 30px;
-            border-top: 1px dashed #90a4ae; /* Muted dashed line */
-            padding-top: 30px;
-            margin-top: 50px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
         }
 
-        .signature-item {
-            flex: 1 1 45%; /* Allow items to grow/shrink, minimum 45% width */
+        .signature-box {
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex: 1;
+            padding: 0 15px;
         }
 
-        .signature-line {
-            border-bottom: 2px solid #546e7a; /* Darker signature line */
-            margin-top: 60px; /* More space for signature */
-            font-size: 0.9rem;
-            color: #546e7a;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding-bottom: 5px; /* Space for the line itself */
-            width: 100%; /* Ensure line spans full width of its container */
-        }
-
-        .signature-preview {
+        .signature-box img {
             max-width: 150px;
-            max-height: 80px;
-            border: 1px solid #ccc;
+            height: auto;
+            border-bottom: 1px solid #333;
             margin-bottom: 10px;
-            object-fit: contain;
-            background-color: #f9f9f9;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .signature-upload-area {
+            margin-top: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
-            margin-top: 10px;
+            gap: 10px;
         }
+
         .signature-upload-area input[type="file"] {
+            border: 1px solid #ccc;
+            padding: 8px;
+            border-radius: 5px;
             width: 100%;
             max-width: 200px;
-            border: 1px solid #c5cae9;
-            border-radius: 6px;
-            padding: 5px;
-            font-size: 0.9rem;
-        }
-        .signature-upload-area input[type="file"]:disabled {
-            background-color: #eceff1;
-            cursor: not-allowed;
         }
 
-        /* Action bar buttons */
-        .actions-bar {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #e8eaf6;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .signature-upload-area img {
+            max-width: 100px;
+            height: auto;
+            border: 1px solid #eee;
+            margin-top: 10px;
+            display: none;
         }
-        .actions-bar button {
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
+
+        /* Buttons */
+        .report-actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 28px;
             border: none;
-            cursor: pointer;
-        }
-        .actions-bar button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        .btn-edit { background-color: #ffa000; color: white; } /* Darker yellow */
-        .btn-edit:hover { background-color: #ffb300; }
-        .btn-save { background-color: #388e3c; color: white; } /* Darker green */
-        .btn-save:hover { background-color: #43a047; }
-        .btn-print { background-color: #1976d2; color: white; } /* Darker blue */
-        .btn-print:hover { background-color: #2196f3; }
-
-        /* General Modal Styling (ensure consistency) */
-        .modal {
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-            display: flex; /* Use flexbox for centering */
-            align-items: center; /* Center vertically */
-            justify-content: center; /* Center horizontally */
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 0;
-            border: 1px solid #888;
-            width: 80%; /* Could be responsive */
-            max-width: 500px;
-            border-radius: 10px; /* Rounded corners */
-            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-            overflow: hidden; /* Ensures rounded corners on content */
-        }
-        .modal-header {
-            padding: 15px 20px;
-            background-color: #1a237e; /* Match header color */
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 10px 10px 0 0;
-        }
-        .modal-header h2 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-        .modal-body {
-            padding: 20px;
-            text-align: center;
-        }
-        .modal-footer {
-            padding: 15px 20px;
-            background-color: #f1f1f1;
-            text-align: right;
-            border-top: 1px solid #e0e0e0;
-            border-radius: 0 0 10px 10px;
-        }
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: #ddd;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .profile-picture-display{
-            height: 120px;
-            width: 120px; /* Make it square */
-            border-radius: 50%; /* Make it circular */
-            object-fit: cover;
-            margin: 0 auto 20px; /* Center and add margin below */
-            display: block; /* Ensures margin auto works */
-            border: 3px solid #1a237e; /* Border matching school theme */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .loading-message, .error-message {
-            padding: 15px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: #1a237e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3f51b5;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+            transform: translateY(-2px);
+        }
+
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mt-4 { margin-top: 1rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .p-4 { padding: 1rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .bg-green-100 { background-color: #d4edda; }
+        .text-green-800 { color: #155724; }
+        .bg-red-100 { background-color: #f8d7da; }
+        .text-red-800 { color: #721c24; }
+        .font-bold { font-weight: 700; }
+        .text-xl { font-size: 1.25rem; }
+
+        /* Loader styles */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1a237e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 50px auto;
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
             text-align: center;
-            font-weight: 500;
-        }
-        .loading-message { background-color: #e0f7fa; color: #007bb5; border: 1px solid #00acc1; }
-        .error-message { background-color: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; }
-        .hidden { display: none; }
-
-        /* Media queries for responsiveness */
-        @media (max-width: 600px) {
-            .report-card-container {
-                padding: 20px;
-            }
-            .school-name {
-                font-size: 1.8rem;
-            }
-            .report-title {
-                font-size: 1.5rem;
-            }
-            .section-title {
-                font-size: 1.2rem;
-            }
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-            .actions-bar {
-                flex-direction: column;
-                gap: 10px;
-            }
-            .actions-bar button {
-                width: 100%;
-            }
+            padding: 20px;
+            background-color: #e6e9ed;
+            color: #555;
+            font-size: 0.9rem;
+            border-top: 1px solid #ddd;
         }
 
-        /* Print-specific styles */
+        /* Print Specific Styles */
         @media print {
-            header, .actions-bar, footer, .modal {
-                display: none !important; /* Hide header, action buttons, and footer when printing */
+            body {
+                background-color: #fff;
+                margin: 0;
+                padding: 0;
+            }
+            header, footer, .report-actions, #messageContainer, .loader {
+                display: none !important;
             }
             main {
                 margin: 0;
                 padding: 0;
-                max-width: 100% !important; /* Ensure report takes full width on print */
+                max-width: 100%;
             }
-            .report-card-container {
-                box-shadow: none !important; /* Remove shadow for cleaner print */
-                border: none !important; /* Remove border for cleaner print */
-                padding: 0 !important; /* Remove padding for full content on print */
+            .report-card {
+                box-shadow: none;
+                border: none;
+                margin: 0;
+                padding: 10mm;
+                page-break-after: always;
+                width: auto;
+                height: auto;
+                position: static;
             }
-            body {
-                background-color: #fff !important; /* White background for print */
+            .school-header, .report-title-section, .section-card, .signature-section {
+                margin-bottom: 15px;
+                padding: 5px 0;
             }
-            /* Ensure text colors are dark for readability on print */
-            .school-name, .report-title, .section-title, .info-item strong, .scores-table th {
-                color: #000 !important;
+            .section-card {
+                background-color: #fff;
+                border: none;
             }
-            .scores-table td, .school-address, .comments-section textarea {
+            .subject-results th, .subject-results td {
+                border-color: #888;
+                font-size: 0.85rem;
+            }
+            .subject-results th {
+                background-color: #e0e0e0 !important;
+                -webkit-print-color-adjust: exact;
                 color: #333 !important;
+            }
+            .subject-results tr:nth-child(even) {
+                background-color: #f8f8f8 !important;
+                -webkit-print-color-adjust: exact;
+            }
+            .school-header h1, .report-title-section h2, .section-card h2 {
+                color: #333;
+            }
+            .school-header, .report-title-section, .section-card h2 {
+                border-bottom: 1px solid #bbb;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .profile-picture {
+                border: 1px solid #ccc;
+            }
+            .signature-box img {
+                border: none;
+            }
+            .assessment-table input[type="number"] {
+                -webkit-print-color-adjust: exact;
+                background-color: #f0f0f0 !important;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-button {
+                display: block;
+            }
+
+            .report-card {
+                padding: 20px;
+                margin: 15px;
+            }
+
+            .school-header h1 {
+                font-size: 2rem;
+            }
+
+            .report-title-section h2, .section-card h2 {
+                font-size: 1.5rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .signature-section {
+                flex-direction: column;
+                align-items: center;
+                gap: 30px;
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
             }
         }
     </style>
@@ -483,593 +552,673 @@
 <body>
     <header>
         <nav>
-            <a href="/dashboard.html" class="logo">SNA CBT System</a>
-            <ul class="nav-links" id="navLinks">
-                <!-- Navigation links will be dynamically inserted here by JS -->
-            </ul>
+            <a href="/dashboard.html" class="nav-brand">
+                <!-- Replace this src with your actual Cloudinary logo URL -->
+                <img src="https://res.cloudinary.com/dyphku0jr/image/upload/v1752362783/signatures/yrwnyhnfmdliuhowdyxw.png" alt="School Logo" class="school-logo">
+                SNA CBT System
+            </a>
+            <button class="mobile-menu-button" id="mobile-menu-button" aria-label="Toggle mobile menu">
+                <i class="fas fa-bars"></i> </button>
+            <div class="nav-links" id="main-nav-links">
+                </div>
         </nav>
+        <div class="mobile-menu hidden" id="mobile-menu">
+            </div>
     </header>
 
-    <div class="actions-bar">
-        <button class="btn btn-edit" id="editBtn">Edit Report</button>
-        <button class="btn btn-save hidden" id="saveBtn">Save Report</button>
-        <button class="btn btn-print" onclick="window.print()">Print Report</button>
-    </div>
-
     <main>
-        <div class="report-card-container">
-            <div id="loadingMessage" class="loading-message">Loading report...</div>
-            <div id="errorMessage" class="error-message hidden"></div>
-            <div id="reportContent" class="hidden">
-                <div class="report-header">
-                    <img src="https://res.cloudinary.com/dyphku0jr/image/upload/v1751046319/new_t7avzn.jpg" alt="School Logo" class="school-logo" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dyphku0jr/image/upload/v1751055034/vector-education-logo_779267-2080_i9yfuv.jpg';">
-                    <h1 class="school-name">Sealed Nectar Academy</h1>
-                    <p class="school-address">15, Nasirudeen street, 10/10 Bus-stop, Ota, Ogun state<br>Email| sealednec@gmail.com Tell| 08065257209</p>
+        <div id="messageContainer" class="hidden p-4 mb-4 text-center rounded-lg"></div>
+        <div class="loader" id="loader"></div>
+
+        <div id="reportCardContent" class="report-card hidden">
+            <!-- School Header -->
+            <div class="school-header">
+                <!-- School Logo - Replace src with your Cloudinary URL -->
+                <img src="https://res.cloudinary.com/dyphku0jr/image/upload/v1752362783/signatures/yrwnyhnfmdliuhowdyxw.png" alt="School Logo" class="school-logo">
+                <h1>SEALED NECTAR ACADEMY</h1>
+                <p>15, NASIRUDEEN STREET, OFF CDA ROAD, OFF IKOLA ROAD 10-10, OTA, OGUN STATE</p>
+                <div class="contact-info">
+                    <span>080865257209</span> | <span>sealednec@gmail.com</span>
                 </div>
+            </div>
 
-                <div class="student-profile-pic-container" style="text-align: center; margin-top: 25px;">
-                    <img id="studentProfilePicture" class="profile-picture-display" src="https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg" alt="Student Profile Picture" onerror="this.onerror=null; this.src='https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';">
-                </div>
+            <!-- Report Title Section -->
+            <div class="report-title-section">
+                <h2>REPORT SHEET</h2>
+                <p>SESSION: <span id="academicYearDisplay"></span></p>
+                <p>TERM: <span id="termDisplay"></span></p>
+            </div>
 
-                <h2 class="report-title" id="reportTermSession"></h2>
-
-                <div class="student-info">
-                    <h3 class="section-title">Student Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item"><p><strong>Name:</strong> <span id="studentFullName"></span></p></div>
-                        <div class="info-item"><p><strong>Admission No:</strong> <span id="studentAdmissionNo"></span></p></div>
-                        <div class="info-item"><p><strong>Class:</strong> <span id="studentClass"></span></p></div>
-                        <div class="info-item"><p><strong>Date Generated:</strong> <span id="dateGenerated"></span></p></div>
+            <!-- Student Information Section -->
+            <div class="section-card student-info">
+                <h2>Student Information</h2>
+                <div class="info-grid">
+                    <div class="info-item text-center">
+                        <img id="studentProfilePicture" class="profile-picture" src="https://placehold.co/100x100/aabbcc/ffffff?text=No+Image" alt="Student Profile Picture">
+                        <p><strong>Student Name:</strong> <span id="studentFullName"></span></p>
+                    </div>
+                    <div class="info-item">
+                        <p><strong>Admission No.:</strong> <span id="admissionNumber"></span></p>
+                        <p><strong>Class Level:</strong> <span id="classLevel"></span></p>
+                        <p id="departmentRow" class="hidden"><strong>Department:</strong> <span id="studentDepartment">N/A</span></p>
+                        <p><strong>Date of Birth:</strong> <span id="studentDob"></span></p>
+                        <p><strong>Gender:</strong> <span id="studentGender"></span></p>
                     </div>
                 </div>
+            </div>
 
-                <div class="scores-section">
-                    <h3 class="section-title">Subject Scores</h3>
-                    <table class="scores-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>CA (40%)</th>
-                                <th>Exam (60%)</th>
-                                <th>Final Score</th>
-                                <th>1st Term</th>
-                                <th>2nd Term</th>
-                                <th>3rd Term</th>
-                                <th>Cumulative Avg.</th>
-                                <th>Grade</th>
-                                <th>Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody id="subjectScoresBody">
-                            <!-- Subject scores will be populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="summary-section">
-                    <h3 class="section-title">Overall Summary</h3>
-                    <table class="summary-table">
+            <!-- Subject Performance Section -->
+            <div class="section-card subject-results">
+                <h2>Subject Performance</h2>
+                <table>
+                    <thead>
                         <tr>
-                            <td>Grand Total Score:</td>
-                            <td id="grandTotalScore"></td>
+                            <th>SUBJECT</th>
+                            <th class="text-center">1ST TERM SCORE</th>
+                            <th class="text-center">2ND TERM SCORE</th>
+                            <th class="text-center">3RD TERM SCORE</th>
+                            <th class="text-center">AGGREGATE SCORE</th>
+                            <th class="text-center">PERCENTAGE (%)</th>
+                            <th class="text-center">GRADE</th>
+                            <th class="text-center">REMARK</th>
                         </tr>
+                    </thead>
+                    <tbody id="subjectResultsBody">
+                        <!-- Subject rows will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Psychomotor Assessment -->
+            <div class="section-card psychomotor-assessment">
+                <h2>PSYCHOMOTOR ASSESSMENT</h2>
+                <table class="assessment-table">
+                    <thead>
                         <tr>
-                            <td>Overall Percentage:</td>
-                            <td id="overallPercentage"></td>
+                            <th>ACTIVITY</th>
+                            <th>RATING (1-5)</th>
+                            <th>GRADE</th>
                         </tr>
+                    </thead>
+                    <tbody id="psychomotorBody">
+                        <tr><td>CLUB/SOCIETY ACTIVITY</td><td><input type="number" min="1" max="5" data-assessment-type="psychomotor" data-assessment-key="clubActivity" disabled></td><td><span data-grade-for="clubActivity">N/A</span></td></tr>
+                        <tr><td>GAMES/SPORTS</td><td><input type="number" min="1" max="5" data-assessment-type="psychomotor" data-assessment-key="gamesSports" disabled></td><td><span data-grade-for="gamesSports">N/A</span></td></tr>
+                        <tr><td>INDUSTRY</td><td><input type="number" min="1" max="5" data-assessment-type="psychomotor" data-assessment-key="industry" disabled></td><td><span data-grade-for="industry">N/A</span></td></tr>
+                        <tr><td>CREATIVITY</td><td><input type="number" min="1" max="5" data-assessment-type="psychomotor" data-assessment-key="creativity" disabled></td><td><span data-grade-for="creativity">N/A</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Affective Domain -->
+            <div class="section-card affective-domain">
+                <h2>AFFECTIVE DOMAIN</h2>
+                <table class="assessment-table">
+                    <thead>
                         <tr>
-                            <td>Class Position:</td>
-                            <td id="classPosition"></td>
+                            <th>TRAIT</th>
+                            <th>RATING (1-5)</th>
+                            <th>GRADE</th>
                         </tr>
-                    </table>
-                </div>
+                    </thead>
+                    <tbody id="affectiveBody">
+                        <tr><td>POLITENESS</td><td><input type="number" min="1" max="5" data-assessment-type="affective" data-assessment-key="politeness" disabled></td><td><span data-grade-for="politeness">N/A</span></td></tr>
+                        <tr><td>SELF CONTROL</td><td><input type="number" min="1" max="5" data-assessment-type="affective" data-assessment-key="selfControl" disabled></td><td><span data-grade-for="selfControl">N/A</span></td></tr>
+                        <tr><td>RELIABILITY/HONESTY</td><td><input type="number" min="1" max="5" data-assessment-type="affective" data-assessment-key="reliabilityHonesty" disabled></td><td><span data-grade-for="reliabilityHonesty">N/A</span></td></tr>
+                        <tr><td>COOPERATION</td><td><input type="number" min="1" max="5" data-assessment-type="affective" data-assessment-key="cooperation" disabled></td><td><span data-grade-for="cooperation">N/A</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="comments-section">
-                    <h3 class="section-title">Comments</h3>
-                    <div>
-                        <p><strong>Teacher's Comment:</strong></p>
-                        <textarea id="teacherComment" rows="3" disabled></textarea>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <p><strong>Principal's Comment:</strong></p>
-                        <textarea id="principalComment" rows="3" disabled></textarea>
-                    </div>
-                </div>
+            <!-- Other Assessments -->
+            <div class="section-card other-assessments">
+                <h2>OTHER ASSESSMENTS</h2>
+                <table class="assessment-table">
+                    <thead>
+                        <tr>
+                            <th>ASSESSMENT</th>
+                            <th>RATING (1-5)</th>
+                            <th>GRADE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="otherAssessmentsBody">
+                        <tr><td>ATTENDANCE</td><td><input type="number" min="1" max="5" data-assessment-type="other" data-assessment-key="attendance" disabled></td><td><span data-grade-for="attendance">N/A</span></td></tr>
+                        <tr><td>TAHFIZ</td><td><input type="number" min="1" max="5" data-assessment-type="other" data-assessment-key="tahfiz" disabled></td><td><span data-grade-for="tahfiz">N/A</span></td></tr>
+                        <tr><td>ASSIGNMENT</td><td><input type="number" min="1" max="5" data-assessment-type="other" data-assessment-key="assignment" disabled></td><td><span data-grade-for="assignment">N/A</span></td></tr>
+                        <tr><td>PROJECT WORK</td><td><input type="number" min="1" max="5" data-assessment-type="other" data-assessment-key="projectWork" disabled></td><td><span data-grade-for="projectWork">N/A</span></td></tr>
+                        <tr><td>NEATNESS</td><td><input type="number" min="1" max="5" data-assessment-type="other" data-assessment-key="neatness" disabled></td><td><span data-grade-for="neatness">N/A</span></td></tr>
+                        <tr><td>PUNCTUALITY</td><td><input type="number" min="1" max="5" data-assessment-type="other" data-assessment-key="punctuality" disabled></td><td><span data-grade-for="punctuality">N/A</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="info-item" style="margin-top: 25px;">
-                    <p><strong>Next Term Begins:</strong> <span id="nextTermBeginsDisplay"></span>
-                       <input type="date" id="nextTermBeginsInput" class="next-term-input hidden" disabled>
-                    </p>
-                </div>
 
-                <div class="signature-section">
-                    <div class="signature-item">
-                        <img id="teacherSignaturePreview" class="signature-preview" src="" alt="Teacher Signature" style="display: none;">
-                        <div class="signature-upload-area">
-                            <input type="file" id="teacherSignatureUpload" accept="image/*" disabled>
-                            <label for="teacherSignatureUpload" class="signature-label">Upload Teacher's Signature</label>
-                        </div>
-                        <div class="signature-line">Teacher's Signature</div>
+            <!-- Overall Performance Summary Section -->
+            <div class="section-card overall-performance">
+                <h2>Overall Performance Summary</h2>
+                <div class="info-grid">
+                    <div class="summary-item">
+                        <p><strong>Total Subjects Taken:</strong> <span id="totalSubjectsTaken"></span></p>
+                        <p><strong>Overall Score Obtained:</strong> <span id="overallScoreObtained"></span></p>
+                        <p><strong>Overall Possible Marks:</strong> <span id="overallPossibleMarks"></span></p>
                     </div>
-                    <div class="signature-item">
-                        <img id="principalSignaturePreview" class="signature-preview" src="" alt="Principal Signature" style="display: none;">
-                        <div class="signature-upload-area">
-                            <input type="file" id="principalSignatureUpload" accept="image/*" disabled>
-                            <label for="principalSignatureUpload" class="signature-label">Upload Principal's Signature</label>
-                        </div>
-                        <div class="signature-line">Principal's Signature</div>
+                    <div class="summary-item">
+                        <p><strong>Overall Percentage:</strong> <span id="overallPercentage"></span>%</p>
+                        <p><strong>Overall Grade:</strong> <span id="overallGrade"></span></p>
+                        <p><strong>Overall Remark:</strong> <span id="overallRemark"></span></p>
+                    </div>
+                    <div class="summary-item">
+                        <p><strong>Position:</strong> <span id="studentPosition">N/A</span></p>
+                        <p><strong>Class Teacher:</strong> <input type="text" id="classTeacherName" disabled class="form-control p-2 border rounded-md w-full"></p>
                     </div>
                 </div>
+            </div>
+
+            <!-- Comments and Remarks Section -->
+            <div class="section-card comments-section">
+                <h2>Comments and Remarks</h2>
+                <div class="form-group mb-4">
+                    <label for="teacherComment">Class Teacher's Comment:</label>
+                    <textarea id="teacherComment" rows="3" placeholder="Enter teacher's comment..." disabled></textarea>
+                </div>
+                <!-- Removed Principal Comment Section -->
+                <div class="form-group">
+                    <label for="nextTermBegins">Next Term Begins:</label>
+                    <input type="date" id="nextTermBegins" disabled class="form-control p-2 border rounded-md w-full">
+                </div>
+            </div>
+
+            <!-- Signature Section -->
+            <div class="signature-section">
+                <div class="signature-box">
+                    <img id="teacherSignaturePreview" src="" alt="Teacher Signature" class="hidden">
+                    <div class="signature-upload-area hidden" id="teacherSignatureUploadArea">
+                        <label for="teacherSignatureUpload" class="btn btn-secondary"><i class="fas fa-upload"></i> Upload Teacher Signature</label>
+                        <input type="file" id="teacherSignatureUpload" accept="image/*" class="hidden">
+                        <span id="teacherSignatureStatus" class="text-sm text-gray-600"></span>
+                    </div>
+                    <p>Teacher's Signature</p>
+                </div>
+                <!-- Removed Principal Signature Section -->
+            </div>
+
+            <!-- Report Actions -->
+            <div class="report-actions">
+                <button id="editBtn" class="btn btn-primary hidden"><i class="fas fa-edit"></i> Edit Report</button>
+                <button id="saveBtn" class="btn btn-primary hidden"><i class="fas fa-save"></i> Save Changes</button>
+                <button id="printBtn" class="btn btn-info"><i class="fas fa-print"></i> Print Report</button>
+                <button id="downloadPdfBtn" class="btn btn-info"><i class="fas fa-file-pdf"></i> Download PDF</button>
             </div>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2025 SNA CBT System. All rights reserved.</p>
+        <p>&copy; 2023 SNA CBT System. All rights reserved.</p>
     </footer>
 
-    <!-- Modals HTML -->
-    <div id="confirmationModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Confirm Action</h2>
-                <span class="close-button" onclick="closeModal('confirmationModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p id="confirmationMessage"></p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
-                <button class="btn btn-danger" onclick="confirmAction(true)">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="alertDialog" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="alertTitle">Alert</h2>
-                <span class="close-button" onclick="closeModal('alertDialog')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p id="alertMessage"></p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
-            </div>
-        </div>
-    </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         let currentUser = null;
-        let confirmCallback = null; // Callback for confirmation modal
+        let isEditMode = false;
+        let reportDataCache = null; // Cache for report data
 
-        // --- Modal Functions ---
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
+        // Function to display messages
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messageContainer');
+            container.textContent = message;
+            container.className = `p-4 mb-4 text-center rounded-lg ${type === 'error' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+            container.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 5000);
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function showAlert(title, message) {
-            document.getElementById('alertTitle').textContent = title;
-            document.getElementById('alertMessage').textContent = message;
-            showModal('alertDialog');
-        }
-
-        function showConfirmation(message) {
-            return new Promise((resolve) => {
-                document.getElementById('confirmationMessage').textContent = message;
-                showModal('confirmationModal');
-                confirmCallback = resolve; // Store resolve function
-            });
-        }
-
-        function confirmAction(result) {
-            closeModal('confirmationModal');
-            if (confirmCallback) {
-                confirmCallback(result); // Call the stored resolve function
-                confirmCallback = null; // Clear the callback
-            }
-        }
-
-        // Utility function to display messages on the page
-        function showPageMessage(message, type = 'info') {
-            const msgDiv = document.getElementById('errorMessage'); // Re-using errorMessage div for general page messages
-            msgDiv.textContent = message;
-            msgDiv.className = `message ${type}-message`; // Apply styling classes
-            msgDiv.classList.remove('hidden');
-            document.getElementById('loadingMessage').classList.add('hidden'); // Hide loading if message appears
-            document.getElementById('reportContent').classList.add('hidden'); // Hide content if message appears
-        }
-
-        async function loadUserData() {
+        // Fetch API wrapper with auth
+        async function fetchApi(url, options = {}) {
             try {
-                const response = await fetch('/api/users/me', { credentials: 'include' });
-                if (!response.ok) {
-                    window.location.href = '/login.html'; // Redirect if not authenticated
-                    return null;
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
                 }
-                currentUser = await response.json();
-                createNavigationLinks(currentUser); // Populate navbar
-                return currentUser;
-            } catch (error) {
-                console.error("Error loading user data:", error);
-                window.location.href = '/login.html'; // Redirect on error
-                return null;
-            }
-        }
 
-        function createNavigationLinks(user) {
-            const navLinksContainer = document.getElementById('navLinks');
-            navLinksContainer.innerHTML = ''; // Clear existing links
+                const response = await fetch(url, { ...options, headers });
 
-            const links = [
-                { href: "/dashboard.html", text: "Dashboard" },
-                { href: "/create-exam.html", text: "Create Exam", roles: ['admin', 'teacher'] },
-                { href: "/manage-users.html", text: "Manage Users", roles: ['admin'] },
-                { href: "/admin-reports.html", text: "Student Reports", roles: ['admin', 'teacher'] },
-                { href: "/manage-subjects.html", text: "Manage Subjects", roles: ['admin'] },
-                { href: "/manage-class-levels.html", text: "Manage Levels", roles: ['admin'] },
-                { href: "/manage-classes.html", text: "Manage Classes", roles: ['admin'] }
-            ];
-
-            links.forEach(linkInfo => {
-                const shouldDisplay = !linkInfo.roles || linkInfo.roles.some(role => {
-                    if (role === 'admin') return user.is_admin;
-                    return user.role === role;
-                });
-
-                if (shouldDisplay) {
-                    const listItem = document.createElement('li');
-                    const link = document.createElement('a');
-                    link.href = linkInfo.href;
-                    link.textContent = linkInfo.text;
-                    link.classList.add('nav-link');
-                    // Add active class if current page
-                    if (window.location.pathname === linkInfo.href) {
-                        link.classList.add('active');
-                    }
-                    listItem.appendChild(link);
-                    navLinksContainer.appendChild(listItem);
+                // Handle 401 Unauthorized globally
+                if (!response.ok && response.status === 401 && window.location.pathname !== '/login.html') {
+                    showMessage('Session expired or unauthorized. Please log in again.', 'error');
+                    localStorage.removeItem('token');
+                    setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+                    return null; // Stop further execution
                 }
-            });
 
-            const logoutLinkItem = document.createElement('li');
-            const logoutBtn = document.createElement('button');
-            logoutBtn.textContent = "Logout";
-            logoutBtn.className = 'btn logout-btn';
-            logoutBtn.style.background = '#f44336';
-            logoutBtn.style.color = 'white';
-            logoutBtn.style.border = 'none';
-            logoutBtn.style.padding = '8px 15px';
-            logoutBtn.style.borderRadius = '5px';
-            logoutBtn.style.cursor = 'pointer';
-            logoutLinkItem.appendChild(logoutBtn);
-            navLinksContainer.appendChild(logoutLinkItem);
-
-            logoutBtn.addEventListener('click', handleLogout);
-        }
-
-        async function handleLogout() {
-            try {
-                const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
-                }
-            } catch (error) {
-                console.error('Network error during logout:', error);
-            } finally {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/login.html';
-            }
-        }
-
-        let isEditing = false;
-
-        function toggleEdit(editMode) {
-            isEditing = editMode;
-            document.getElementById('editBtn').classList.toggle('hidden', isEditing);
-            document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
-
-            const teacherComment = document.getElementById('teacherComment');
-            const principalComment = document.getElementById('principalComment');
-            const nextTermBeginsInput = document.getElementById('nextTermBeginsInput');
-            const nextTermBeginsDisplay = document.getElementById('nextTermBeginsDisplay');
-
-            const teacherSignatureUpload = document.getElementById('teacherSignatureUpload');
-            const principalSignatureUpload = document.getElementById('principalSignatureUpload');
-
-            teacherComment.disabled = !isEditing;
-            principalComment.disabled = !isEditing;
-            teacherSignatureUpload.disabled = !isEditing;
-            principalSignatureUpload.disabled = !isEditing;
-
-
-            if (isEditing) {
-                nextTermBeginsDisplay.classList.add('hidden');
-                nextTermBeginsInput.classList.remove('hidden');
-                nextTermBeginsInput.disabled = false;
-                // Set the input value to the display value if it exists
-                if (nextTermBeginsDisplay.textContent && nextTermBeginsDisplay.textContent !== 'N/A') {
-                    nextTermBeginsInput.value = new Date(nextTermBeginsDisplay.textContent).toISOString().split('T')[0];
-                }
-            } else {
-                nextTermBeginsDisplay.classList.remove('hidden');
-                nextTermBeginsInput.classList.add('hidden');
-                nextTermBeginsInput.disabled = true;
-                // Update display value from input if changed
-                if (nextTermBeginsInput.value) {
-                    nextTermBeginsDisplay.textContent = new Date(nextTermBeginsInput.value).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                }
-            }
-        }
-
-        async function loadReport() {
-            document.getElementById('loadingMessage').classList.remove('hidden');
-            document.getElementById('reportContent').classList.add('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const studentId = urlParams.get('studentId');
-            const term = urlParams.get('term');
-            const academicYear = urlParams.get('academicYear');
-
-            if (!studentId || !term || !academicYear) {
-                showPageMessage("Missing student ID, term, or academic year in the URL. Please navigate from the student reports page.", 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/exam-results/report-card/${studentId}?term=${term}&academicYear=${academicYear}`, { credentials: 'include' });
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Failed to load report data.');
+                    throw new Error(data.error || `API Error: ${response.statusText}`);
                 }
-
-                if (!data.student_info || !data.report_data) {
-                    throw new Error("Incomplete report data received from server. Missing student_info or report_data.");
-                }
-
-                displayReport(data);
-                document.getElementById('loadingMessage').classList.add('hidden');
-                document.getElementById('reportContent').classList.remove('hidden');
-
+                return data;
             } catch (error) {
-                console.error("Error loading report:", error);
-                showPageMessage(`Failed to load report: ${error.message}`, 'error');
-            }
-        }
-
-        function displayReport(data) {
-            const { student_info, report_data, meta_data } = data;
-
-            // Student Information Section
-            document.getElementById('studentProfilePicture').src = student_info.profile_picture_url || 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg';
-            document.getElementById('studentFullName').textContent = student_info.username || 'N/A';
-            document.getElementById('studentAdmissionNo').textContent = student_info.admission_number || 'N/A';
-            document.getElementById('studentClass').textContent = student_info.class_level_name || 'N/A';
-            document.getElementById('dateGenerated').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-            // Report Title
-            const urlParams = new URLSearchParams(window.location.search);
-            const term = urlParams.get('term');
-            const academicYear = urlParams.get('academicYear');
-            document.getElementById('reportTermSession').textContent = `${term ? term.toUpperCase() + ' TERM' : ''} ACADEMIC REPORT FOR ${academicYear || ''}`;
-
-            // Subject Scores Table
-            const subjectScoresBody = document.getElementById('subjectScoresBody');
-            subjectScoresBody.innerHTML = '';
-
-            if (report_data.subjects && report_data.subjects.length > 0) {
-                report_data.subjects.forEach(subject => {
-                    const row = `
-                        <tr>
-                            <td>${subject.subject_name || 'N/A'}</td>
-                            <td>${subject.ca_score !== undefined && subject.ca_score !== null ? parseFloat(subject.ca_score).toFixed(2) : 'N/A'}</td>
-                            <td>${subject.exam_score !== undefined && subject.exam_score !== null ? parseFloat(subject.exam_score).toFixed(2) : 'N/A'}</td>
-                            <td>${subject.total_score !== undefined && subject.total_score !== null ? parseFloat(subject.total_score).toFixed(2) : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['FIRST'] !== undefined && subject.cumulative_data['FIRST'] !== null) ? parseFloat(subject.cumulative_data['FIRST']).toFixed(2) : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['SECOND'] !== undefined && subject.cumulative_data['SECOND'] !== null) ? parseFloat(subject.cumulative_data['SECOND']).toFixed(2) : 'N/A'}</td>
-                            <td>${(subject.cumulative_data && subject.cumulative_data['THIRD'] !== undefined && subject.cumulative_data['THIRD'] !== null) ? parseFloat(subject.cumulative_data['THIRD']).toFixed(2) : 'N/A'}</td>
-                            <td>${subject.cumulative_avg !== undefined && subject.cumulative_avg !== null ? parseFloat(subject.cumulative_avg).toFixed(2) : 'N/A'}</td>
-                            <td>${subject.grade || 'N/A'}</td>
-                            <td>${subject.remark || 'N/A'}</td>
-                        </tr>
-                    `;
-                    subjectScoresBody.innerHTML += row;
-                });
-            } else {
-                subjectScoresBody.innerHTML = `<tr><td colspan="10" style="text-align: center;">No subject scores available for this term.</td></tr>`;
-            }
-
-            // Overall Summary
-            // Using grand_total_score for the sum of all subject scores
-            document.getElementById('grandTotalScore').textContent = report_data.grand_total_score !== undefined && report_data.grand_total_score !== null ? parseFloat(report_data.grand_total_score).toFixed(2) : 'N/A';
-            // Correctly using overall_percentage for the average percentage
-            document.getElementById('overallPercentage').textContent = report_data.overall_percentage !== undefined && report_data.overall_percentage !== null ? `${parseFloat(report_data.overall_percentage).toFixed(2)}%` : 'N/A';
-            document.getElementById('classPosition').textContent = report_data.position !== undefined && report_data.class_size !== undefined && report_data.position !== null && report_data.class_size !== null ? `${report_data.position}${getOrdinalSuffix(report_data.position)} of ${report_data.class_size}` : 'N/A';
-
-            // Comments Section
-            document.getElementById('teacherComment').value = meta_data.teacher_comment || '';
-            document.getElementById('principalComment').value = meta_data.principal_comment || '';
-
-            // Next Term Begins
-            const nextTermBeginsDisplay = document.getElementById('nextTermBeginsDisplay');
-            const nextTermBeginsInput = document.getElementById('nextTermBeginsInput');
-            if (meta_data.next_term_begins) {
-                const date = new Date(meta_data.next_term_begins);
-                nextTermBeginsDisplay.textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                nextTermBeginsInput.value = date.toISOString().split('T')[0];
-            } else {
-                nextTermBeginsDisplay.textContent = 'N/A';
-                nextTermBeginsInput.value = '';
-            }
-
-            // Signature Previews
-            const teacherSignaturePreview = document.getElementById('teacherSignaturePreview');
-            const principalSignaturePreview = document.getElementById('principalSignaturePreview');
-
-            if (meta_data.teacher_signature_url) {
-                teacherSignaturePreview.src = meta_data.teacher_signature_url;
-                teacherSignaturePreview.style.display = 'block';
-            } else {
-                teacherSignaturePreview.style.display = 'none';
-            }
-
-            if (meta_data.principal_signature_url) {
-                principalSignaturePreview.src = meta_data.principal_signature_url;
-                principalSignaturePreview.style.display = 'block';
-            } else {
-                principalSignaturePreview.style.display = 'none';
-            }
-        }
-
-        function getOrdinalSuffix(i) {
-            if (isNaN(i) || i === null) return '';
-            const j = i % 10,
-                k = i % 100;
-            if (j == 1 && k != 11) {
-                return "st";
-            }
-            if (j == 2 && k != 12) {
-                return "nd";
-            }
-            if (j == 3 && k != 13) {
-                return "rd";
-            }
-            return "th";
-        }
-
-        async function uploadSignature(file) {
-            if (!file) return null;
-
-            const formData = new FormData();
-            formData.append('signature', file);
-
-            try {
-                const response = await fetch('/api/users/upload-signature', {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'include'
-                });
-
-                const result = await response.json();
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to upload signature.');
-                }
-                return result.url; // Return the Cloudinary URL
-            } catch (error) {
-                console.error("Error uploading signature:", error);
-                showAlert('Upload Error', `Failed to upload signature: ${error.message}`);
+                console.error("Fetch API error:", error);
+                showMessage(error.message, 'error');
                 return null;
             }
         }
 
-        async function saveReportData() {
-            const confirmed = await showConfirmation('Are you sure you want to save these comments and date?');
-            if (!confirmed) {
-                showAlert('Save Cancelled', 'Report data save was cancelled.');
-                return;
+        // Function to build navigation links based on user role (Integrated from common.js concept)
+        function buildNavigation(user) {
+            const mainNavLinks = document.getElementById('main-nav-links');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mainNavLinks.innerHTML = '';
+            mobileMenu.innerHTML = '';
+
+            const links = [
+                { href: '/dashboard.html', text: 'Dashboard', roles: ['admin', 'teacher', 'student'] },
+                { href: '/create-exam.html', text: 'Create Exam', roles: ['admin', 'teacher'] },
+                { href: '/manage-exams.html', text: 'Manage Exams', roles: ['admin', 'teacher'] },
+                { href: '/manage-users.html', text: 'Manage Users', roles: ['admin'] },
+                { href: '/results.html', text: 'View Results', roles: ['admin', 'teacher', 'student'] },
+                { href: '/profile.html', text: 'Profile', roles: ['admin', 'teacher', 'student'] }
+            ];
+
+            links.forEach(link => {
+                if (link.roles.includes(user.role) || (user.is_admin && link.roles.includes('admin'))) {
+                    const desktopLink = document.createElement('a');
+                    desktopLink.href = link.href;
+                    desktopLink.textContent = link.text;
+                    mainNavLinks.appendChild(desktopLink);
+
+                    const mobileLink = document.createElement('a');
+                    mobileLink.href = link.href;
+                    mobileLink.textContent = link.text;
+                    mobileMenu.appendChild(mobileLink);
+                }
+            });
+
+            // Add logout link
+            const logoutDesktopLink = document.createElement('a');
+            logoutDesktopLink.href = '#';
+            logoutDesktopLink.textContent = 'Logout';
+            logoutDesktopLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            });
+            mainNavLinks.appendChild(logoutDesktopLink);
+
+            const logoutMobileLink = document.createElement('a');
+            logoutMobileLink.href = '#';
+            logoutMobileLink.textContent = 'Logout';
+            logoutMobileLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            });
+            mobileMenu.appendChild(logoutMobileLink);
+        }
+
+        // Load user data and manage authentication
+        async function loadUserData() {
+            const user = await fetchApi('/api/users/me');
+            if (user) {
+                currentUser = user;
+                // Build navigation based on user role
+                buildNavigation(currentUser);
+
+                // Show/hide edit button based on role
+                const editBtn = document.getElementById('editBtn');
+                if (currentUser.is_admin || currentUser.role === 'teacher') {
+                    editBtn.classList.remove('hidden');
+                } else {
+                    editBtn.classList.add('hidden');
+                }
+            } else {
+                // If user data could not be loaded (e.g., not authenticated), fetchApi would have redirected
+                // No need for redundant redirect here, unless fetchApi was modified not to.
             }
+            return currentUser;
+        }
+
+        function getRatingGrade(value) {
+            if (value === 5) return 'Excellent';
+            if (value === 4) return 'Very Good';
+            if (value === 3) return 'Good';
+            if (value === 2) return 'Fair';
+            if (value === 1) return 'Poor';
+            return 'N/A';
+        }
+
+        function toggleEdit(enable) {
+            isEditMode = enable;
+            document.getElementById('teacherComment').disabled = !enable;
+            // document.getElementById('principalComment').disabled = !enable; // Removed principal comment
+            document.getElementById('nextTermBegins').disabled = !enable;
+            document.getElementById('classTeacherName').disabled = !enable; // Enable/disable teacher name input
+
+            // Enable/disable assessment inputs
+            document.querySelectorAll('.assessment-table input[type="number"]').forEach(input => {
+                input.disabled = !enable;
+            });
+
+            const teacherSignatureUploadArea = document.getElementById('teacherSignatureUploadArea');
+            // const principalSignatureUploadArea = document.getElementById('principalSignatureUploadArea'); // Removed principal signature
+            const saveBtn = document.getElementById('saveBtn');
+            const editBtn = document.getElementById('editBtn');
+
+            if (enable) {
+                teacherSignatureUploadArea.classList.remove('hidden');
+                // principalSignatureUploadArea.classList.remove('hidden'); // Removed principal signature
+                saveBtn.classList.remove('hidden');
+                editBtn.classList.add('hidden'); // Hide edit button when in edit mode
+            } else {
+                teacherSignatureUploadArea.classList.add('hidden');
+                // principalSignatureUploadArea.classList.add('hidden'); // Removed principal signature
+                saveBtn.classList.add('hidden');
+                editBtn.classList.remove('hidden'); // Show edit button when not in edit mode
+            }
+        }
+
+        // Function to load and display the report
+        async function loadReport() {
+            const loader = document.getElementById('loader');
+            const reportCardContent = document.getElementById('reportCardContent');
+            const messageContainer = document.getElementById('messageContainer');
+
+            loader.classList.remove('hidden');
+            reportCardContent.classList.add('hidden');
+            messageContainer.classList.add('hidden'); // Clear previous messages
 
             const urlParams = new URLSearchParams(window.location.search);
             const studentId = urlParams.get('studentId');
             const term = urlParams.get('term');
-            const academicYear = urlParams.get('academicYear');
+            const session = urlParams.get('session');
 
-            const teacherComment = document.getElementById('teacherComment').value;
-            const principalComment = document.getElementById('principalComment').value;
-            const nextTermBegins = document.getElementById('nextTermBeginsInput').value; // Get value from input
-
-            const teacherSignatureFile = document.getElementById('teacherSignatureUpload').files[0];
-            const principalSignatureFile = document.getElementById('principalSignatureUpload').files[0];
-
-            let teacherSignatureUrl = document.getElementById('teacherSignaturePreview').src;
-            let principalSignatureUrl = document.getElementById('principalSignaturePreview').src;
-
-            // Only upload if a new file is selected
-            if (teacherSignatureFile) {
-                teacherSignatureUrl = await uploadSignature(teacherSignatureFile);
-                if (!teacherSignatureUrl) return; // Stop if upload failed
-            }
-            if (principalSignatureFile) {
-                principalSignatureUrl = await uploadSignature(principalSignatureFile);
-                if (!principalSignatureUrl) return; // Stop if upload failed
+            if (!studentId || !term || !session) {
+                showMessage('Missing student ID, term, or session in URL. Cannot load report.', 'error');
+                loader.classList.add('hidden');
+                return;
             }
 
             try {
-                const response = await fetch('/api/exam-results/report-card-meta', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        studentId,
-                        term,
-                        session: academicYear, // Backend expects 'session'
-                        teacher_comment: teacherComment,
-                        principal_comment: principalComment,
-                        next_term_begins: nextTermBegins || null, // Send null if empty
-                        teacher_signature_url: teacherSignatureUrl === 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg' ? null : teacherSignatureUrl, // Don't save default avatar as signature
-                        principal_signature_url: principalSignatureUrl === 'https://res.cloudinary.com/dyphku0jr/image/upload/v1750662670/default_avatar_sjvhgm.jpg' ? null : principalSignatureUrl // Don't save default avatar as signature
-                    }),
-                    credentials: 'include'
-                });
+                const report = await fetchApi(`/api/exam-results/report-card/${studentId}?term=${term}&session=${session}`);
+                reportDataCache = report; // Cache the fetched report data
 
-                const result = await response.json();
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to save report data.');
+                if (!report) {
+                    showMessage('Report card not found for the specified student, term, and session.', 'info');
+                    loader.classList.add('hidden');
+                    return;
                 }
 
-                showAlert('Success', 'Report comments and signature saved successfully!');
-                toggleEdit(false); // Exit edit mode after saving
-                // Re-load report data to ensure display is updated from backend
-                await loadReport();
+                // Populate Student Info
+                document.getElementById('studentFullName').textContent = report.student_info.full_name || report.student_info.username;
+                document.getElementById('admissionNumber').textContent = report.student_info.admission_number || 'N/A';
+                document.getElementById('classLevel').textContent = report.student_info.class_level_name || 'N/A';
+                document.getElementById('studentDob').textContent = report.student_info.dob || 'N/A';
+                document.getElementById('studentGender').textContent = report.student_info.gender || 'N/A';
+                
+                const departmentRow = document.getElementById('departmentRow');
+                const studentDepartment = document.getElementById('studentDepartment');
+                if (report.student_info.department) {
+                    studentDepartment.textContent = report.student_info.department;
+                    departmentRow.classList.remove('hidden');
+                } else {
+                    departmentRow.classList.add('hidden');
+                }
+
+                const studentProfilePicture = document.getElementById('studentProfilePicture');
+                studentProfilePicture.src = report.student_info.profile_picture_url || 'https://placehold.co/100x100/aabbcc/ffffff?text=No+Image';
+
+                // Populate Report Title Section
+                document.getElementById('academicYearDisplay').textContent = report.session;
+                document.getElementById('termDisplay').textContent = report.term;
+
+                // Populate Subject Performance
+                const subjectResultsBody = document.getElementById('subjectResultsBody');
+                subjectResultsBody.innerHTML = '';
+                if (report.results_by_subject && report.results_by_subject.length > 0) {
+                    report.results_by_subject.forEach(subject => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${subject.subject_name}</td>
+                            <td class="text-center">${subject.first_term_score !== null ? subject.first_term_score : 'N/A'}</td>
+                            <td class="text-center">${subject.second_term_score !== null ? subject.second_term_score : 'N/A'}</td>
+                            <td class="text-center">${subject.third_term_score !== null ? subject.third_term_score : 'N/A'}</td>
+                            <td class="text-center">${subject.aggregate_score !== null ? subject.aggregate_score : 'N/A'}</td>
+                            <td class="text-center">${subject.average_score_percentage !== null ? subject.average_score_percentage.toFixed(2) : 'N/A'}%</td>
+                            <td class="text-center">${subject.grade}</td>
+                            <td class="text-center">${subject.remark}</td>
+                        `;
+                        subjectResultsBody.appendChild(row);
+                    });
+                } else {
+                    subjectResultsBody.innerHTML = '<tr><td colspan="8" class="text-center">No subject results found for this term and session.</td></tr>';
+                }
+
+                // Populate Overall Performance Summary
+                document.getElementById('totalSubjectsTaken').textContent = report.overall_performance.total_subjects_taken;
+                document.getElementById('overallScoreObtained').textContent = report.overall_performance.total_score_obtained;
+                document.getElementById('overallPossibleMarks').textContent = report.overall_performance.total_possible_marks;
+                document.getElementById('overallPercentage').textContent = report.overall_performance.overall_percentage.toFixed(2);
+                document.getElementById('overallGrade').textContent = report.overall_performance.overall_grade;
+                document.getElementById('overallRemark').textContent = report.overall_performance.overall_remark;
+                document.getElementById('studentPosition').textContent = report.overall_performance.class_position;
+                document.getElementById('classTeacherName').value = report.class_teacher_name || 'N/A'; // Prefill teacher name
+
+                // Populate Psychomotor Assessment
+                const psychomotorBody = document.getElementById('psychomotorBody');
+                Object.keys(report.psychomotor_assessment).forEach(key => {
+                    const input = psychomotorBody.querySelector(`input[data-assessment-key="${key}"]`);
+                    const gradeSpan = psychomotorBody.querySelector(`span[data-grade-for="${key}"]`);
+                    if (input) {
+                        input.value = report.psychomotor_assessment[key];
+                        gradeSpan.textContent = getRatingGrade(report.psychomotor_assessment[key]);
+                    }
+                });
+
+                // Populate Affective Domain
+                const affectiveBody = document.getElementById('affectiveBody');
+                Object.keys(report.affective_domain).forEach(key => {
+                    const input = affectiveBody.querySelector(`input[data-assessment-key="${key}"]`);
+                    const gradeSpan = affectiveBody.querySelector(`span[data-grade-for="${key}"]`);
+                    if (input) {
+                        input.value = report.affective_domain[key];
+                        gradeSpan.textContent = getRatingGrade(report.affective_domain[key]);
+                    }
+                });
+
+                // Populate Other Assessments
+                const otherAssessmentsBody = document.getElementById('otherAssessmentsBody');
+                Object.keys(report.other_assessments).forEach(key => {
+                    const input = otherAssessmentsBody.querySelector(`input[data-assessment-key="${key}"]`);
+                    const gradeSpan = otherAssessmentsBody.querySelector(`span[data-grade-for="${key}"]`);
+                    if (input) {
+                        input.value = report.other_assessments[key];
+                        gradeSpan.textContent = getRatingGrade(report.other_assessments[key]);
+                    }
+                });
+
+
+                // Populate Comments and Remarks
+                document.getElementById('teacherComment').value = report.teacher_comment || '';
+                // document.getElementById('principalComment').value = report.principal_comment || ''; // Removed principal comment
+                document.getElementById('nextTermBegins').value = report.next_term_begins || '';
+
+                // Populate Signatures
+                const teacherSignaturePreview = document.getElementById('teacherSignaturePreview');
+                if (report.teacher_signature_url) {
+                    teacherSignaturePreview.src = report.teacher_signature_url;
+                    teacherSignaturePreview.classList.remove('hidden');
+                } else {
+                    teacherSignaturePreview.classList.add('hidden');
+                    teacherSignaturePreview.src = '';
+                }
+                // const principalSignaturePreview = document.getElementById('principalSignaturePreview'); // Removed principal signature
+                // if (report.principal_signature_url) {
+                //     principalSignaturePreview.src = report.principal_signature_url;
+                //     principalSignaturePreview.classList.remove('hidden');
+                // } else {
+                //     principalSignaturePreview.classList.add('hidden');
+                //     principalSignaturePreview.src = '';
+                // }
+
+
+                reportCardContent.classList.remove('hidden');
+                toggleEdit(false); // Ensure view mode initially
 
             } catch (error) {
-                console.error("Error saving report data:", error);
-                showAlert('Error', `Failed to save report data: ${error.message}`);
+                console.error("Error loading report:", error);
+                showMessage(`Fetch API error: ${error.message}`, 'error');
+            } finally {
+                loader.classList.add('hidden');
             }
         }
 
-        // Event listeners for signature file inputs to show preview
-        document.getElementById('teacherSignatureUpload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('teacherSignaturePreview');
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                document.getElementById('teacherSignaturePreview').style.display = 'none';
-                document.getElementById('teacherSignaturePreview').src = '';
+        // Function to save report data
+        async function saveReportData() {
+            if (!reportDataCache || !currentUser) {
+                showMessage('No report data to save or user not authenticated.', 'error');
+                return;
             }
-        });
 
-        document.getElementById('principalSignatureUpload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('principalSignaturePreview');
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
+            const studentId = reportDataCache.student_info.id;
+            const term = reportDataCache.term;
+            const session = reportDataCache.session;
+
+            const teacherComment = document.getElementById('teacherComment').value;
+            // const principalComment = document.getElementById('principalComment').value; // Removed principal comment
+            const nextTermBegins = document.getElementById('nextTermBegins').value;
+            const classTeacherName = document.getElementById('classTeacherName').value; // Get teacher name
+
+            const psychomotorAssessment = {};
+            document.querySelectorAll('#psychomotorBody input[type="number"]').forEach(input => {
+                psychomotorAssessment[input.dataset.assessmentKey] = input.value ? parseInt(input.value) : null;
+            });
+
+            const affectiveDomain = {};
+            document.querySelectorAll('#affectiveBody input[type="number"]').forEach(input => {
+                affectiveDomain[input.dataset.assessmentKey] = input.value ? parseInt(input.value) : null;
+            });
+
+            const otherAssessments = {};
+            document.querySelectorAll('#otherAssessmentsBody input[type="number"]').forEach(input => {
+                otherAssessments[input.dataset.assessmentKey] = input.value ? parseInt(input.value) : null;
+            });
+
+            // Handle signature upload if a new file is selected
+            let teacherSignatureUrl = reportDataCache.teacher_signature_url;
+            const teacherSignatureFile = document.getElementById('teacherSignatureUpload').files[0];
+            const teacherSignatureStatus = document.getElementById('teacherSignatureStatus');
+
+            try {
+                if (teacherSignatureFile) {
+                    teacherSignatureStatus.textContent = 'Uploading teacher signature...';
+                    teacherSignatureStatus.style.color = 'blue';
+                    const formData = new FormData();
+                    formData.append('signature_file', teacherSignatureFile);
+                    const uploadResponse = await fetch('/api/users/upload-signature', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+                    const uploadData = await uploadResponse.json();
+                    if (uploadResponse.ok) {
+                        teacherSignatureUrl = uploadData.url;
+                        teacherSignatureStatus.textContent = 'Upload complete!';
+                        teacherSignatureStatus.style.color = 'green';
+                    } else {
+                        throw new Error(uploadData.error || 'Signature upload failed.');
+                    }
+                }
+
+                const payload = {
+                    studentId,
+                    term,
+                    session,
+                    teacher_comment: teacherComment,
+                    // principal_comment: principalComment, // Removed principal comment
+                    next_term_begins: nextTermBegins,
+                    psychomotor_assessment: psychomotorAssessment,
+                    affective_domain: affectiveDomain,
+                    other_assessments: otherAssessments,
+                    teacher_signature_url: teacherSignatureUrl,
+                    // principal_signature_url: reportDataCache.principal_signature_url, // Removed principal signature
+                    class_position: reportDataCache.overall_performance.class_position, // Retain position
+                    class_teacher_id: currentUser.id // Save the ID of the teacher making the comment
                 };
-                reader.readAsDataURL(file);
-            } else {
-                document.getElementById('principalSignaturePreview').style.display = 'none';
-                document.getElementById('principalSignaturePreview').src = '';
+
+                const saveBtn = document.getElementById('saveBtn');
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+
+                const response = await fetchApi('/api/exam-results/report-card-meta', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                if (response) {
+                    showMessage('Report card data saved successfully!', 'success');
+                    // Reload report to display updated data and disable fields
+                    loadReport();
+                }
+
+            } catch (error) {
+                console.error("Error saving report data:", error);
+                showMessage(`Failed to save report: ${error.message}`, 'error');
+            } finally {
+                const saveBtn = document.getElementById('saveBtn');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
+                teacherSignatureStatus.textContent = ''; // Clear status message
             }
-        });
+        }
+
+        // Function to download PDF
+        async function downloadPDF() {
+            window.jsPDF = window.jspdf.jsPDF; // Ensure jspdf is globally accessible
+            const doc = new jsPDF('p', 'mm', 'a4'); // 'p' for portrait, 'mm' for millimeters, 'a4' for A4 size
+
+            const reportCardElement = document.getElementById('reportCardContent');
+
+            // Temporarily hide action buttons and signature upload areas for PDF generation
+            document.querySelectorAll('.report-actions, .signature-upload-area').forEach(el => el.classList.add('hidden'));
+
+            // Use html2canvas to render the report card content
+            html2canvas(reportCardElement, { scale: 2, useCORS: true, logging: true }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                // Restore hidden elements after PDF generation
+                document.querySelectorAll('.report-actions, .signature-upload-area').forEach(el => el.classList.remove('hidden'));
+
+                // Generate filename
+                const studentName = document.getElementById('studentFullName').textContent.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                const term = document.getElementById('termDisplay').textContent.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                const session = document.getElementById('academicYearDisplay').textContent.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                pdf.save(`${studentName}_ReportCard_${term}_${session}.pdf`);
+            }).catch(error => {
+                console.error("Error generating PDF:", error);
+                showMessage("Failed to generate PDF. Please try again.", 'error');
+                // Ensure elements are restored even if PDF generation fails
+                document.querySelectorAll('.report-actions, .signature-upload-area').forEach(el => el.classList.remove('hidden'));
+            });
+        }
 
 
         // --- PAGE INITIALIZATION ---
@@ -1083,6 +1232,16 @@
         // Event Listeners for report actions
         document.getElementById('editBtn').addEventListener('click', () => toggleEdit(true));
         document.getElementById('saveBtn').addEventListener('click', saveReportData);
+        document.getElementById('printBtn').addEventListener('click', () => window.print());
+        document.getElementById('downloadPdfBtn').addEventListener('click', downloadPDF);
+
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', () => {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('open');
+        });
 
     </script>
 </body>

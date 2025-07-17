@@ -85,8 +85,9 @@ router.get("/me", auth, async (req, res) => {
     try {
         // req.user is set by the auth middleware
         const userId = req.user.id;
+        // Added full_name and department to the select query
         const result = await pool.query(
-            'SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender FROM users u LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id WHERE u.id = $1',
+            'SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender, u.full_name, u.department FROM users u LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id WHERE u.id = $1',
             [userId]
         );
         if (result.rows.length === 0) {
@@ -101,7 +102,8 @@ router.get("/me", auth, async (req, res) => {
 
 // POST /api/users/register - Register a new user
 router.post("/register", upload.single('profile_picture'), async (req, res) => {
-    const { username, email, password, role, admission_number, dob, gender } = req.body;
+    // Added first_name, last_name, and department to destructuring
+    const { username, email, password, role, admission_number, dob, gender, first_name, last_name, department } = req.body;
     let class_level_id_raw = req.body.class_level_id; // Get the raw value from req.body
 
     if (!username || !email || !password || !role) {
@@ -109,6 +111,10 @@ router.post("/register", upload.single('profile_picture'), async (req, res) => {
     }
 
     let final_class_level_id = null; // Initialize to null
+    // Construct full_name from first_name and last_name, trim extra spaces
+    // Prioritize full_name if provided, otherwise construct from first/last
+    const fullName = req.body.full_name ? req.body.full_name.trim() : `${first_name || ''} ${last_name || ''}`.trim();
+
 
     // Process class_level_id based on role
     if (role === 'student') {
@@ -136,7 +142,7 @@ router.post("/register", upload.single('profile_picture'), async (req, res) => {
         }
 
         const newUser = await pool.query(
-            'INSERT INTO users (username, email, password, role, admission_number, class_level_id, dob, gender, profile_picture_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, username, email, role, is_admin, admission_number, class_level_id, dob, gender, profile_picture_url',
+            'INSERT INTO users (username, email, password, role, admission_number, class_level_id, dob, gender, profile_picture_url, full_name, department) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, username, email, role, is_admin, admission_number, class_level_id, dob, gender, profile_picture_url, full_name, department',
             [
                 username,
                 email,
@@ -146,7 +152,9 @@ router.post("/register", upload.single('profile_picture'), async (req, res) => {
                 final_class_level_id,     // Use the processed final_class_level_id
                 dob || null,              // Will be null if not provided
                 gender || null,           // Will be null if not provided
-                profile_picture_url
+                profile_picture_url,
+                fullName,                 // Store full_name
+                department || null        // Store department
             ]
         );
         res.status(201).json(newUser.rows[0]);
@@ -184,8 +192,9 @@ router.post("/login", async (req, res) => {
 
     try {
         // IMPROVEMENT: Modify the query to allow login by username, email, OR admission_number
+        // Added full_name and department to the select query
         const query = `
-            SELECT u.id, u.username, u.email, u.password, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender
+            SELECT u.id, u.username, u.email, u.password, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender, u.full_name, u.department
             FROM users u
             LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id
             WHERE u.username = $1 OR u.email = $1 OR (u.role = 'student' AND u.admission_number = $1)
@@ -218,7 +227,7 @@ router.post("/login", async (req, res) => {
             maxAge: 7200000 // 1 hour in milliseconds
         });
 
-        res.json({ message: "Logged in successfully", user: { id: user.id, username: user.username, email: user.email, role: user.role, is_admin: user.is_admin, profile_picture_url: user.profile_picture_url, admission_number: user.admission_number, class_level_id: user.class_level_id, class_level_name: user.class_level_name, dob: user.dob, gender: user.gender } });
+        res.json({ message: "Logged in successfully", user: { id: user.id, username: user.username, email: user.email, role: user.role, is_admin: user.is_admin, profile_picture_url: user.profile_picture_url, admission_number: user.admission_number, class_level_id: user.class_level_id, class_level_name: user.class_level_name, dob: user.dob, gender: user.gender, full_name: user.full_name, department: user.department } });
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ error: "Internal server error during login." });
@@ -280,7 +289,7 @@ router.post("/forgot-password", async (req, res) => {
                 </div>
             `,
         };
-        
+
         try {
             await transporter.sendMail(mailOptions);
             res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
@@ -290,7 +299,6 @@ router.post("/forgot-password", async (req, res) => {
             if (emailError.code) console.error("Nodemailer error code:", emailError.code);
             if (emailError.response) console.error("Nodemailer response:", emailError.response);
             if (emailError.responseCode) console.error("Nodemailer response code:", emailError.responseCode);
-            
             // Revert the token update if email sending fails to prevent invalid tokens
             await pool.query(
                 'UPDATE users SET reset_password_token = NULL, reset_password_expires = NULL WHERE id = $1',
@@ -300,7 +308,6 @@ router.post("/forgot-password", async (req, res) => {
             // but log the actual error for debugging.
             res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
         }
-
     } catch (error) {
         console.error("Forgot password processing error:", error);
         res.status(500).json({ error: "Failed to process password reset request due to a server error." });
@@ -310,7 +317,6 @@ router.post("/forgot-password", async (req, res) => {
 // POST /api/users/reset-password - Reset password using the token
 router.post("/reset-password", async (req, res) => {
     const { token, newPassword } = req.body;
-
     if (!token || !newPassword) {
         return res.status(400).json({ error: "Token and new password are required." });
     }
@@ -339,9 +345,8 @@ router.post("/reset-password", async (req, res) => {
         );
 
         res.status(200).json({ message: "Password has been reset successfully. You can now log in." });
-
     } catch (error) {
-        if (error.name === 'TokenExpiredError' || error.name === 'JsonWebWebTokenError') {
+        if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
             return res.status(400).json({ error: "Password reset token is invalid or has expired." });
         }
         console.error("Reset password error:", error);
@@ -349,225 +354,254 @@ router.post("/reset-password", async (req, res) => {
     }
 });
 
+// POST /api/users/logout - Clear JWT cookie
+router.post("/logout", (req, res) => {
+    res.clearCookie('jwt', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+    });
+    res.status(200).json({ message: "Logged out successfully." });
+});
 
-// GET /api/users - Get all users (for admin view) with optional class_level_id filter
-// Modified to filter by role 'student' if no specific role is requested, or by role if specified.
-router.get("/", auth, async (req, res) => {
-    // Only admin can access this route
-    if (!req.user.is_admin && req.user.role !== 'teacher') {
-        return res.status(403).json({ error: "Unauthorized: Only administrators and teachers can view all users." });
-    }
-
-    const { class_level_id, role, search } = req.query;
-    let query = `
-        SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender
-        FROM users u
-        LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id
-        WHERE 1=1
-    `;
-    const params = [];
-    let paramIndex = 1;
-
-    // Filter by role: default to 'student' if no role is specified and the requesting user is a teacher
-    // Admins can see all users by default, or filter by any role.
-    let targetRole = role;
-    if (req.user.role === 'teacher' && !targetRole) {
-        targetRole = 'student'; // Teachers primarily see students
-    }
-
-    if (targetRole) {
-        query += ` AND u.role = $${paramIndex++}`;
-        params.push(targetRole);
-    }
-
-    if (class_level_id) {
-        query += ` AND u.class_level_id = $${paramIndex++}`;
-        params.push(class_level_id);
-    }
-
-    if (search) {
-        const searchTerm = `%${search.toLowerCase()}%`;
-        query += ` AND (LOWER(u.username) LIKE $${paramIndex} OR LOWER(u.email) LIKE $${paramIndex} OR LOWER(u.admission_number) LIKE $${paramIndex})`;
-        params.push(searchTerm);
-        paramIndex++;
-    }
-
-    query += ` ORDER BY u.username ASC`;
-
+// GET /api/users - Get all users (Admin only)
+router.get("/", auth, isAdminOrTeacher, async (req, res) => {
     try {
+        const { role, search } = req.query; // Added search query parameter
+        let query = `
+            SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender, u.full_name, u.department
+            FROM users u
+            LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (role) {
+            query += ` AND u.role = $${paramIndex++}`;
+            params.push(role);
+        }
+        if (search) {
+            // Search by username, email, full_name, admission_number (if student)
+            query += ` AND (LOWER(u.username) LIKE LOWER($${paramIndex}) OR LOWER(u.email) LIKE LOWER($${paramIndex}) OR LOWER(u.full_name) LIKE LOWER($${paramIndex}) `;
+            if (role === 'student' || !role) { // If role is student or not specified, include admission_number
+                query += ` OR LOWER(u.admission_number) LIKE LOWER($${paramIndex})`;
+            }
+            query += `)`;
+            params.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY u.full_name ASC, u.username ASC`; // Order by full_name then username
+
         const result = await pool.query(query, params);
+        // Format DOB for consistency (YYYY-MM-DD)
+        result.rows.forEach(user => {
+            user.dob = user.dob ? new Date(user.dob).toISOString().split('T')[0] : null;
+        });
         res.json(result.rows);
     } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching all users:", error);
         res.status(500).json({ error: "Failed to fetch users." });
     }
 });
 
-
-// GET /api/users/admin-stats - Get overall statistics for admin dashboard
-router.get("/admin-stats", auth, async (req, res) => {
-    // Only admin can access this route
-    if (!req.user.is_admin) {
-        return res.status(403).json({ error: "Unauthorized: Only administrators can view admin statistics." });
-    }
-
-    try {
-        const totalUsers = (await pool.query('SELECT COUNT(*) FROM users')).rows[0].count;
-        const totalSubjects = (await pool.query('SELECT COUNT(*) FROM subjects')).rows[0].count;
-        const totalExams = (await pool.query('SELECT COUNT(*) FROM exams')).rows[0].count;
-        const totalClassLevels = (await pool.query('SELECT COUNT(*) FROM class_levels')).rows[0].count;
-        // Assuming 'classes' refers to distinct class_level_id in users or a separate classes table
-        // If you have a dedicated 'classes' table, adjust this query.
-        // For now, assuming it means distinct class levels assigned to students.
-        const totalClasses = (await pool.query('SELECT COUNT(DISTINCT class_level_id) FROM users WHERE role = \'student\' AND class_level_id IS NOT NULL')).rows[0].count;
-
-        res.json({
-            totalUsers: parseInt(totalUsers),
-            totalSubjects: parseInt(totalSubjects),
-            totalExams: parseInt(totalExams),
-            totalClassLevels: parseInt(totalClassLevels),
-            totalClasses: parseInt(totalClasses)
-        });
-    } catch (error) {
-        console.error("Error fetching admin statistics:", error);
-        res.status(500).json({ error: "Failed to fetch admin statistics." });
-    }
-});
-
-
-// GET /api/users/:id - Get user by ID (for editing)
+// GET /api/users/:id - Get a single user by ID (Admin or owner)
 router.get("/:id", auth, async (req, res) => {
-    const { id } = req.params;
-    // Only admin can view/edit any user. A user can view their own profile via /me endpoint.
-    if (!req.user.is_admin) {
-        return res.status(403).json({ error: "Unauthorized: Only administrators can view other user profiles." });
-    }
     try {
+        const { id } = req.params;
+        const requestingUser = req.user;
+
+        // Added full_name and department to the select query
         const result = await pool.query(
-            'SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender FROM users u LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id WHERE u.id = $1',
+            'SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender, u.full_name, u.department FROM users u LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id WHERE u.id = $1',
             [id]
         );
+
         if (result.rows.length === 0) {
             return res.status(404).json({ error: "User not found." });
         }
-        res.json(result.rows[0]);
+
+        const user = result.rows[0];
+
+        // Authorization: Admin can view any user. Non-admin can only view their own profile.
+        if (!requestingUser.is_admin && requestingUser.id !== parseInt(id)) {
+            return res.status(403).json({ error: "Access denied. You can only view your own profile." });
+        }
+
+        // Format DOB for consistency (YYYY-MM-DD)
+        user.dob = user.dob ? new Date(user.dob).toISOString().split('T')[0] : null;
+
+        res.json(user);
     } catch (error) {
         console.error("Error fetching user by ID:", error);
         res.status(500).json({ error: "Failed to fetch user." });
     }
 });
 
-// PUT /api/users/:id - Update user by ID
+// PUT /api/users/:id - Update user details (Admin or owner)
 router.put("/:id", auth, upload.single('profile_picture'), async (req, res) => {
     const { id } = req.params;
-    const { username, email, role, admission_number, class_level_id, dob, gender, current_profile_picture_url } = req.body;
+    const requestingUser = req.user;
 
-    // Only admin can update other users. Users can update their own profile via a separate route if needed.
-    if (!req.user.is_admin) {
-        return res.status(403).json({ error: "Unauthorized: Only administrators can update user profiles." });
+    // Authorization: Admin can update any user. Non-admin can only update their own profile.
+    if (!requestingUser.is_admin && requestingUser.id !== parseInt(id)) {
+        return res.status(403).json({ error: "Access denied. You can only update your own profile." });
     }
 
-    if (!username || !email || !role) {
-        return res.status(400).json({ error: "Username, email, and role are required." });
-    }
+    const {
+        username,
+        email,
+        role,
+        admission_number,
+        class_level_id,
+        dob,
+        gender,
+        current_password, // For password change validation
+        new_password,
+        remove_profile_picture, // 'true' or 'false' string from checkbox
+        first_name, // New fields
+        last_name,  // New fields
+        department  // New field
+    } = req.body;
 
-    let profile_picture_url = current_profile_picture_url || DEFAULT_AVATAR_URL;
+    // Construct full_name from first_name and last_name, trim extra spaces
+    // Prioritize full_name if provided, otherwise construct from first/last
+    const fullName = req.body.full_name ? req.body.full_name.trim() : `${first_name || ''} ${last_name || ''}`.trim();
 
+
+    const client = await pool.connect();
     try {
-        // If a new file is uploaded, upload it to Cloudinary
-        if (req.file) {
+        await client.query('BEGIN');
+
+        // 1. Fetch current user data to compare and validate
+        const currentUserResult = await client.query('SELECT * FROM users WHERE id = $1', [id]);
+        if (currentUserResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: "User not found." });
+        }
+        const currentUser = currentUserResult.rows[0];
+
+        let profile_picture_url = currentUser.profile_picture_url;
+
+        // Handle profile picture removal
+        if (remove_profile_picture === 'true') {
+            profile_picture_url = DEFAULT_AVATAR_URL;
+            // Optionally delete old image from Cloudinary if not default
+            if (currentUser.profile_picture_url && currentUser.profile_picture_url !== DEFAULT_AVATAR_URL) {
+                const publicId = currentUser.profile_picture_url.split('/').pop().split('.')[0];
+                cloudinary.uploader.destroy(`profile_pictures/${publicId}`, (error, result) => {
+                    if (error) console.error("Error deleting old profile picture from Cloudinary:", error);
+                    else console.log("Old profile picture deleted:", result);
+                });
+            }
+        } else if (req.file) { // Handle new profile picture upload
             profile_picture_url = await uploadToCloudinary(req.file.buffer);
+            // Optionally delete old image from Cloudinary if not default and different from new
+            if (currentUser.profile_picture_url && currentUser.profile_picture_url !== DEFAULT_AVATAR_URL && currentUser.profile_picture_url !== profile_picture_url) {
+                const publicId = currentUser.profile_picture_url.split('/').pop().split('.')[0];
+                cloudinary.uploader.destroy(`profile_pictures/${publicId}`, (error, result) => {
+                    if (error) console.error("Error deleting old profile picture from Cloudinary:", error);
+                    else console.log("Old profile picture deleted:", result);
+                });
+            }
         }
 
-        // Handle class_level_id based on role
+        let hashedPassword = currentUser.password;
+        if (new_password) {
+            if (!current_password) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: "Current password is required to change password." });
+            }
+            const isMatch = await bcrypt.compare(current_password, currentUser.password);
+            if (!isMatch) {
+                await client.query('ROLLBACK');
+                return res.status(401).json({ error: "Incorrect current password." });
+            }
+            hashedPassword = await bcrypt.hash(new_password, 10);
+        }
+
         let final_class_level_id = null;
         if (role === 'student') {
-            final_class_level_id = class_level_id ? parseInt(class_level_id) : null;
-            if (isNaN(final_class_level_id)) {
-                return res.status(400).json({ error: "Class level is required and must be a valid number for students." });
+            if (!class_level_id || isNaN(parseInt(class_level_id))) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: "Class level is required for students.", field: "class_level_id" });
             }
+            final_class_level_id = parseInt(class_level_id);
         } else {
-            // For non-students, ensure class_level_id is null
+            // If role is changed from student to non-student, clear class_level_id
             final_class_level_id = null;
         }
 
-        const result = await pool.query(
-            `UPDATE users SET
-                username = $1,
-                email = $2,
-                role = $3,
-                admission_number = $4,
-                class_level_id = $5,
-                dob = $6,
-                gender = $7,
-                profile_picture_url = $8,
-                updated_at = NOW()
-            WHERE id = $9
-            RETURNING id, username, email, role, is_admin, profile_picture_url, admission_number, class_level_id, dob, gender`,
-            [username, email, role, admission_number || null, final_class_level_id, dob || null, gender || null, profile_picture_url, id]
-        );
+        // Update user query - added full_name and department
+        const updateQuery = `
+            UPDATE users
+            SET username = $1, email = $2, role = $3, admission_number = $4,
+                class_level_id = $5, dob = $6, gender = $7, profile_picture_url = $8,
+                password = $9, full_name = $10, department = $11
+            WHERE id = $12
+            RETURNING id, username, email, role, is_admin, admission_number, class_level_id, dob, gender, profile_picture_url, full_name, department;
+        `;
+        const result = await client.query(updateQuery, [
+            username,
+            email,
+            role,
+            admission_number || null,
+            final_class_level_id,
+            dob || null,
+            gender || null,
+            profile_picture_url,
+            hashedPassword,
+            fullName, // Use the constructed full name
+            department || null, // Use the provided department
+            id
+        ]);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: "User not found." });
-        }
-        res.json({ message: "User updated successfully", user: result.rows[0] });
+        await client.query('COMMIT');
+        res.json(result.rows[0]);
     } catch (error) {
+        await client.query('ROLLBACK');
         if (error.code === '23505') { // Unique violation
             if (error.detail && error.detail.includes('users_email_key')) {
-                return res.status(409).json({ error: "An account with this email already exists." });
+                return res.status(409).json({ error: "An account with this email already exists.", field: "email" });
             }
             if (error.detail && error.detail.includes('users_username_key')) {
-                return res.status(409).json({ error: "This username is already taken." });
+                return res.status(409).json({ error: "This username is already taken.", field: "username" });
             }
-            if (error.detail && error.detail.includes('users_admission_number_key')) {
-                return res.status(409).json({ error: "This admission number is already in use." });
+            if (error.detail && error.detail.includes('users_admission_number_key') && role === 'student') {
+                return res.status(409).json({ error: "This admission number is already in use.", field: "admission_number" });
             }
             return res.status(409).json({ error: "A user with this data already exists." });
         }
         console.error("Error updating user:", error);
-        res.status(500).json({ error: "Failed to update user." });
+        res.status(500).json({ error: "Failed to update user: " + error.message });
+    } finally {
+        client.release();
     }
 });
 
-// DELETE /api/users/:id - Delete user by ID
-router.delete("/:id", auth, async (req, res) => {
-    const { id } = req.params;
-    // Only admin can delete users
-    if (!req.user.is_admin) {
-        return res.status(403).json({ error: "Unauthorized: Only administrators can delete users." });
-    }
+// DELETE /api/users/:id - Delete a user (Admin only)
+router.delete("/:id", auth, isAdminOrTeacher, async (req, res) => {
     try {
+        const { id } = req.params;
         const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ error: "User not found." });
         }
-        res.json({ message: "User deleted successfully." });
+        res.status(200).json({ message: "User deleted successfully." });
     } catch (error) {
         console.error("Error deleting user:", error);
-        // Handle foreign key constraint violation
-        if (error.code === '23503') { // PostgreSQL foreign key violation error code
-            return res.status(400).json({ error: `Cannot delete user: still referenced by other records. Please resolve dependencies. Detail: ${error.detail || error.message}` });
-        }
-        res.status(500).json({ error: "Failed to delete user. " + error.message });
-    } finally {
-        // Removed client.release() from finally block as client is not defined here
-        // and pool.query handles connection pooling internally.
+        res.status(500).json({ error: "Failed to delete user." });
     }
 });
 
+// Upload signature route (for teachers/principals)
+router.post("/upload-signature", auth, upload.single('signature_file'), async (req, res) => {
+    // Ensure only teachers or admins can upload signatures
+    if (!req.user || (!req.user.is_admin && req.user.role !== 'teacher')) {
+        return res.status(403).json({ error: "Access denied. Only teachers and admins can upload signatures." });
+    }
 
-// LOGOUT USER
-router.post("/logout", (req, res) => {
-    res.clearCookie('jwt', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Lax'
-    });
-    res.status(200).json({ message: "Logged out successfully" });
-});
-
-// POST /api/users/upload-signature - Upload signature image
-router.post("/upload-signature", auth, isAdminOrTeacher, upload.single('signature'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "No signature file provided." });
@@ -590,15 +624,16 @@ router.post("/upload-signature", auth, isAdminOrTeacher, upload.single('signatur
 router.get('/debug-users', async (req, res) => {
   try {
     // Select class_level_id and join with class_levels to get level_name
-    const result = await pool.query('SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender FROM users u LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id');
+    const result = await pool.query('SELECT u.id, u.username, u.email, u.role, u.is_admin, u.profile_picture_url, u.admission_number, u.class_level_id, cl.level_name AS class_level_name, u.dob, u.gender, u.full_name, u.department FROM users u LEFT JOIN class_levels cl ON u.class_level_id = cl.level_id');
     result.rows.forEach(user => {
-        user.profile_picture_url = user.profile_picture_url || DEFAULT_AVATAR_URL;
+        user.dob = user.dob ? new Date(user.dob).toISOString().split('T')[0] : null;
     });
     res.json(result.rows);
   } catch (error) {
-    console.error("Debug users route error:", error);
+    console.error("Error in debug-users route:", error);
     res.status(500).json({ error: "Failed to fetch debug users." });
   }
 });
+
 
 module.exports = router;

@@ -511,6 +511,7 @@
     let timerInterval;
     let timeRemaining; // in seconds
     let examStartTime; // To track when the exam actually started for timeTakenSeconds calculation
+    let autoSaveInterval; // Declare autoSaveInterval variable
 
     // Modals for alerts and confirmations
     let currentConfirmationCallback = null; 
@@ -643,7 +644,10 @@
                 }
             } else {
                 allQuestions.forEach(q => {
-                    userAnswers[q.question_id] = null; // Initialize with null if no progress
+                    // Initialize with null if no progress, but only if not already set (e.g., from a previous session)
+                    if (userAnswers[q.question_id] === undefined) {
+                        userAnswers[q.question_id] = null;
+                    }
                 });
             }
 
@@ -658,11 +662,15 @@
             
             // Resume timer from saved time or start new
             timeRemaining = sessionData.session.timeRemaining || (currentExam.duration_minutes * 60);
-            examStartTime = Date.now() - (currentExam.duration_minutes * 60 - timeRemaining) * 1000; 
+            // Calculate examStartTime based on current time and timeRemaining
+            examStartTime = Date.now() - (currentExam.duration_minutes * 60 - timeRemaining) * 1000;
             startTimer(timeRemaining);
 
-            // Set up auto-save every 30 seconds
-            setInterval(saveProgress, 30000); // Save every 30 seconds
+            // Clear any existing auto-save interval before setting a new one
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+            autoSaveInterval = setInterval(saveProgress, 30000); // Save every 30 seconds
 
             loadingIndicator.classList.add('hidden');
             examContent.classList.remove('hidden');
@@ -689,7 +697,9 @@
             }
             questionNavigation.appendChild(button);
         });
-        feather.replace(); // Re-render feather icons for newly added elements
+        if (typeof feather !== 'undefined') { // Check if feather is loaded
+            feather.replace();
+        }
     }
 
     function showQuestion(index) {
@@ -699,15 +709,18 @@
 
         // Before moving to a new question, save the current question's answer if any radio is selected
         const currentQuestion = allQuestions[currentQuestionIndex];
-        const currentQuestionRadios = document.querySelectorAll(`input[name="question-${currentQuestion.question_id}"]`);
-        let currentAnswerSelected = false;
-        currentQuestionRadios.forEach(radio => {
-            if (radio.checked) {
-                userAnswers[currentQuestion.question_id] = radio.value;
-                currentAnswerSelected = true;
-            }
-        });
-        updateQuestionNavButton(currentQuestionIndex, currentAnswerSelected);
+        // Only attempt to get radio buttons if currentQuestion is valid
+        if (currentQuestion) {
+            const currentQuestionRadios = document.querySelectorAll(`input[name="question-${currentQuestion.question_id}"]`);
+            let currentAnswerSelected = false;
+            currentQuestionRadios.forEach(radio => {
+                if (radio.checked) {
+                    userAnswers[currentQuestion.question_id] = radio.value;
+                    currentAnswerSelected = true;
+                }
+            });
+            updateQuestionNavButton(currentQuestionIndex, currentAnswerSelected);
+        }
 
 
         currentQuestionIndex = index;
@@ -837,6 +850,20 @@
     }
 
     async function saveProgress() {
+        // Ensure currentQuestion's answer is saved before auto-saving
+        const currentQuestion = allQuestions[currentQuestionIndex];
+        if (currentQuestion) {
+            const currentQuestionRadios = document.querySelectorAll(`input[name="question-${currentQuestion.question_id}"]`);
+            let currentAnswerSelected = false;
+            currentQuestionRadios.forEach(radio => {
+                if (radio.checked) {
+                    userAnswers[currentQuestion.question_id] = radio.value;
+                    currentAnswerSelected = true;
+                }
+            });
+            updateQuestionNavButton(currentQuestionIndex, currentAnswerSelected);
+        }
+
         if (!currentExam || Object.keys(userAnswers).length === 0) {
             return; // Don't save if exam not loaded or no answers
         }
@@ -864,10 +891,25 @@
 
     async function submitExam() {
         clearInterval(timerInterval); // Stop the timer
+        if (autoSaveInterval) { // Stop auto-save interval
+            clearInterval(autoSaveInterval);
+        }
         if (submitExamBtn) { // Check if element exists before accessing
             submitExamBtn.disabled = true;
             submitExamBtn.textContent = 'Submitting...';
         }
+
+        // Ensure the last question's answer is captured before submission
+        const currentQuestion = allQuestions[currentQuestionIndex];
+        if (currentQuestion) {
+            const currentQuestionRadios = document.querySelectorAll(`input[name="question-${currentQuestion.question_id}"]`);
+            currentQuestionRadios.forEach(radio => {
+                if (radio.checked) {
+                    userAnswers[currentQuestion.question_id] = radio.value;
+                }
+            });
+        }
+
 
         const timeTakenSeconds = Math.floor((Date.now() - examStartTime) / 1000);
 
@@ -950,7 +992,11 @@
         if (user) {
             loadExam();
         }
-        feather.replace(); // Initialize Feather icons
+        // Ensure feather.replace() is called after all static and initial dynamic content is in place.
+        // For dynamically added question navigation buttons, it's called in renderQuestionNavigation.
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
     });
   </script>
   <!-- Modals HTML (add these to the end of your body tag) -->

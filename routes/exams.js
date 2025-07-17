@@ -32,7 +32,7 @@ async function getExamWithSectionsAndQuestions(examId) {
     for (const sectionRow of sectionsResult.rows) {
       // Fetch questions for each section, ordered by question_id for consistency
       const questionsResult = await pool.query(
-        `SELECT question_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation
+        `SELECT question_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, marks
          FROM questions WHERE section_id = $1 ORDER BY question_id ASC`,
         [sectionRow.section_id]
       );
@@ -43,7 +43,8 @@ async function getExamWithSectionsAndQuestions(examId) {
           question_text: q.question_text,
           options: { A: q.option_a, B: q.option_b, C: q.option_c, D: q.option_d },
           correct_answer: q.correct_answer,
-          explanation: q.explanation
+          explanation: q.explanation,
+          marks: q.marks // Include marks for each question
       }));
 
       sections.push({
@@ -94,7 +95,10 @@ router.get("/user-stats", auth, async (req, res) => {
         );
         const highestScore = parseFloat(highestScoreQuery.rows[0].max) || 0;
 
-        // Total questions answered
+        // Total questions answered (This might need adjustment if total_possible_marks in exam_results
+        // doesn't accurately reflect questions answered, but rather total marks available.
+        // For now, it sums total_possible_marks from results, which is fine if each question is 1 mark
+        // or if total_possible_marks is the sum of marks for questions in that exam)
         const totalQuestionsAnsweredQuery = await pool.query(
             `SELECT SUM(total_possible_marks) FROM exam_results WHERE student_id = $1`,
             [userId]
@@ -294,10 +298,11 @@ router.post("/", auth, (req, res, next) => {
       const sectionId = sectionResult.rows[0].section_id;
 
       for (const question of section.questions) {
+        // Include 'marks' in the INSERT statement for questions
         await client.query(
-          `INSERT INTO questions (section_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [sectionId, question.question_text, question.options.A, question.options.B, question.options.C, question.options.D, question.correct_answer, question.explanation]
+          `INSERT INTO questions (section_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, marks)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [sectionId, question.question_text, question.options.A, question.options.B, question.options.C, question.options.D, question.correct_answer, question.explanation, question.marks]
         );
       }
     }
@@ -361,10 +366,11 @@ router.put("/:id", auth, (req, res, next) => {
       );
       const sectionId = sectionResult.rows[0].section_id;
       for (const question of section.questions) {
+        // Include 'marks' in the INSERT statement for questions
         await client.query(
-          `INSERT INTO questions (section_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [sectionId, question.question_text, question.options.A, question.options.B, question.options.C, question.options.D, question.correct_answer, question.explanation]
+          `INSERT INTO questions (section_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, marks)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [sectionId, question.question_text, question.options.A, question.options.B, question.options.C, question.options.D, question.correct_answer, question.explanation, question.marks]
         );
       }
     }

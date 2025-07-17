@@ -4,9 +4,255 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Users | CBT System</title>
-  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/feather-icons"></script>
   <style>
-    /* Modal styles */
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f4f7f6;
+        color: #333;
+        line-height: 1.6;
+    }
+    main {
+        max-width: 1200px; /* Increased max-width for better table display */
+        margin: 30px auto;
+        padding: 20px;
+    }
+    header {
+        background-color: #2c3e50; /* Dark blue/grey */
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    .logo {
+        color: #ecf0f1; /* Light grey text */
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    .logo:hover {
+        color: #3498db; /* Primary blue on hover */
+    }
+    .nav-links {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 1.5rem; /* Space between nav items */
+    }
+    .nav-links li a, .nav-links li button {
+        color: #ecf0f1; /* Light grey text */
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 0.8rem;
+        border-radius: 5px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .nav-links li a:hover, .nav-links li button:hover {
+        background-color: #34495e; /* Slightly darker background on hover */
+        color: #ffffff;
+    }
+    .nav-links li button.btn {
+        background-color: #e74c3c; /* Red for logout */
+        border: none;
+        cursor: pointer;
+    }
+    .nav-links li button.btn:hover {
+        background-color: #c0392b; /* Darker red on hover */
+    }
+    /* Mobile menu button and dropdown */
+    .mobile-menu-button {
+        display: none; /* Hidden on desktop */
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.8rem;
+        cursor: pointer;
+    }
+    .mobile-menu {
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        background-color: #2c3e50;
+        padding: 1rem;
+        position: absolute;
+        top: 60px; /* Adjust based on header height */
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .mobile-menu.open {
+        display: flex;
+    }
+    .mobile-menu a {
+        color: #ffffff;
+        padding: 0.75rem 1rem;
+        text-decoration: none;
+        border-bottom: 1px solid #34495e;
+    }
+    .mobile-menu a:last-child {
+        border-bottom: none;
+    }
+    .mobile-menu a:hover {
+        background-color: #34495e;
+    }
+    @media (max-width: 768px) {
+        .nav-links {
+            display: none; /* Hide desktop nav links on mobile */
+        }
+        .mobile-menu-button {
+            display: block; /* Show mobile menu button */
+        }
+        nav {
+            flex-direction: row; /* Keep logo and button on one line */
+            justify-content: space-between;
+            align-items: center;
+        }
+    }
+
+    /* User Management Section */
+    .user-management-section {
+        background-color: #ffffff;
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+    }
+    .user-management-section h1 {
+        font-size: 2.2rem;
+        color: #1a237e;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-weight: 700;
+    }
+
+    /* Filter Controls */
+    .filter-controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: #f0f8ff; /* Light blue background for filters */
+        border-radius: 8px;
+        border: 1px solid #cce0ff;
+    }
+    .filter-controls label {
+        font-weight: 600;
+        color: #1a237e;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .filter-controls select,
+    .filter-controls input[type="text"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+    }
+    .filter-controls select:focus,
+    .filter-controls input[type="text"]:focus {
+        border-color: #1a237e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.2);
+    }
+
+    /* User Table */
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-radius: 10px;
+        overflow: hidden; /* Ensures rounded corners apply to table */
+    }
+    .user-table th, .user-table td {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        vertical-align: middle;
+    }
+    .user-table thead th {
+        background-color: #1a237e;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+    .user-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    .user-table tbody tr:hover {
+        background-color: #f0f0f0;
+    }
+    .user-profile-pic-thumbnail {
+        width: 50px; /* Slightly larger thumbnail */
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #ccc;
+    }
+    .user-actions button {
+        padding: 8px 15px; /* Larger buttons */
+        font-size: 0.9rem;
+        border-radius: 6px;
+        margin-right: 8px;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .user-actions button:hover {
+        transform: translateY(-1px);
+    }
+    .btn-edit {
+        background-color: #28a745; /* Green for edit */
+        color: white;
+    }
+    .btn-edit:hover {
+        background-color: #218838;
+    }
+    .btn-delete {
+        background-color: #dc3545; /* Red for delete */
+        color: white;
+    }
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    #loadingIndicatorUsers {
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+        color: #666;
+    }
+    .message {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        text-align: center;
+    }
+    .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Modal styles (retained from original for consistency, but slightly enhanced) */
     .modal {
         display: none; /* Hidden by default */
         position: fixed; /* Stay in place */
@@ -17,74 +263,77 @@
         height: 100%; /* Full height */
         overflow: auto; /* Enable scroll if needed */
         background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        justify-content: center;
-        align-items: center;
+        display: flex; /* Use flexbox for centering */
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
     }
     .modal-content {
         background-color: #fefefe;
-        margin: auto; /* Center vertically and horizontally */
-        padding: 20px;
+        margin: auto;
+        padding: 0; /* Removed padding here, moved to header/body */
         border: 1px solid #888;
         width: 80%; /* Could be more responsive */
         max-width: 500px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        border-radius: 10px; /* Softer corners */
+        box-shadow: 0 8px 30px rgba(0,0,0,0.25); /* Stronger shadow */
         animation-name: animatetop;
-        animation-duration: 0.4s
+        animation-duration: 0.4s;
+        overflow: hidden; /* Ensures rounded corners on content */
     }
     .modal-header {
-        padding: 10px 16px;
-        background-color: var(--primary-blue);
+        padding: 15px 20px; /* Increased padding */
+        background-color: #1a237e; /* Deep blue */
         color: white;
-        border-radius: 8px 8px 0 0;
+        border-radius: 10px 10px 0 0; /* Rounded top corners */
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
     .modal-body {
-        padding: 20px 16px;
+        padding: 20px; /* Consistent padding */
+        text-align: center;
     }
     .modal-footer {
-        padding: 10px 16px;
+        padding: 15px 20px; /* Consistent padding */
         text-align: right;
-        border-top: 1px solid #eee;
+        border-top: 1px solid #e0e0e0; /* Lighter border */
+        background-color: #f1f1f1; /* Light grey background */
+        border-radius: 0 0 10px 10px; /* Rounded bottom corners */
     }
     .close-button {
         color: #aaa;
-        float: right;
         font-size: 28px;
         font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
     }
     .close-button:hover,
     .close-button:focus {
-        color: #000;
+        color: #ddd; /* Lighter on hover */
         text-decoration: none;
-        cursor: pointer;
     }
 
-    /* Add animation */
     @keyframes animatetop {
         from {top: -300px; opacity: 0}
         to {top: 0; opacity: 1}
     }
-
-    main { max-width: 1100px; }
-    .user-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
-    .user-table th, .user-table td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; vertical-align: middle; }
-    .user-table th { background-color: var(--primary-blue); color: white; font-weight: 600; }
-    .user-table tr:nth-child(even) { background-color: #f8f9fa; }
-    .user-actions button { margin-right: 5px; padding: 6px 10px; font-size: 0.85em; }
-    .user-profile-pic-thumbnail { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-    #loadingIndicatorUsers { text-align: center; padding: 20px; font-style: italic; color: #666; }
   </style>
 </head>
 <body>
   <header>
     <nav>
         <a href="/dashboard.html" class="logo">SNA CBT System</a>
+        <button class="mobile-menu-button" id="mobile-menu-button" aria-label="Toggle mobile menu">
+            <i data-feather="menu"></i> </button>
         <ul class="nav-links" id="navLinks">
                 <!-- Navigation links will be dynamically inserted here -->
             </ul>
+        <div class="mobile-menu hidden" id="mobile-menu">
+            </div>
     </nav>
   </header>
 
@@ -92,18 +341,22 @@
     <section class="user-management-section">
       <h1>Manage Users</h1>
       <div id="userManagementError" class="error-message hidden"></div>
+      <div id="userManagementSuccess" class="success-message hidden"></div>
 
       <div class="filter-controls">
-        <label for="roleFilter">Filter by Role:</label>
-        <select id="roleFilter">
-          <option value="">All Roles</option>
-          <option value="student">Student</option>
-          <option value="teacher">Teacher</option>
-          <option value="admin">Admin</option>
-        </select>
-
-        <label for="searchUsers">Search:</label>
-        <input type="text" id="searchUsers" placeholder="Search by name, email, admission no.">
+        <div>
+            <label for="roleFilter">Filter by Role:</label>
+            <select id="roleFilter">
+                <option value="">All Roles</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <div>
+            <label for="searchUsers">Search:</label>
+            <input type="text" id="searchUsers" placeholder="Name, email, admission no., dept">
+        </div>
       </div>
 
       <div id="loadingIndicatorUsers">Loading users...</div>
@@ -117,6 +370,7 @@
             <th>Role</th>
             <th>Admission No.</th>
             <th>Class</th>
+            <th>Department</th> <!-- New column header -->
             <th>Actions</th>
           </tr>
         </thead>
@@ -142,8 +396,8 @@
         <p id="confirmationMessage"></p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="confirmAction(false)">Cancel</button>
-        <button class="btn btn-danger" onclick="confirmAction(true)">Confirm</button>
+        <button class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400" onclick="confirmAction(false)">Cancel</button>
+        <button class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700" onclick="confirmAction(true)">Confirm</button>
       </div>
     </div>
   </div>
@@ -159,7 +413,7 @@
         <p id="alertMessage"></p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-primary" onclick="closeModal('alertDialog')">OK</button>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" onclick="closeModal('alertDialog')">OK</button>
       </div>
     </div>
   </div>
@@ -218,58 +472,64 @@
      */
     function buildNavigation(user) {
         const navLinksContainer = document.getElementById('navLinks');
+        const mobileMenu = document.getElementById('mobile-menu');
         if (navLinksContainer) {
             navLinksContainer.innerHTML = ''; 
+            mobileMenu.innerHTML = '';
             
-            const dashboardLink = document.createElement('li');
-            // Corrected path to ensure it always starts from the root
-            dashboardLink.innerHTML = '<a href="/dashboard.html" class="nav-link">Dashboard</a>'; 
-            navLinksContainer.appendChild(dashboardLink);
+            const navLinks = [
+                { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'], icon: 'home' },
+                { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'], icon: 'plus-square' },
+                { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'], icon: 'users' },
+                { text: 'Register User', href: '/registration.html', roles: ['admin'], icon: 'user-plus' },
+                { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'], icon: 'book' },
+                { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'], icon: 'layers' },
+                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'], icon: 'grid' },
+                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin', 'teacher'], icon: 'bar-chart-2' },
+                { text: 'Exam Results', href: '/results.html', roles: ['student', 'teacher', 'admin'], icon: 'clipboard' },
+            ];
 
-            if (user.is_admin || user.role === 'teacher') {
-                const createExamLink = document.createElement('li');
-                createExamLink.innerHTML = '<a href="/create-exam.html" class="nav-link">Create Exam</a>'; // Corrected path
-                navLinksContainer.appendChild(createExamLink);
-            }
-
-            if (user.is_admin) {
-                const manageUsersLink = document.createElement('li');
-                manageUsersLink.innerHTML = '<a href="/manage-users.html" class="nav-link">Manage Users</a>'; // Corrected path
-                navLinksContainer.appendChild(manageUsersLink);
-
-                const registerLink = document.createElement('li');
-                registerLink.innerHTML = '<a href="/registration.html" class="nav-link">Register User</a>'; // Corrected path
-                navLinksContainer.appendChild(registerLink);
-
-                const reportsLink = document.createElement('li');
-                reportsLink.innerHTML = '<a href="/admin-reports.html" class="nav-link">Student Reports</a>'; // Corrected path
-                navLinksContainer.appendChild(reportsLink);
-
-                // New links for navigation bar
-                const manageSubjectsLink = document.createElement('li');
-                manageSubjectsLink.innerHTML = '<a href="/manage-subjects.html" class="nav-link">Manage Subjects</a>'; // Corrected path
-                navLinksContainer.appendChild(manageSubjectsLink);
-
-                const manageClassLevelsLink = document.createElement('li');
-                manageClassLevelsLink.innerHTML = '<a href="/manage-class-levels.html" class="nav-link">Manage Class Levels</a>'; // Added this line
-                navLinksContainer.appendChild(manageClassLevelsLink);
-
-
-                const manageClassesLink = document.createElement('li');
-                manageClassesLink.innerHTML = '<a href="/manage-classes.html" class="nav-link">Manage Classes</a>'; // Corrected path
-                navLinksContainer.appendChild(manageClassesLink);
-            }
-
-            const logoutLinkItem = document.createElement('li');
-            logoutLinkItem.innerHTML = '<a href="#" id="logoutLink" class="nav-link">Logout</a>';
-            navLinksContainer.appendChild(logoutLinkItem);
-
-            const logoutButton = document.getElementById('logoutLink');
-            if (logoutButton) {
-                logoutButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    handleLogout();
+            navLinks.forEach(link => {
+                const shouldDisplay = link.roles.some(role => {
+                    if (role === 'admin') return user.is_admin;
+                    return user.role === role;
                 });
+
+                if (shouldDisplay) {
+                    const navLi = document.createElement('li');
+                    const navA = document.createElement('a');
+                    navA.href = link.href;
+                    navA.textContent = link.text;
+                    navA.classList.add('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900', 'px-3', 'py-2', 'rounded-md', 'text-sm', 'font-medium', 'flex', 'items-center');
+                    navA.innerHTML = `<i data-feather="${link.icon}" class="w-4 h-4 mr-2"></i> ${link.text}`;
+                    navLinksContainer.appendChild(navLi).appendChild(navA);
+
+                    const mobileA = document.createElement('a');
+                    mobileA.href = link.href;
+                    mobileA.textContent = link.text;
+                    mobileA.classList.add('block', 'px-3', 'py-2', 'rounded-md', 'text-base', 'font-medium', 'text-white', 'hover:bg-gray-700');
+                    mobileMenu.appendChild(mobileA);
+                }
+            });
+
+            // Add logout link for both desktop and mobile
+            const logoutDesktopLi = document.createElement('li');
+            const logoutDesktopBtn = document.createElement('button');
+            logoutDesktopBtn.textContent = 'Logout';
+            logoutDesktopBtn.classList.add('bg-red-500', 'text-white', 'px-3', 'py-2', 'rounded-md', 'text-sm', 'font-medium', 'hover:bg-red-600', 'flex', 'items-center', 'justify-center');
+            logoutDesktopBtn.innerHTML = `<i data-feather="log-out" class="w-4 h-4 mr-2"></i> Logout`;
+            logoutDesktopBtn.onclick = handleLogout;
+            navLinksContainer.appendChild(logoutDesktopLi).appendChild(logoutDesktopBtn);
+
+            const logoutMobileA = document.createElement('a');
+            logoutMobileA.href = '#'; // Use # as it will be handled by JS
+            logoutMobileA.textContent = 'Logout';
+            logoutMobileA.classList.add('block', 'px-3', 'py-2', 'rounded-md', 'text-base', 'font-medium', 'text-white', 'hover:bg-gray-700');
+            logoutMobileA.onclick = handleLogout;
+            mobileMenu.appendChild(logoutMobileA);
+
+            if (typeof feather !== 'undefined') {
+                feather.replace();
             }
         }
     }
@@ -280,10 +540,7 @@
      */
     async function handleLogout() {
         try {
-            const response = await fetch('/api/users/logout', { 
-                method: 'POST', 
-                credentials: 'include' 
-            });
+            const response = await fetch('/api/users/logout', { method: 'POST', credentials: 'include' });
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 console.warn('Logout API call failed:', errorData.error || 'Server responded with an error.');
@@ -298,133 +555,117 @@
     }
 
     /**
-     * Main function to initialize the page.
-     * It ensures the user is an authenticated admin before proceeding.
+     * Loads current user data from the backend (/api/users/me) for authentication and navigation.
+     * @returns {Promise<object|null>} The user object if authenticated, otherwise null.
      */
-    async function initializePage() {
+    async function loadUserData() {
         try {
-            // First, fetch the current user's data to check permissions.
             const response = await fetch('/api/users/me', { credentials: 'include' });
             if (!response.ok) {
-                // If not authenticated, redirect to login.
                 window.location.href = '/login.html';
-                return;
+                return null;
             }
             currentUser = await response.json();
-            
-            // Build the navigation bar for the authenticated user.
-            buildNavigation(currentUser);
-
-            // Security check: If the user is not an admin, block access.
-            if (!currentUser.is_admin) {
-                document.querySelector('main').innerHTML = `
-                    <h1>Access Denied</h1>
-                    <p>You do not have permission to view this page. <a href="/dashboard.html">Return to Dashboard</a></p>
-                `;
-                return;
-            }
-            
-            // If the user is an admin, proceed to load the user management data.
-            await loadAllUsers();
-
+            buildNavigation(currentUser); // Call the navigation function
+            return currentUser;
         } catch (error) {
-            console.error('Page Initialization Error:', error);
-            // Redirect to login on any failure during the auth check.
-            showAlert('Failed to initialize page. Please log in again.', 'Error');
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 2000); // Redirect after a short delay
+            console.error("Error loading user data for navigation:", error);
+            window.location.href = '/login.html';
+            return null;
         }
     }
-    
+
     /**
-     * Fetches the list of all users from the server.
+     * Fetches all users from the backend and renders them in the table.
      */
     async function loadAllUsers() {
-      const loadingIndicator = document.getElementById('loadingIndicatorUsers');
-      const errorDiv = document.getElementById('userManagementError');
-      const userTable = document.querySelector('.user-table');
-      
-      loadingIndicator.classList.remove('hidden');
-      errorDiv.classList.add('hidden');
-      userTable.classList.add('hidden');
-      
-      try {
-        // This fetch is now explicitly protected by isAdmin middleware on the server
-        const response = await fetch('/api/users', { credentials: 'include' });
-        if (!response.ok) {
-          // This will catch 403 Forbidden if authentication token is missing or user is not admin
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Failed to load users. Server responded with status: ${response.status}`);
+        const loadingIndicator = document.getElementById('loadingIndicatorUsers');
+        const userTable = document.querySelector('.user-table');
+        const userTableBody = document.getElementById('userTableBody');
+        const roleFilter = document.getElementById('roleFilter').value;
+        const searchUsers = document.getElementById('searchUsers').value;
+        const userManagementError = document.getElementById('userManagementError');
+        const userManagementSuccess = document.getElementById('userManagementSuccess');
+
+        loadingIndicator.classList.remove('hidden');
+        userTable.classList.add('hidden');
+        userTableBody.innerHTML = ''; // Clear existing rows
+        userManagementError.classList.add('hidden');
+        userManagementSuccess.classList.add('hidden');
+
+        try {
+            let url = `/api/users`;
+            const queryParams = new URLSearchParams();
+            if (roleFilter) {
+                queryParams.append('role', roleFilter);
+            }
+            if (searchUsers) {
+                queryParams.append('search', searchUsers);
+            }
+            if (queryParams.toString()) {
+                url += `?${queryParams.toString()}`;
+            }
+
+            const users = await fetch(url, { credentials: 'include' });
+            if (!users.ok) {
+                const errorData = await users.json();
+                throw new Error(errorData.error || 'Failed to fetch users.');
+            }
+            allUsersData = await users.json(); // Store fetched data
+
+            if (allUsersData.length === 0) {
+                userTableBody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No users found matching your criteria.</td></tr>';
+            } else {
+                allUsersData.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="py-2 px-4 border-b">
+                            <img src="${user.profile_picture_url || '/images/default_avatar.jpeg'}" alt="Profile" class="user-profile-pic-thumbnail">
+                        </td>
+                        <td class="py-2 px-4 border-b">${user.full_name || 'N/A'}</td>
+                        <td class="py-2 px-4 border-b">${user.username}</td>
+                        <td class="py-2 px-4 border-b">${user.email}</td>
+                        <td class="py-2 px-4 border-b">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</td>
+                        <td class="py-2 px-4 border-b">${user.admission_number || 'N/A'}</td>
+                        <td class="py-2 px-4 border-b">${user.class_level_name || 'N/A'}</td>
+                        <td class="py-2 px-4 border-b">${user.department || 'N/A'}</td> <!-- Display department -->
+                        <td class="py-2 px-4 border-b user-actions">
+                            <button onclick="editUser(${user.id})" class="btn-edit">Edit</button>
+                            <button onclick="deleteUser(${user.id})" class="btn-delete">Delete</button>
+                        </td>
+                    `;
+                    userTableBody.appendChild(row);
+                });
+            }
+            userTable.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error loading users:', error);
+            userManagementError.textContent = 'Error loading users: ' + error.message;
+            userManagementError.classList.remove('hidden');
+        } finally {
+            loadingIndicator.classList.add('hidden');
         }
-        allUsersData = await response.json();
-        applyUserFilters(); // Apply default filters and display the users
-        userTable.classList.remove('hidden');
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        errorDiv.textContent = error.message;
-        errorDiv.classList.remove('hidden');
-      } finally {
-        loadingIndicator.classList.add('hidden');
-      }
     }
 
     /**
-     * Filters the `allUsersData` array based on UI controls and calls displayUsers.
+     * Applies filters to the displayed user list.
      */
     function applyUserFilters() {
-      const roleFilter = document.getElementById('roleFilter').value;
-      const searchFilter = document.getElementById('searchUsers').value.toLowerCase();
-
-      const filteredUsers = allUsersData.filter(user => {
-        const matchesRole = !roleFilter || user.role === roleFilter;
-        const matchesSearch = !searchFilter ||
-                              (user.full_name && user.full_name.toLowerCase().includes(searchFilter)) ||
-                              (user.username && user.username.toLowerCase().includes(searchFilter)) ||
-                              (user.email && user.email.toLowerCase().includes(searchFilter)) ||
-                              (user.admission_number && user.admission_number.toLowerCase().includes(searchFilter));
-        return matchesRole && matchesSearch;
-      });
-      displayUsers(filteredUsers);
+        loadAllUsers(); // Re-fetch users with new filters
     }
-    
-    /**
-     * Renders the provided list of users into the table.
-     * @param {Array} users - The array of user objects to display.
-     */
-    function displayUsers(users) {
-      const userTableBody = document.getElementById('userTableBody');
-      userTableBody.innerHTML = ''; // Clear existing rows
-      
-      if (users.length === 0) {
-        userTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No users found matching your criteria.</td></tr>';
-        return;
-      }
 
-      users.forEach(user => {
-        const profilePicSrc = user.profile_picture_url || '/images/default_avatar.jpeg'; 
-        const row = `
-          <tr>
-            <td><img src="${profilePicSrc}" alt="Profile" class="user-profile-pic-thumbnail" onerror="this.onerror=null; this.src='/images/default_avatar.jpeg';"></td>
-            <td>${user.full_name || 'N/A'}</td>
-            <td>${user.username}</td>
-            <td>${user.email}</td>
-            <td>${user.role}</td>
-            <td>${user.admission_number || 'N/A'}</td>
-            <td>${user.class_level_name || 'N/A'}</td>
-            <td class="user-actions">
-              <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">Delete</button>
-            </td>
-          </tr>
-        `;
-        userTableBody.innerHTML += row;
-    });
-}
-    // --- Action and Navigation Functions ---
-    function editUser(userId) { window.location.href = `/edit-user.html?userId=${userId}`; } // Corrected path
-    
-    // Implemented deleteUser function
+    /**
+     * Redirects to the edit user page.
+     * @param {number} userId - The ID of the user to edit.
+     */
+    function editUser(userId) {
+        window.location.href = `/edit-user.html?userId=${userId}`;
+    }
+
+    /**
+     * Deletes a user after confirmation.
+     * @param {number} userId - The ID of the user to delete.
+     */
     async function deleteUser(userId) {
         const confirmed = await showConfirmation('Are you sure you want to delete this user and all associated data? This action cannot be undone.');
         if (!confirmed) {
@@ -453,10 +694,21 @@
     // --- Event Listeners ---
     document.getElementById('roleFilter').addEventListener('change', applyUserFilters);
     document.getElementById('searchUsers').addEventListener('input', applyUserFilters);
+    
     // Added a small delay before calling initializePage to ensure cookie is set
-    document.addEventListener('DOMContentLoaded', () => {
-        // Increased delay slightly, and ensured all navigation links use absolute paths
-        setTimeout(initializePage, 100); 
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadUserData(); // Load current user and build navigation
+        if (currentUser && currentUser.is_admin) { // Only admins can access this page
+            await loadAllUsers(); // Initial load of users
+        } else {
+            window.location.href = '/dashboard.html'; // Redirect if not admin
+        }
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+            document.getElementById('mobile-menu').classList.toggle('open');
+        });
     });
 </script>
 </body>

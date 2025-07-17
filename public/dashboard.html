@@ -98,8 +98,10 @@
             <div class="bg-white p-6 rounded-xl shadow-md interactive-card">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Welcome, <span id="usernameDisplay"></span>!</h2>
                 <p class="text-gray-600">Role: <span id="userRoleDisplay"></span></p>
+                <p class="text-gray-600" id="userFullNameDisplay"></p> <!-- Added for full name -->
                 <p class="text-gray-600" id="userClassLevelDisplay"></p>
                 <p class="text-gray-600" id="userAdmissionNumberDisplay"></p>
+                <p class="text-gray-600" id="userDepartmentDisplay"></p> <!-- Added for department -->
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-md interactive-card">
@@ -211,6 +213,7 @@
                     // Populate user info
                     document.getElementById('usernameDisplay').textContent = user.username;
                     document.getElementById('userRoleDisplay').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                    document.getElementById('userFullNameDisplay').textContent = `Full Name: ${user.full_name || 'N/A'}`; // Display full name
                     if (user.class_level_name) {
                         document.getElementById('userClassLevelDisplay').textContent = `Class Level: ${user.class_level_name}`;
                     } else {
@@ -221,12 +224,20 @@
                     } else {
                         document.getElementById('userAdmissionNumberDisplay').textContent = `Admission No.: N/A`;
                     }
+                    // Display Department if available
+                    const userDepartmentDisplay = document.getElementById('userDepartmentDisplay');
+                    if (user.department) {
+                        userDepartmentDisplay.textContent = `Department: ${user.department}`;
+                        userDepartmentDisplay.classList.remove('hidden'); // Ensure it's visible
+                    } else {
+                        userDepartmentDisplay.classList.add('hidden'); // Hide if no department
+                    }
 
                     populateNavLinks(currentUser, 'navLinks');
                     populateNavLinks(currentUser, 'mobileNavLinks');
 
                     // Show/hide admin stats card ONLY for admin
-                    if (currentUser.is_admin) { // Changed from (currentUser.is_admin || currentUser.role === 'teacher')
+                    if (currentUser.is_admin) {
                         document.getElementById('adminStatsCard').classList.remove('hidden');
                         await loadAdminStats();
                     } else {
@@ -256,7 +267,6 @@
             } catch (error) {
                 console.error("Failed to load user data:", error);
                 // If there's a network error or other critical issue, redirect to login
-                // This catch block is for errors not caught by fetchApi's response.ok check (e.g., network down)
                 window.location.href = '/login.html';
                 return null;
             }
@@ -270,11 +280,12 @@
                 { text: 'Dashboard', href: '/dashboard.html', roles: ['student', 'teacher', 'admin'], icon: 'home' },
                 { text: 'Create Exam', href: '/create-exam.html', roles: ['teacher', 'admin'], icon: 'plus-square' },
                 { text: 'Manage Users', href: '/manage-users.html', roles: ['admin'], icon: 'users' },
-                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin'], icon: 'bar-chart-2' },
                 { text: 'Register User', href: '/registration.html', roles: ['admin'], icon: 'user-plus' },
-                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'], icon: 'book-open' },
-                { text: 'Manage Levels', href: '/manage-class-levels.html', roles: ['admin'], icon: 'layers' },
-                { text: 'Manage Exams', href: '/manage-exams.html', roles: ['teacher', 'admin'], icon: 'edit' }
+                { text: 'Manage Subjects', href: '/manage-subjects.html', roles: ['admin'], icon: 'book' },
+                { text: 'Manage Class Levels', href: '/manage-class-levels.html', roles: ['admin'], icon: 'layers' },
+                { text: 'Manage Classes', href: '/manage-classes.html', roles: ['admin'], icon: 'grid' },
+                { text: 'Student Reports', href: '/admin-reports.html', roles: ['admin', 'teacher'], icon: 'bar-chart-2' },
+                { text: 'Exam Results', href: '/results.html', roles: ['student', 'teacher', 'admin'], icon: 'clipboard' },
             ];
 
             navLinks.forEach(link => {
@@ -295,6 +306,7 @@
                                     </button>`;
             container.appendChild(logoutBtn);
             document.getElementById(`logoutBtn-${containerId}`).addEventListener('click', handleLogout);
+
             // Call feather.replace() after all icons are added to the DOM
             if (typeof feather !== 'undefined') { // Check if feather is loaded
                 feather.replace();
@@ -312,215 +324,217 @@
                 }
             } catch (error) {
                 console.error("Logout error:", error);
-                showMessage('Network error during logout.', 'error');
-            }
-        }
-
-        async function loadUserStatistics() {
-            const stats = await fetchApi('/api/exams/user-stats');
-            if (stats) {
-                document.getElementById('totalExamsTaken').textContent = stats.totalExamsTaken;
-                document.getElementById('examsPassed').textContent = stats.examsPassed;
-                document.getElementById('highestScore').textContent = `${stats.highestScore}%`;
-                document.getElementById('totalQuestionsAnswered').textContent = stats.totalQuestionsAnswered;
+                showMessage("Network error during logout.", 'error');
             }
         }
 
         async function loadAdminStats() {
-            // This function should only be called if currentUser.is_admin is true
-            if (!currentUser || !currentUser.is_admin) {
-                console.warn("Attempted to load admin stats without admin privileges.");
-                return; // Prevent API call and errors
-            }
-            const stats = await fetchApi('/api/admin/stats');
-            if (stats) {
-                document.getElementById('adminTotalUsers').textContent = stats.totalUsers;
-                document.getElementById('adminTotalExams').textContent = stats.totalExams;
-                document.getElementById('adminTotalSubjects').textContent = stats.totalSubjects;
-                document.getElementById('adminTotalClassLevels').textContent = stats.totalClassLevels;
-                document.getElementById('adminTotalClasses').textContent = stats.totalClasses;
+            try {
+                const [users, exams, subjects, classLevels, classes] = await Promise.all([
+                    fetchApi('/api/users?role='), // Fetch all users
+                    fetchApi('/api/exams'), // Fetch all exams
+                    fetchApi('/api/exams/config/subjects'), // Fetch all subjects
+                    fetchApi('/api/exams/config/class-levels'), // Fetch all class levels
+                    fetchApi('/api/classes') // Assuming you have a /api/classes endpoint
+                ]);
+
+                document.getElementById('adminTotalUsers').textContent = users ? users.length : 0;
+                document.getElementById('adminTotalExams').textContent = exams ? exams.length : 0;
+                document.getElementById('adminTotalSubjects').textContent = subjects ? subjects.length : 0;
+                document.getElementById('adminTotalClassLevels').textContent = classLevels ? classLevels.length : 0;
+                document.getElementById('adminTotalClasses').textContent = classes ? classes.length : 0;
+
+            } catch (error) {
+                console.error("Error loading admin stats:", error);
+                showMessage("Failed to load admin statistics.", 'error');
             }
         }
 
         async function loadUserPerformanceGraph() {
-            // Ensure currentUser is available and is a student before attempting to fetch results
-            if (!currentUser || currentUser.role !== 'student') {
-                document.getElementById('performanceGraphSection').innerHTML = '<p class="text-center text-gray-500">Performance graph is available for students only.</p>';
-                return;
-            }
+            try {
+                const results = await fetchApi(`/api/exam-results/my-results`);
+                if (results && results.length > 0) {
+                    const labels = results.map(r => r.exam_title);
+                    const scores = results.map(r => r.score);
 
-            const results = await fetchApi('/api/exam-results/my-results'); // Assuming an endpoint for student's own results
-            if (results && results.length > 0) {
-                const examTitles = results.map(r => r.exam_title);
-                const scores = results.map(r => r.score);
+                    const ctx = document.getElementById('performanceChart').getContext('2d');
 
-                const ctx = document.getElementById('performanceChart').getContext('2d');
+                    if (performanceChartInstance) {
+                        performanceChartInstance.destroy(); // Destroy existing chart if it exists
+                    }
 
-                if (performanceChartInstance) {
-                    performanceChartInstance.destroy(); // Destroy existing chart if it exists
-                }
-
-                performanceChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: examTitles,
-                        datasets: [{
-                            label: 'Score (%)',
-                            data: scores,
-                            borderColor: '#1a237e',
-                            backgroundColor: 'rgba(26, 35, 126, 0.1)',
-                            tension: 0.1,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 100
+                    performanceChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Your Score (%)',
+                                data: scores,
+                                borderColor: 'rgb(75, 192, 192)',
+                                tension: 0.1,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: 'Score (%)'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                },
+                                title: {
+                                    display: false,
+                                    text: 'Your Recent Exam Performance'
+                                }
                             }
                         }
-                    }
-                });
-            } else {
-                document.getElementById('performanceGraphSection').innerHTML = '<p class="text-center text-gray-500">No exam results to display performance graph.</p>';
+                    });
+                } else {
+                    document.getElementById('performanceGraphSection').innerHTML = '<p class="text-center text-gray-500">No exam results available to display performance graph.</p>';
+                }
+            } catch (error) {
+                console.error("Error loading user performance graph:", error);
+                showMessage("Failed to load performance graph.", 'error');
             }
         }
 
-        async function fetchSubjectsForFilter() {
-            const subjectFilterSelect = document.getElementById('subjectFilter');
-            subjectFilterSelect.innerHTML = '<option value="">All Subjects</option>';
+        async function loadSubjectsFilter() {
             try {
                 const subjects = await fetchApi('/api/exams/config/subjects');
+                const subjectFilter = document.getElementById('subjectFilter');
+                subjectFilter.innerHTML = '<option value="">All Subjects</option>';
                 if (subjects) {
                     subjects.forEach(subject => {
                         const option = document.createElement('option');
                         option.value = subject.subject_id;
                         option.textContent = subject.name;
-                        subjectFilterSelect.appendChild(option);
+                        subjectFilter.appendChild(option);
                     });
                 }
             } catch (error) {
-                console.error("Error fetching subjects for filter:", error);
+                console.error("Error loading subjects for filter:", error);
+                showMessage("Failed to load subjects filter.", 'error');
             }
         }
 
-        async function fetchClassLevelsForFilter() {
-            const classLevelFilterSelect = document.getElementById('classLevelFilter');
-            classLevelFilterSelect.innerHTML = '<option value="">All Class Levels</option>';
+        async function loadClassLevelsFilter() {
             try {
                 const classLevels = await fetchApi('/api/exams/config/class-levels');
+                const classLevelFilter = document.getElementById('classLevelFilter');
+                classLevelFilter.innerHTML = '<option value="">All Class Levels</option>';
                 if (classLevels) {
                     classLevels.forEach(level => {
                         const option = document.createElement('option');
                         option.value = level.level_id;
                         option.textContent = level.level_name;
-                        classLevelFilterSelect.appendChild(option);
+                        classLevelFilter.appendChild(option);
                     });
                 }
             } catch (error) {
-                console.error("Error fetching class levels for filter:", error);
+                console.error("Error loading class levels for filter:", error);
+                showMessage("Failed to load class levels filter.", 'error');
             }
         }
 
         async function loadAvailableExams() {
-            const examsListContainer = document.getElementById('examsList');
+            const examsListDiv = document.getElementById('examsList');
             const noExamsMessage = document.getElementById('noExamsMessage');
-            examsListContainer.innerHTML = ''; // Clear previous exams
-            noExamsMessage.classList.add('hidden'); // Hide message initially
+            examsListDiv.innerHTML = ''; // Clear previous exams
+            noExamsMessage.classList.add('hidden'); // Hide no exams message initially
 
             const subjectId = document.getElementById('subjectFilter').value;
-            let classLevelId = document.getElementById('classLevelFilter').value;
+            const classLevelId = document.getElementById('classLevelFilter').value;
 
-            // For students, always filter by their own class
-            if (currentUser && currentUser.role === 'student') {
-                if (currentUser.class_level_id) {
-                    classLevelId = currentUser.class_level_id;
+            let url = `/api/exams?`;
+            const params = new URLSearchParams();
+            if (subjectId) params.append('subject_id', subjectId);
+            if (classLevelId) params.append('class_level_id', classLevelId);
+            // If current user is a student, automatically filter by their class level
+            if (currentUser && currentUser.role === 'student' && currentUser.class_level_id) {
+                params.append('class_level_id', currentUser.class_level_id);
+            }
+            url += params.toString();
+
+            try {
+                const exams = await fetchApi(url);
+                if (exams && exams.length > 0) {
+                    exams.forEach(exam => {
+                        const examCard = document.createElement('div');
+                        examCard.className = 'bg-white p-6 rounded-xl shadow-md interactive-card';
+                        examCard.innerHTML = `
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">${exam.title}</h3>
+                            <p class="text-gray-600 text-sm">Subject: ${exam.subject_name || 'N/A'}</p>
+                            <p class="text-gray-600 text-sm">Class: ${exam.class_level_name || 'N/A'}</p>
+                            <p class="text-gray-600 text-sm">Type: ${exam.exam_type || 'N/A'}</p>
+                            <p class="text-gray-600 text-sm">Duration: ${exam.duration_minutes} mins</p>
+                            <p class="text-gray-600 text-sm">Term: ${exam.term || 'N/A'} | Session: ${exam.session || 'N/A'}</p>
+                            <p class="text-gray-600 text-sm">Status: ${exam.is_locked ? '<span class="text-red-500">Locked</span>' : '<span class="text-green-500">Available</span>'}</p>
+                            <div class="mt-4 flex justify-end space-x-2">
+                                ${currentUser && (currentUser.is_admin || currentUser.role === 'teacher') ? `
+                                    <button onclick="window.location.href='/create-exam.html?examId=${exam.exam_id}'" class="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600">Edit</button>
+                                    <button data-exam-id="${exam.exam_id}" class="delete-exam-btn bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Delete</button>
+                                ` : ''}
+                                ${currentUser && currentUser.role === 'student' && !exam.is_locked ? `
+                                    <button onclick="window.location.href='/exam.html?examId=${exam.exam_id}'" class="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-700">Take Exam</button>
+                                ` : ''}
+                                ${currentUser && currentUser.role === 'student' ? `
+                                    <button onclick="window.location.href='/results.html?examId=${exam.exam_id}'" class="bg-purple-600 text-white px-3 py-1 rounded-md text-sm hover:bg-purple-700">View Result</button>
+                                ` : ''}
+                            </div>
+                        `;
+                        examsListDiv.appendChild(examCard);
+                    });
                 } else {
-                    // If student's class_level_id is not set, prevent fetching exams
-                    showMessage("Cannot load exams: your class level is not set.", 'info');
-                    // Render an empty list of exams if the student's class level is not set
-                    return; 
+                    noExamsMessage.classList.remove('hidden');
                 }
+            } catch (error) {
+                console.error("Error loading available exams:", error);
+                showMessage("Failed to load available exams.", 'error');
             }
-
-            let url = '/api/exams?';
-            if (subjectId) url += `subject_id=${subjectId}&`;
-            if (classLevelId) url += `class_level_id=${classLevelId}&`;
-            
-            const exams = await fetchApi(url);
-            if (exams && exams.length > 0) {
-                exams.forEach(exam => {
-                    const examCard = document.createElement('div');
-                    examCard.className = 'bg-gray-50 p-5 rounded-lg shadow interactive-card flex flex-col justify-between';
-                    examCard.innerHTML = `
-                        <div>
-                            <h3 class="text-lg font-semibold text-indigo-700 mb-2">${exam.title}</h3>
-                            <p class="text-sm text-gray-600">Subject: ${exam.subject_name}</p>
-                            <p class="text-sm text-gray-600">Class Level: ${exam.class_level_name}</p>
-                            <p class="text-sm text-gray-600">Type: ${exam.exam_type}</p>
-                            <p class="text-sm text-gray-600">Duration: ${exam.duration_minutes} mins</p>
-                            <p class="text-sm text-gray-600">Term: ${exam.term}</p>
-                            <p class="text-sm text-gray-600">Session: ${exam.session}</p>
-                            ${exam.is_locked ? '<p class="text-sm text-red-500 font-medium mt-2">Locked: Students cannot take this exam.</p>' : ''}
-                        </div>
-                        <div class="mt-4 flex flex-col space-y-2">
-                            ${currentUser && currentUser.role === 'student' && !exam.is_locked ? `<button onclick="startExam(${exam.exam_id})" class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition duration-300">Take Exam</button>` : ''}
-                            ${currentUser && currentUser.role === 'student' ? `<button onclick="viewMyResult(${exam.exam_id})" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300">View My Result</button>` : ''}
-                            ${currentUser && (currentUser.is_admin || currentUser.role === 'teacher') ? `
-                                <button onclick="editExam(${exam.exam_id})" class="w-full bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition duration-300">Edit Exam</button>
-                                <button data-exam-id="${exam.exam_id}" class="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-300 delete-exam-btn">Delete Exam</button>
-                            ` : ''}
-                        </div>
-                    `;
-                    examsListContainer.appendChild(examCard);
-                });
-            } else {
-                noExamsMessage.classList.remove('hidden');
-            }
-        }
-
-        function startExam(examId) {
-            window.location.href = `/exam.html?examId=${examId}`;
-        }
-
-        function viewMyResult(examId) {
-            // This will navigate to the results page, which will then fetch the specific result for the current user and exam.
-            window.location.href = `/results.html?examId=${examId}`;
-        }
-
-        function editExam(examId) {
-            window.location.href = `/edit-exam.html?examId=${examId}`;
         }
 
         async function handleDeleteExam(examId) {
-            if (confirm('Are you sure you want to delete this exam? This action cannot be undone.')) {
-                try {
-                    const response = await fetchApi(`/api/exams/${examId}`, { method: 'DELETE' });
-                    if (response) {
-                        showMessage('Exam deleted successfully!', 'success');
-                        loadAvailableExams(); // Reload exams list
-                    }
-                } catch (error) {
-                    console.error("Error deleting exam:", error);
-                    showMessage(`Failed to delete exam: ${error.message}`, 'error');
+            const confirmed = confirm('Are you sure you want to delete this exam? This action cannot be undone.');
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/exams/${examId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    showMessage('Exam deleted successfully!', 'success');
+                    await loadAvailableExams(); // Reload the list
+                } else {
+                    const errorData = await response.json();
+                    showMessage(errorData.error || 'Failed to delete exam.', 'error');
                 }
+            } catch (error) {
+                console.error('Error deleting exam:', error);
+                showMessage('Network error or failed to delete exam.', 'error');
             }
         }
 
-        // --- Page Initialization ---
         async function initDashboard() {
-            const user = await loadUserData(); // This will handle redirection if not authenticated
+            const user = await loadUserData();
             if (user) {
-                await loadUserStatistics(); // Load user-specific stats
-                await fetchSubjectsForFilter(); // Load subjects for filter
-                if (user.role !== 'student') { // Only load class levels for filter if not a student
-                    await fetchClassLevelsForFilter(); // Load class levels for filter
-                }
-
-                await loadAvailableExams(); // Load exams based on initial filters and user role
+                await loadSubjectsFilter();
+                await loadClassLevelsFilter();
+                await loadAvailableExams();
 
                 document.getElementById('applyExamFilterBtn').addEventListener('click', async () => {
                     await loadAvailableExams();
@@ -548,6 +562,7 @@
                 // Mobile menu toggle
                 document.getElementById('mobile-menu-button').addEventListener('click', () => {
                     document.getElementById('mobile-menu').classList.toggle('hidden');
+                    document.getElementById('mobile-menu').classList.toggle('open');
                 });
 
                 // Replace all feather icons

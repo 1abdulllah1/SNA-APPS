@@ -171,15 +171,13 @@
                 <select id="classLevelFilter">
                     <option value="">All Class Levels</option>
                 </select>
-                <!-- NEW: Term Filter -->
                 <select id="termFilter">
                     <option value="">All Terms</option>
                     <option value="FIRST">First Term</option>
                     <option value="SECOND">Second Term</option>
                     <option value="THIRD">Third Term</option>
                 </select>
-                <!-- NEW: Session Filter - Changed to text input -->
-                <input type="text" id="sessionFilter" placeholder="Academic Session (e.g., 2023-2024)" pattern="\d{4}-\d{4}">
+                <input type="text" id="sessionFilter" placeholder="Academic Session (e.g., 2023/2024)" pattern="\d{4}/\d{4}">
                 <button id="applyFilterBtn">Apply Filter</button>
             </div>
 
@@ -398,7 +396,7 @@
                 url += `&term=${term}`;
             }
             if (session) {
-                url += `&academicYear=${encodeURIComponent(session)}`; // Use academicYear for session param
+                url += `&session=${encodeURIComponent(session)}`; // Changed to 'session'
             }
             window.location.href = url;
         }

@@ -25,7 +25,7 @@ router.get('/:studentId/:term/:session', auth, async (req, res) => {
 
   // Authorize: Admin can view any, student can only view their own, teachers can view students in their classes (if implemented)
   // For simplicity, currently: Admin can view any, student can only view their own
-  if (req.user.id !== parseInt(studentId) && !req.user.is_admin) {
+  if (req.user.id !== parseInt(studentId) && !req.user.is_admin && req.user.role !== 'teacher') { // Allow teacher to view
     return res.status(403).json({ error: "Access denied. You can only view your own report card meta." });
   }
 
@@ -51,28 +51,43 @@ router.get('/:studentId/:term/:session', auth, async (req, res) => {
  * @body {number} studentId - The ID of the student.
  * @body {string} term - The academic term (e.g., 'FIRST', 'SECOND', 'THIRD').
  * @body {string} session - The academic session (e.g., '2023/2024').
- * @body {string} classLevel - The class level for which the report is generated.
  * @body {string} [teacherComment] - Optional comment from the teacher.
  * @body {string} [principalComment] - Optional comment from the principal.
  * @body {string} [nextTermBegins] - Optional date for next term's resumption.
- * @body {Array} [cumulativeData] - JSON array of cumulative scores for subjects.
+ * @body {Object} [psychomotor_assessment] - JSON object for psychomotor ratings.
+ * @body {Object} [affective_domain] - JSON object for affective domain ratings.
+ * @body {Object} [other_assessments] - JSON object for other assessment ratings.
+ * @body {string} [teacher_signature_url] - URL for teacher's signature.
+ * @body {string} [principal_signature_url] - URL for principal's signature.
+ * @body {string} [class_position] - Student's position in class.
+ * @body {number} [class_teacher_id] - ID of the class teacher.
  */
-router.post("/", auth, isAdminOrTeacher, async (req, res) => { // Changed isAdmin to isAdminOrTeacher
-    const { studentId, term, session, teacherComment, principalComment, nextTermBegins, cumulativeData, classLevel } = req.body;
-    if (!studentId || !term || !session || !classLevel) {
-        return res.status(400).json({ error: "Missing required identifiers (studentId, term, session, classLevel)." });
+router.post("/", auth, isAdminOrTeacher, async (req, res) => {
+    const { studentId, term, session, teacher_comment, principal_comment, next_term_begins,
+            psychomotor_assessment, affective_domain, other_assessments,
+            teacher_signature_url, principal_signature_url, class_position, class_teacher_id } = req.body;
+
+    if (!studentId || !term || !session) {
+        return res.status(400).json({ error: "Missing required identifiers (studentId, term, session)." });
     }
     try {
         const query = `
-            INSERT INTO report_card_meta (student_id, term, session, class_level, teacher_comment, principal_comment, next_term_begins, cumulative_data)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO report_card_meta (student_id, term, session, teacher_comment, principal_comment, next_term_begins,
+                                        psychomotor_assessment, affective_domain, other_assessments,
+                                        teacher_signature_url, principal_signature_url, class_position, class_teacher_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             ON CONFLICT (student_id, term, session)
             DO UPDATE SET
-                class_level = EXCLUDED.class_level,
                 teacher_comment = EXCLUDED.teacher_comment,
                 principal_comment = EXCLUDED.principal_comment,
                 next_term_begins = EXCLUDED.next_term_begins,
-                cumulative_data = EXCLUDED.cumulative_data,
+                psychomotor_assessment = EXCLUDED.psychomotor_assessment,
+                affective_domain = EXCLUDED.affective_domain,
+                other_assessments = EXCLUDED.other_assessments,
+                teacher_signature_url = EXCLUDED.teacher_signature_url,
+                principal_signature_url = EXCLUDED.principal_signature_url,
+                class_position = EXCLUDED.class_position,
+                class_teacher_id = EXCLUDED.class_teacher_id,
                 updated_at = NOW()
             RETURNING *;
         `;
@@ -80,11 +95,16 @@ router.post("/", auth, isAdminOrTeacher, async (req, res) => { // Changed isAdmi
             studentId,
             term.toUpperCase(), // Ensure term is uppercase for consistency
             session,
-            classLevel,
-            teacherComment || null,
-            principalComment || null,
-            nextTermBegins || null,
-            cumulativeData ? JSON.stringify(cumulativeData) : null // Store cumulativeData as JSON string
+            teacher_comment || null,
+            principal_comment || null,
+            next_term_begins || null,
+            psychomotor_assessment ? JSON.stringify(psychomotor_assessment) : null,
+            affective_domain ? JSON.stringify(affective_domain) : null,
+            other_assessments ? JSON.stringify(other_assessments) : null,
+            teacher_signature_url || null,
+            principal_signature_url || null,
+            class_position || null, // Save class position
+            class_teacher_id || null // Save class teacher ID
         ]);
         res.status(200).json({ message: "Report card data saved successfully.", data: result.rows[0] });
     } catch (error) {
@@ -101,7 +121,7 @@ router.post("/", auth, isAdminOrTeacher, async (req, res) => { // Changed isAdmi
  * @param {string} term - The academic term.
  * @param {string} session - The academic session.
  */
-router.delete('/:studentId/:term/:session', auth, isAdminOrTeacher, async (req, res) => { // Changed isAdmin to isAdminOrTeacher
+router.delete('/:studentId/:term/:session', auth, isAdminOrTeacher, async (req, res) => {
   const { studentId, term, session } = req.params;
   try {
     const deleteResult = await pool.query(
